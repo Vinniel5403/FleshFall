@@ -96,16 +96,5 @@ export interface Player {
   deaths: number;
 }
 
-export interface HuntView {
-  id: string;
-  ended: "won" | "died" | "fled" | null;
-  zone: { id: string; name: string; emoji: string; tier: Tier; tierInfo: TierInfo } | null;
-  hero: { name: string; level: number; hp: number; maxHp: number; sanity: number };
-  monsters: { id: string; name: string; emoji: string; hp: number; maxHp: number }[];
-  door: { name: string; emoji: string } | null;
-  loot: { id: string; name: string; emoji: string; n: number }[];
-  xp: number;
-  lines: string[];
-}
 
 export type ApiError = { error: string };

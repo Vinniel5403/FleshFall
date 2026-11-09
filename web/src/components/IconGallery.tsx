@@ -6,17 +6,17 @@ import { useApi } from "@/lib/api";
 import { doorVar } from "@/lib/md";
 import type { Icon } from "@/lib/types";
 
-const icon = (f: string) => encodeURI(`/icons/${f}`);
+const icon = (name: string) => `/icons/${name}.webp`;
 
 /** Art per Icon (from the Canva deck's Icon pages). No art → plain strip in the door color. */
 const ICON_ART: Record<string, { src: string; pos: string } | undefined> = {
-  beelzebub: { src: icon("IMG_5925.PNG"), pos: "50% 28%" },
-  hastur: { src: icon("IMG_5924.PNG"), pos: "50% 4%" },
+  beelzebub: { src: icon("beelzebub"), pos: "50% 28%" },
+  hastur: { src: icon("hastur"), pos: "50% 4%" },
   loki: undefined,
-  belphegor: { src: icon("IMG_5942.PNG"), pos: "50% 22%" },
-  sophia: { src: icon("IMG_5960.PNG"), pos: "32% 30%" },
-  thanatos: { src: icon("IMG_5866.png"), pos: "58% 30%" },
-  wendigo: { src: icon("IMG_4606.PNG"), pos: "50% 62%" },
+  belphegor: { src: icon("belphegor"), pos: "50% 22%" },
+  sophia: { src: icon("sophia"), pos: "32% 30%" },
+  thanatos: { src: icon("thanatos"), pos: "58% 30%" },
+  wendigo: { src: icon("wendigo"), pos: "50% 62%" },
 };
 
 const EPITHET: Record<string, string> = {

@@ -2,21 +2,12 @@
  * FleshFall JSON API for the Next.js site in web/ (no framework).
  * The site proxies /api/* here (see web/next.config.ts).
  */
-import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { createServer, type ServerResponse } from 'node:http';
 import * as api from './api.js';
 
 function json(res: ServerResponse, code: number, body: unknown) {
   res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
   res.end(JSON.stringify(body));
-}
-
-async function readBody(req: IncomingMessage): Promise<Record<string, unknown>> {
-  let raw = '';
-  for await (const chunk of req) {
-    raw += chunk;
-    if (raw.length > 10_000) throw new Error('body too large');
-  }
-  return raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
 }
 
 export function startApi(port: number, players: api.PlayerSource) {
@@ -35,11 +26,6 @@ export function startApi(port: number, players: api.PlayerSource) {
             case '/api/bestiary': return json(res, 200, api.bestiary());
             case '/api/leaderboard': return json(res, 200, api.leaderboard(players));
           }
-        }
-        if (req.method === 'POST') {
-          const body = await readBody(req);
-          if (p === '/api/demo/start') return json(res, 200, api.demoStart(body));
-          if (p === '/api/demo/act') return json(res, 200, api.demoAct(body));
         }
         return json(res, 404, { error: 'not found' });
       }

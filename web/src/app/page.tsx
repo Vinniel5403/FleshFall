@@ -133,7 +133,7 @@ export default function Home() {
       {/* ICONS */}
       <section className="icons-hero" id="icons">
         <div className="icons-hero-bg" aria-hidden="true">
-          <Image src={encodeURI("/icons/IMG_5941.PNG")} alt="" fill sizes="100vw" />
+          <Image src="/icons/lineup.webp" alt="" fill sizes="100vw" />
         </div>
         <div className="head">
           <div>

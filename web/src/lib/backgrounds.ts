@@ -19,7 +19,7 @@ export function backgroundSlides(): Slide[] {
   }
   const known = new Map(Object.values(ART).map((a) => [a.src, a.pos]));
   return files.map((f) => {
-    const src = encodeURI(`/background/${f}`);
+    const src = `/background/${encodeURIComponent(f)}`;
     return { src, pos: known.get(src) ?? "50% 40%" };
   });
 }
