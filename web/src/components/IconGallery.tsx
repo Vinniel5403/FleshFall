@@ -25,7 +25,7 @@ interface IconArt {
 const ICON_ART: Record<string, IconArt | undefined> = {
   beelzebub: { src: icon("beelzebub-0"), w: 1450, h: 1800, frames: [0, 1, 2, 3, 4].map((n) => icon(`beelzebub-${n}`)) },
   hastur: { src: icon("hastur"), w: 1228, h: 1800 },
-  loki: { src: icon("loki"), w: 735, h: 1036, y: "8%" },
+  loki: { src: icon("loki-cutout"), w: 735, h: 1036, y: "8%" },
   belphegor: { src: icon("belphegor"), w: 1058, h: 1800 },
   sophia: { src: icon("sophia"), w: 1692, h: 1800, align: "left", shift: "-15%" },
   thanatos: { src: icon("thanatos"), w: 1777, h: 1800, align: "right", shift: "13%" },

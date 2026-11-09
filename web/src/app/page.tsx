@@ -99,7 +99,7 @@ export default function Home() {
         </Reveal>
       </section>
 
-      {/* GEOGRAPHY */}
+      {/* GEOGRAPHY — hidden for now
       <section className="lands">
         <SectionHead en="GEOGRAPHY" th="สามดินแดน" center />
         <RevealGroup className="lands-grid">
@@ -121,6 +121,7 @@ export default function Home() {
           </Link>
         </div>
       </section>
+      */}
 
       {/* ICONS */}
       <section className="icons-hero" id="icons">

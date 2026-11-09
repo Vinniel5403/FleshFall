@@ -48,6 +48,7 @@
 .cta:hover { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4), 0 8px 24px rgba(224, 30, 55, .3); }
 .tab, .chip, .cw { border-radius: 0; }
 
+
 /* ---------- Panels: hairline frame, inner frame on hover ---------- */
 .card, .land, .step, .guide-card, .rules li, .cmd { border-radius: 0; }
 .card, .land, .guide-card { transition: border-color .25s, outline-color .25s; outline: 1px solid transparent; outline-offset: -6px; }

@@ -102,6 +102,7 @@ EN serif ตรงกลาง ขนาบเส้นเรียวแดง�
 ## 6. Imagery
 
 - `public/{background,asset,icons}` เป็น **webp** ชื่อ kebab-case (`maid-cleaver.webp`, `sophia.webp`) · background ≤ 2560px, อื่น ≤ 1800px
+- **แทนรูปเดิม → ตั้งชื่อไฟล์ใหม่เสมอ** (เช่น `patron-centaur.webp`) ไม่เขียนทับชื่อเดิม เพราะแคชย่อรูปของ Next / เบราว์เซอร์ / CDN จะยังโชว์รูปเก่า
 - ลงทะเบียนใน `src/lib/art.ts` (`src`, `alt`, `pos`) · ภาพเทพใน `IconGallery.tsx`
 - ภาพตัดพื้น → `cutout` + `drop-shadow` · ภาพมีพื้น → `framed`
 - ใช้ `next/image` (`fill` + `sizes`), ภาพแรกของหน้า `preload`

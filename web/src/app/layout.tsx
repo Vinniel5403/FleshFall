@@ -13,9 +13,29 @@ const cinzel = Cinzel({ variable: "--font-cinzel", subsets: ["latin"], weight: [
 const logo = UnifrakturMaguntia({ variable: "--font-logo", subsets: ["latin"], weight: "400" });
 const kanit = Kanit({ variable: "--font-kanit", subsets: ["thai", "latin"], weight: ["300", "400", "500", "600", "700", "800"] });
 
+const SITE = "https://fleshfall.org";
+const DESCRIPTION = "สู่แดนแห่งเนื้อสดและเมดผู้หิวโหย — เล่นบน Discord";
+
 export const metadata: Metadata = {
-  title: { default: "FleshFall", template: "%s · FleshFall" },
-  description: "FleshFall — โลกสยองขวัญของเกาะเนื้อ Rouge Land และวังวน Old Realm",
+  metadataBase: new URL(SITE),
+  title: { default: "Fleshfall — เมดเนื้อ", template: "%s · Fleshfall" },
+  description: DESCRIPTION,
+  applicationName: "Fleshfall",
+  keywords: ["Fleshfall", "เมดเนื้อ", "FleshFall ARG", "FF_ARG", "Discord RPG", "horror"],
+  // og:image / twitter:image come from app/opengraph-image.jpg + app/twitter-image.jpg
+  openGraph: {
+    type: "website",
+    url: SITE,
+    siteName: "Fleshfall",
+    title: "Fleshfall — เมดเนื้อ",
+    description: DESCRIPTION,
+    locale: "th_TH",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Fleshfall — เมดเนื้อ",
+    description: DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
