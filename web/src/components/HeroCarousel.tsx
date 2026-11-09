@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { ComingSoon } from "./ComingSoon";
 import { useEffect, useState } from "react";
 import type { Slide } from "@/lib/backgrounds";
 
@@ -68,12 +68,7 @@ export function HeroCarousel({ slides }: { slides: Slide[] }) {
           {copy.line}
         </p>
         <div className="kv-cta">
-          <Link className="cta" href="/create">
-            ✦ สร้างตัวละคร
-          </Link>
-          <Link className="cta ghost" href="/world">
-            สำรวจโลก
-          </Link>
+          <ComingSoon />
         </div>
       </div>
 
