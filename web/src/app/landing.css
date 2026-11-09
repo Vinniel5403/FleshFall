@@ -116,3 +116,13 @@
 @media (max-width: 560px) {
   .roles-grid { grid-template-columns: 1fr; }
 }
+
+/* ===== STAFF (credits) ===== */
+.staff { padding: 90px 16px 40px; text-align: center; background-image: radial-gradient(var(--dots) 1.2px, transparent 1.6px); background-size: 22px 22px; }
+.staff-list { display: grid; gap: 34px; margin-top: 10px; }
+.staff-role { display: inline-flex; align-items: center; gap: 14px; margin: 0 0 10px; font: 600 13px var(--font-cinzel), serif; letter-spacing: .12em; color: var(--muted); }
+.staff-role::before, .staff-role::after { content: ""; width: clamp(40px, 6vw, 80px); height: 1px; background: linear-gradient(90deg, transparent, var(--hair)); }
+.staff-role::after { background: linear-gradient(90deg, var(--hair), transparent); }
+.staff-names { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px clamp(24px, 4vw, 56px); margin: 0; }
+.staff-names span { font: 600 clamp(24px, 3vw, 38px)/1.2 var(--font-cinzel), serif; letter-spacing: .08em; color: var(--bone); }
+.staff-group:first-child .staff-names span { font-size: clamp(32px, 4vw, 52px); }

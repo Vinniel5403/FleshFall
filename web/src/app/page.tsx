@@ -6,6 +6,7 @@ import { IconGallery } from "@/components/IconGallery";
 import { Reveal, RevealGroup, RevealItem } from "@/components/Reveal";
 import { ART } from "@/lib/art";
 import { SectionHead } from "@/components/SectionHead";
+import { Staff } from "@/components/Staff";
 import { backgroundSlides } from "@/lib/backgrounds";
 
 const LANDS = [
@@ -152,6 +153,9 @@ export default function Home() {
           </Link>
         </Reveal>
       </section>
+
+      {/* STAFF */}
+      <Staff />
     </>
   );
 }
