@@ -1,0 +1,32 @@
+{
+  "name": "fleshfall-bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "deploy": "tsx src/deploy-commands.ts",
+    "web": "tsx watch src/web/standalone.ts",
+    "api": "tsx watch src/web/standalone.ts",
+    "web:dev": "npm run dev -w web",
+    "web:build": "npm run build -w web"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "discord.js": "^14.28.1",
+    "dotenv": "^18.0.9"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "workspaces": [
+    "web"
+  ]
+}
