@@ -16,12 +16,12 @@
   border: 1px solid rgba(255, 255, 255, .08);
   transition: flex-grow .6s cubic-bezier(.2, .8, .2, 1), border-color .35s, box-shadow .35s, opacity .35s;
 }
-.ig-panel.on { flex-grow: 5; border-color: var(--door); box-shadow: 0 0 40px color-mix(in srgb, var(--door) 35%, transparent), inset 0 0 0 1px var(--door); }
+.ig-panel.on { flex-grow: 5; border-color: rgba(255, 255, 255, .85); box-shadow: 0 0 44px rgba(255, 255, 255, .28), 0 0 12px rgba(255, 255, 255, .25), inset 0 0 0 1px rgba(255, 255, 255, .7); }
 .has-active .ig-panel:not(.on) { opacity: .7; }
 .ig-panel:focus-visible { outline: 2px solid var(--flesh); outline-offset: 3px; }
 
-.ig-img { object-fit: cover; filter: grayscale(.75) brightness(.55); transform: scale(1.04); transition: filter .6s, transform 1s; }
-.ig-panel.on .ig-img { filter: none; transform: scale(1); }
+.ig-img { object-fit: cover; filter: grayscale(.75) brightness(.55); transition: filter .6s; }
+.ig-panel.on .ig-img { filter: none; }
 .ig-tint { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8, 4, 4, .2), rgba(8, 4, 4, .75)), color-mix(in srgb, var(--door) 12%, transparent); transition: background .5s; }
 .ig-panel.on .ig-tint { background: linear-gradient(180deg, transparent 45%, rgba(11, 6, 6, .85)); }
 /* no art: just a plain strip in the door color */

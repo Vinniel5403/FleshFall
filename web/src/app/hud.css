@@ -1,0 +1,75 @@
+/*
+ * Ornate layer — site-wide finishing (FGO-like elegance in FleshFall's blood palette).
+ * Loaded last so it can refine earlier styles. See web/designsystem.md.
+ */
+:root {
+  --hair: rgba(230, 184, 162, .55);   /* hairline (flesh) */
+  --ornament: rgba(224, 30, 55, .55); /* diamond ornament stroke */
+  --dots: rgba(255, 255, 255, .03);   /* background dot pattern */
+}
+
+/* ---------- Section head ---------- */
+.sh { margin: 0 0 30px; }
+.sh.center { text-align: center; display: flex; flex-direction: column; align-items: center; }
+
+.sh p.sh-title {
+  position: relative; display: inline-flex; align-items: center; gap: clamp(14px, 2vw, 26px); margin: 0; padding: 14px 0;
+  font: 600 clamp(32px, 4.2vw, 58px)/1 var(--font-cinzel), serif; letter-spacing: .1em; color: var(--bone); text-shadow: none;
+}
+/* diamond ornament behind the title */
+.sh p.sh-title::before, .sh p.sh-title::after {
+  content: ""; position: absolute; left: 50%; top: 50%; pointer-events: none;
+  border: 1px solid var(--ornament); transform: translate(-50%, -50%) rotate(45deg);
+}
+.sh p.sh-title::before { width: 1.25em; height: 1.25em; }
+.sh p.sh-title::after { width: .9em; height: .9em; border-color: rgba(230, 184, 162, .25); }
+.sh-en { position: relative; z-index: 1; }
+
+/* tapered lines (thick near the title, fading out) */
+.sh-line { display: block; width: clamp(50px, 9vw, 150px); height: 4px; }
+.sh-line.l { clip-path: polygon(0 50%, 100% 0, 100% 100%); background: linear-gradient(90deg, transparent, var(--crimson)); }
+.sh-line.r { clip-path: polygon(0 0, 100% 50%, 0 100%); background: linear-gradient(90deg, var(--crimson), transparent); }
+
+.sh h1.sh-sub, .sh h2.sh-sub {
+  display: inline-flex; align-items: center; gap: 14px; margin: 6px 0 0;
+  font: 500 clamp(16px, 1.5vw, 21px)/1.35 var(--font-kanit), sans-serif; color: var(--flesh); letter-spacing: .03em;
+}
+.sh h1.sh-sub::before, .sh h1.sh-sub::after, .sh h2.sh-sub::before, .sh h2.sh-sub::after {
+  content: ""; width: clamp(36px, 5vw, 70px); height: 1px; background: linear-gradient(90deg, transparent, var(--hair));
+}
+.sh h1.sh-sub::after, .sh h2.sh-sub::after { background: linear-gradient(90deg, var(--hair), transparent); }
+
+/* left-aligned variant: no outer-left line, diamond under the first letters */
+.sh:not(.center) .sh-line.l, .sh:not(.center) .sh-sub::before { display: none; }
+.sh:not(.center) p.sh-title::before, .sh:not(.center) p.sh-title::after { left: .62em; }
+
+/* ---------- Buttons: clean rectangle with inner hairline ---------- */
+.cta { border-radius: 0; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); letter-spacing: .04em; }
+.cta:hover { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4), 0 8px 24px rgba(224, 30, 55, .3); }
+.tab, .chip, .cw { border-radius: 0; }
+
+/* ---------- Panels: hairline frame, inner frame on hover ---------- */
+.card, .land, .step, .guide-card, .rules li, .cmd { border-radius: 0; }
+.card, .land, .guide-card { transition: border-color .25s, outline-color .25s; outline: 1px solid transparent; outline-offset: -6px; }
+.card:hover, .land:hover, .guide-card:hover { border-color: rgba(224, 30, 55, .4); outline-color: rgba(230, 184, 162, .18); }
+
+/* ---------- Background: faint dot pattern ---------- */
+.intro, .lore, .lands, .page-body, .design {
+  background-image: radial-gradient(var(--dots) 1.2px, transparent 1.6px);
+  background-size: 22px 22px;
+}
+
+.step-no, .land-no { font-family: var(--font-cinzel), serif; }
+
+/* ---------- Sub-page banner ---------- */
+.banner-copy { z-index: 1; }
+.banner .sh { margin-bottom: 8px; }
+.banner .sh p.sh-title { font-size: clamp(40px, 5.6vw, 80px); }
+
+.icons-hero .head { align-items: flex-start; }
+.ig-info { border-radius: 0; }
+
+@media (max-width: 700px) {
+  .sh p.sh-title { font-size: 9.5vw; }
+  .sh-line { width: 40px; }
+}

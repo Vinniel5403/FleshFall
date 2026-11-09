@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import { Cinzel, Kanit } from "next/font/google";
+import { Cinzel, Kanit, UnifrakturMaguntia } from "next/font/google";
 import { Header } from "@/components/Header";
 import "./globals.css";
 import "./kv.css";
 import "./nav.css";
 import "./landing.css";
 import "./icons.css";
+import "./characters.css";
+import "./hud.css";
 
 const cinzel = Cinzel({ variable: "--font-cinzel", subsets: ["latin"], weight: ["600", "800"] });
+const logo = UnifrakturMaguntia({ variable: "--font-logo", subsets: ["latin"], weight: "400" });
 const kanit = Kanit({ variable: "--font-kanit", subsets: ["thai", "latin"], weight: ["300", "400", "500", "600", "700", "800"] });
 
 export const metadata: Metadata = {
@@ -17,7 +20,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="th" className={`${cinzel.variable} ${kanit.variable}`}>
+    <html lang="th" className={`${cinzel.variable} ${kanit.variable} ${logo.variable}`}>
       <body>
         <div className="grain" aria-hidden="true" />
         <Header />

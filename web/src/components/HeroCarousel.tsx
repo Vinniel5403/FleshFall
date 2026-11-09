@@ -62,7 +62,7 @@ export function HeroCarousel({ slides }: { slides: Slide[] }) {
           {copy.kicker}
         </p>
         <h1 className="kv-logo">
-          FLESH<span>FALL</span>
+          Fleshfall
         </h1>
         <p className="kv-line" key={`l${i}`}>
           {copy.line}

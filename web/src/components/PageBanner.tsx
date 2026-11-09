@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { ART, type ArtKey } from "@/lib/art";
+import { SectionHead } from "./SectionHead";
 
-/** Full-bleed art banner at the top of sub-pages. */
+/** Full-bleed art banner at the top of sub-pages, with the HUD section head. */
 export function PageBanner({ art, en, th, lead }: { art: ArtKey; en: string; th: string; lead?: string }) {
   const a = ART[art];
   return (
@@ -9,8 +10,7 @@ export function PageBanner({ art, en, th, lead }: { art: ArtKey; en: string; th:
       <Image src={a.src} alt={a.alt} fill sizes="100vw" preload style={{ objectPosition: a.pos }} className="banner-img" />
       <div className="banner-shade" aria-hidden="true" />
       <div className="banner-copy">
-        <p className="banner-en">{en}</p>
-        <h1>{th}</h1>
+        <SectionHead en={en} th={th} as="h1" />
         {lead && <p className="banner-lead">{lead}</p>}
       </div>
     </section>

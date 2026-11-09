@@ -47,7 +47,7 @@ export function Header() {
     <header className="nav-shell">
       <nav aria-label="เมนูหลัก" className={`nav-bar ${isScrolled ? "solid" : ""}`}>
         <Link href="/" onClick={close} className="nav-logo" aria-label="FleshFall หน้าแรก">
-          FLESH<span>FALL</span>
+          Fleshfall
         </Link>
 
         <ul className="nav-links">

@@ -3,6 +3,7 @@ import Image from "next/image";
 import { PageBanner } from "@/components/PageBanner";
 import { ART } from "@/lib/art";
 import { GAME } from "@/lib/game";
+import { SectionHead } from "@/components/SectionHead";
 import { doorVar } from "@/lib/md";
 
 export const metadata: Metadata = { title: "สร้างตัวละคร" };
@@ -104,8 +105,7 @@ export default function CreatePage() {
 
         <section className="block design">
           <div className="design-copy">
-            <p className="sec-en">CHARACTER DESIGN</p>
-            <h2>แนวทางออกแบบตัวละคร</h2>
+            <SectionHead en="DESIGN" th="แนวทางออกแบบตัวละคร" />
             <p className="lead">วาดตัวละครของคุณเองได้ — ทุกชุดไม่จำกัดเพศ ✅</p>
             <div className="design-grid">
               {DESIGN.map((d) => (

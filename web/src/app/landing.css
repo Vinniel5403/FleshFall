@@ -27,7 +27,7 @@
 /* geography */
 .lands { padding: 100px 16px 40px; max-width: 1240px; margin: 0 auto; }
 .lands-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 30px 0; }
-.land { position: relative; padding: 28px 24px; border: 1px solid var(--line); background: linear-gradient(180deg, var(--panel), var(--bg2)); clip-path: polygon(0 0, 100% 0, 100% 90%, 92% 100%, 0 100%); }
+.land { position: relative; padding: 28px 24px; border: 1px solid var(--line); background: linear-gradient(180deg, var(--panel), var(--bg2)); }
 .land-no { position: absolute; right: 18px; top: 10px; font: 800 64px var(--font-cinzel), serif; color: rgba(255, 255, 255, .05); }
 .land-en { font: 800 13px var(--font-cinzel), serif; letter-spacing: .35em; color: var(--crimson); margin: 0 0 6px; }
 .land h3 { font-size: 24px; margin-bottom: 8px; }
