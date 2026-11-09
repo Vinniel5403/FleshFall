@@ -3,9 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useApi } from "@/lib/api";
 import type { Slide } from "@/lib/backgrounds";
-import type { Status } from "@/lib/types";
 
 const LINES: { kicker: string; line: string }[] = [
   { kicker: "OLD REALM", line: "พรทุกอย่างมีผลกรรม" },
@@ -24,7 +22,6 @@ export function HeroCarousel({ slides }: { slides: Slide[] }) {
   // cycle increments on every change so the incoming image always remounts and restarts its motion
   const [{ i, prevI, cycle }, setState] = useState({ i: 0, prevI: -1, cycle: 0 });
   const go = (n: number) => setState((st) => (n === st.i ? st : { i: n, prevI: st.i, cycle: st.cycle + 1 }));
-  const { data: s } = useApi<Status>("status");
   const count = slides.length;
 
   useEffect(() => {
@@ -61,7 +58,6 @@ export function HeroCarousel({ slides }: { slides: Slide[] }) {
       </div>
 
       <div className="kv-copy">
-        {s?.crimsonMoon && <div className="kv-moon">🌕 CRIMSON MOON</div>}
         <p className="kv-kicker" key={`k${i}`}>
           {copy.kicker}
         </p>

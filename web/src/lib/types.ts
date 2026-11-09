@@ -1,4 +1,4 @@
-// Shapes returned by the bot's web API (src/web/api.ts at the repo root).
+// Shapes of the bundled game data (web/src/data/game.json, generated from src/web/api.ts).
 
 export type Tier = "easy" | "normal" | "hard" | "epic";
 
@@ -8,14 +8,6 @@ export interface TierInfo {
   rec: number;
 }
 
-export interface Status {
-  crimsonMoon: boolean;
-  nextCrimsonMoon: number;
-  players: number;
-  exploring: number;
-  fiends: number;
-  cities: number;
-}
 
 export interface City {
   id: string;
@@ -85,16 +77,5 @@ export interface Monster {
   minLevel?: number;
 }
 
-export interface Player {
-  name: string;
-  role: string;
-  icon: string;
-  level: number;
-  fiend: boolean;
-  zone: string;
-  dungeonsCleared: number;
-  deaths: number;
-}
 
 
-export type ApiError = { error: string };

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { useApi } from "@/lib/api";
+import { useGame } from "@/lib/game";
 import { doorVar } from "@/lib/md";
 import type { Icon } from "@/lib/types";
 
@@ -34,7 +34,7 @@ const EPITHET: Record<string, string> = {
  * with nothing hovered they're just equal strips.
  */
 export function IconGallery() {
-  const { data: icons } = useApi<Icon[]>("icons");
+  const { data: icons } = useGame("icons");
   const [active, setActive] = useState<number | null>(null);
 
   if (!icons) return <div className="ig ig-loading" />;
@@ -66,14 +66,6 @@ export function IconGallery() {
                     <i /> {EPITHET[ic.id] ?? ""} · {ic.doorName}
                   </span>
                   <span className="ig-concept">{ic.concept}</span>
-                  <span className="ig-trade">
-                    <span>
-                      <b>✦ พร</b> {ic.blessing}
-                    </span>
-                    <span>
-                      <b>✖ ผลกรรม</b> {ic.repercussion}
-                    </span>
-                  </span>
                 </span>
               )}
             </button>

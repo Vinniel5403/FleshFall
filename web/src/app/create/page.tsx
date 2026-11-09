@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { CreateGuide } from "@/components/CreateGuide";
 import { PageBanner } from "@/components/PageBanner";
 import { ART } from "@/lib/art";
+import { GAME } from "@/lib/game";
+import { doorVar } from "@/lib/md";
 
 export const metadata: Metadata = { title: "สร้างตัวละคร" };
 
@@ -28,10 +29,77 @@ const DESIGN = [
 export default function CreatePage() {
   return (
     <>
-      <PageBanner art="maid" en="CREATE" th="สร้างตัวละคร" lead="เลือกบทบาท เลือกเทพ ตั้งชื่อ — แล้วเริ่มเล่นใน Discord" />
+      <PageBanner art="maid" en="CREATE" th="สร้างตัวละคร" lead="แนวทางสร้างตัวละครของคุณในโลก FleshFall" />
       <main>
-        <section className="block page-body">
-          <CreateGuide />
+        <section className="block page-body create">
+          {/* STEP 1 — roles */}
+          <section className="step">
+            <header>
+              <span className="step-no">01</span>
+              <div>
+                <h3>เลือกบทบาท</h3>
+                <p className="sub">แต่ละบทบาทมีที่มาและวิธีเอาชีวิตรอดต่างกัน</p>
+              </div>
+            </header>
+            <div className="guide-grid">
+              {GAME.roles.map((r) => (
+                <article key={r.id} className="guide-card">
+                  <h4>
+                    {r.emoji} {r.name}
+                  </h4>
+                  <p className="sub">{r.short}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          {/* STEP 2 — icons */}
+          <section className="step">
+            <header>
+              <span className="step-no">02</span>
+              <div>
+                <h3>เลือกเทพที่ศรัทธา</h3>
+                <p className="sub">เทพที่คุณศรัทธาจะติดตัวไปตลอด — เลือกให้ดี</p>
+              </div>
+            </header>
+            <div className="guide-grid">
+              {GAME.icons.map((ic) => (
+                <article key={ic.id} className="guide-card icon" style={{ "--door": doorVar(ic.door) } as React.CSSProperties}>
+                  <h4>
+                    {ic.emoji} {ic.name}
+                  </h4>
+                  <p className="sub">{ic.doorName}</p>
+                  <p className="icons-concept">{ic.concept}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          {/* STEP 3 — start in Discord */}
+          <section className="step">
+            <header>
+              <span className="step-no">03</span>
+              <div>
+                <h3>สร้างตัวละครใน Discord</h3>
+                <p className="sub">พิมพ์คำสั่งในเซิร์ฟ FleshFall แล้วเลือกบทบาทกับเทพ</p>
+              </div>
+            </header>
+            <div className="cmd">
+              <code>/start name:ชื่อตัวละคร role:บทบาท icon:เทพ</code>
+            </div>
+            <ol className="flow">
+              <li>
+                ไปที่ห้อง <b>#butchery</b> กด 📜 โปรไฟล์ เพื่อดูตัวละคร
+              </li>
+              <li>
+                กด <b>🗺️ ออกสำรวจ</b> เลือกทวีปและเมือง — เมืองระดับ 🟢 Easy เหมาะกับมือใหม่
+              </li>
+              <li>ในห้องเมือง กด 🎲 ออกล่า หรือ 🔍 สำรวจ โชคดีอาจเจอประตูดันเจียน</li>
+              <li>
+                เนื้อหมด แรงหมด กด <b>🏠 กลับ Rouge Land</b> เพื่อซื้อของ ปรุงอาหาร และอัปเกรดที่บาร์
+              </li>
+            </ol>
+          </section>
         </section>
 
         <section className="block design">

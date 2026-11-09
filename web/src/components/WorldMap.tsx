@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useApi } from "@/lib/api";
+import { useGame } from "@/lib/game";
 import { doorVar, TIER_NAME } from "@/lib/md";
 import type { Item, World } from "@/lib/types";
 
 export function WorldMap() {
-  const { data: world, error } = useApi<World>("world");
-  const { data: items } = useApi<Item[]>("items");
+  const { data: world, error } = useGame("world");
+  const { data: items } = useGame("items");
   const [pick, setPick] = useState<string | null>(null);
   if (error) return <p className="notice">{error}</p>;
   if (!world) return <p className="notice">กำลังโหลด…</p>;

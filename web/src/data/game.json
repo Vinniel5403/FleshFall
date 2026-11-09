@@ -1,0 +1,1420 @@
+{
+ "world": {
+  "locations": {
+   "rouge_land": {
+    "name": "Rouge Land (เกาะเนื้อ)",
+    "emoji": "🩸",
+    "desc": "ดินแดนที่ปกคลุมด้วยเนื้อสด กระดูก และอวัยวะงอกงาม — ร่างของสิ่งที่หัวใจยังเต้นอยู่"
+   },
+   "cypress": {
+    "name": "Cypress Isle (เกาะไซปรัส)",
+    "emoji": "🏛️",
+    "desc": "เกาะซากกรีกโรมันที่ประตูดำนับไม่ถ้วนหันไปทางทิศใต้ ทางผ่านเดียวสู่ Rouge Land"
+   },
+   "old_realm": {
+    "name": "Old Realm (วังวนนอกเกาะ)",
+    "emoji": "🌫️",
+    "desc": "มิติซ้อนทับโลกจริง ยืดออกแนวราบ 8–10 เท่า คนจริงเหลือเพียงเงาที่หยุดนิ่ง"
+   }
+  },
+  "tiers": {
+   "easy": {
+    "name": "Easy",
+    "emoji": "🟢",
+    "rec": 1,
+    "hpMul": 1,
+    "dmgAdd": 0,
+    "acAdd": 0,
+    "hitAdd": 0,
+    "xpMul": 1,
+    "lootMul": 1,
+    "lvlBonus": 0
+   },
+   "normal": {
+    "name": "Normal",
+    "emoji": "🟡",
+    "rec": 4,
+    "hpMul": 1.25,
+    "dmgAdd": 0,
+    "acAdd": 1,
+    "hitAdd": 0.03,
+    "xpMul": 1.6,
+    "lootMul": 1.3,
+    "lvlBonus": 2
+   },
+   "hard": {
+    "name": "Hard",
+    "emoji": "🔴",
+    "rec": 8,
+    "hpMul": 1.5,
+    "dmgAdd": 1,
+    "acAdd": 1,
+    "hitAdd": 0.05,
+    "xpMul": 2.5,
+    "lootMul": 1.6,
+    "lvlBonus": 4
+   },
+   "epic": {
+    "name": "Epic",
+    "emoji": "🟣",
+    "rec": 12,
+    "hpMul": 1.8,
+    "dmgAdd": 2,
+    "acAdd": 2,
+    "hitAdd": 0.07,
+    "xpMul": 4,
+    "lootMul": 2,
+    "lvlBonus": 6
+   }
+  },
+  "doors": {
+   "green": {
+    "name": "ประตูสีเขียว",
+    "emoji": "🟩",
+    "rule": {
+     "depth": [
+      3,
+      4
+     ],
+     "retreat": "free",
+     "note": "ทารกปีศาจงอกจากผนังมดลูก แหล่งอาหารไม่สิ้นสุด"
+    }
+   },
+   "yellow": {
+    "name": "ประตูสีเหลือง",
+    "emoji": "🟨",
+    "rule": {
+     "depth": [
+      3,
+      4
+     ],
+     "retreat": "locked",
+     "note": "มืดสนิท ประตูล็อกตามหลัง ต้องมีแสงสว่าง"
+    }
+   },
+   "gray": {
+    "name": "ประตูสีเทา",
+    "emoji": "⬜",
+    "rule": {
+     "depth": [
+      3,
+      3
+     ],
+     "retreat": "timeloss",
+     "note": "เหมือนโลกจริง หลอกให้ลืมเวลา ประตูสุดท้ายคือประตูแรก"
+    }
+   },
+   "orange": {
+    "name": "ประตูสีส้ม",
+    "emoji": "🟧",
+    "rule": {
+     "depth": [
+      3,
+      4
+     ],
+     "retreat": "feed",
+     "note": "ปากและหนวดเนื้อหิวโหย ไม่ป้อนเนื้อให้ ไม่ยอมให้ออก"
+    }
+   },
+   "white": {
+    "name": "ประตูสีขาวซีด",
+    "emoji": "🤍",
+    "rule": {
+     "depth": [
+      4,
+      5
+     ],
+     "retreat": "locked",
+     "note": "เงียบสงัด ผนึก 3–9 วัน ไม่มีอาหารไม่มีน้ำ"
+    }
+   },
+   "blue": {
+    "name": "ประตูสีน้ำเงิน",
+    "emoji": "🟦",
+    "rule": {
+     "depth": [
+      3,
+      3
+     ],
+     "retreat": "free",
+     "note": "ความทรงจำโศกถาโถม ไม่มีใครกลับออกมาครบส่วน"
+    }
+   },
+   "purple": {
+    "name": "ประตูสีม่วง",
+    "emoji": "🟪",
+    "rule": {
+     "depth": [
+      3,
+      4
+     ],
+     "retreat": "free",
+     "note": "Miasma ของ Thanatos เนื้อสดเน่าทันทีที่สัมผัส"
+    }
+   },
+   "red": {
+    "name": "ประตูสีแดง",
+    "emoji": "🟥",
+    "rule": null
+   },
+   "black": {
+    "name": "ประตูสีดำ",
+    "emoji": "⬛",
+    "rule": null
+   }
+  },
+  "continents": [
+   {
+    "id": "europe",
+    "name": "Europe",
+    "emoji": "🏰",
+    "icon": "Loki",
+    "door": "gray",
+    "shop": [
+     "bandage",
+     "absinthe",
+     "blood_wine",
+     "walking_cane",
+     "kris",
+     "leather_coat",
+     "lighter"
+    ],
+    "cities": [
+     {
+      "id": "paris",
+      "name": "Paris",
+      "emoji": "🗼",
+      "tier": "easy",
+      "desc": "ถนนหินยืดยาวสุดสายตา หอไอเฟลบิดเป็นเกลียว เงาของผู้คนนั่งนิ่งในคาเฟ่ริมทาง"
+     },
+     {
+      "id": "vienna",
+      "name": "Vienna",
+      "emoji": "🎻",
+      "tier": "easy",
+      "desc": "โรงละครโอเปร่าบรรเลงวอลทซ์ไม่มีวันจบ ผู้ชมในชุดราตรีไม่เคยลุกจากเก้าอี้"
+     },
+     {
+      "id": "roma",
+      "name": "Roma",
+      "emoji": "🏛️",
+      "tier": "easy",
+      "desc": "โคลอสเซียมยังมีเสียงเชียร์ แม้อัฒจันทร์จะว่างเปล่า น้ำพุไหลเป็นสีชมพู"
+     },
+     {
+      "id": "athen",
+      "name": "Athen",
+      "emoji": "🏺",
+      "tier": "normal",
+      "desc": "วิหารพาร์เธนอนเสาเพิ่มขึ้นทุกคืน รูปปั้นเทพเจ้าหันหน้าตามผู้มาเยือน"
+     },
+     {
+      "id": "moscow",
+      "name": "Moscow",
+      "emoji": "❄️",
+      "tier": "normal",
+      "desc": "หิมะตกไม่หยุด โดมหัวหอมของวิหารเต้นตุบเหมือนหัวใจ"
+     },
+     {
+      "id": "byzantine",
+      "name": "Byzantine",
+      "emoji": "🕌",
+      "tier": "normal",
+      "desc": "นครโบราณที่ไม่ควรมีอยู่แล้ว กำแพงทองคำจารึกชื่อคนที่ยังไม่ตาย"
+     },
+     {
+      "id": "frankfurt",
+      "name": "Frankfurt",
+      "emoji": "🏦",
+      "tier": "hard",
+      "desc": "ตึกกระจกสะท้อนภาพที่ไม่ใช่คุณ ตลาดหุ้นซื้อขายเนื้อแทนเงิน"
+     },
+     {
+      "id": "geneva",
+      "name": "Geneva",
+      "emoji": "⌚",
+      "tier": "hard",
+      "desc": "นาฬิกานับพันเรือนเดินไม่ตรงกัน ทะเลสาบนิ่งจนเห็นอีกเมืองอยู่ใต้น้ำ"
+     },
+     {
+      "id": "budapest",
+      "name": "Budapest",
+      "emoji": "🌉",
+      "tier": "hard",
+      "desc": "สะพานข้ามแม่น้ำดานูบยาวขึ้นทุกครั้งที่เดิน บ่อน้ำร้อนเดือดเป็นเลือด"
+     },
+     {
+      "id": "granada",
+      "name": "Granada",
+      "emoji": "🕍",
+      "tier": "epic",
+      "desc": "พระราชวังอัลฮัมบราที่ลวดลายบนผนังขยับเป็นเรขาคณิต — ที่มั่นของ Loki"
+     }
+    ]
+   },
+   {
+    "id": "asia",
+    "name": "Asia",
+    "emoji": "🏯",
+    "icon": "Beelzebub",
+    "door": "orange",
+    "shop": [
+     "bandage",
+     "spice_jerky",
+     "instant_noodle",
+     "alchemy_salve",
+     "carving_knife",
+     "sigil"
+    ],
+    "cities": [
+     {
+      "id": "bangkok",
+      "name": "Bangkok",
+      "emoji": "🛕",
+      "tier": "easy",
+      "desc": "ตลาดน้ำขายของที่ไม่มีใครรู้ว่าเนื้ออะไร ไฟจราจรแดงค้างตลอดกาล"
+     },
+     {
+      "id": "seoul",
+      "name": "Seoul",
+      "emoji": "🏙️",
+      "tier": "easy",
+      "desc": "ป้ายนีออนกะพริบเป็นภาษาที่อ่านไม่ออก ร้านไก่ทอดเปิดตลอด 24 ชั่วโมงโดยไม่มีพนักงาน"
+     },
+     {
+      "id": "shanghai",
+      "name": "Shanghai",
+      "emoji": "🌃",
+      "tier": "easy",
+      "desc": "ตึกระฟ้างอกสูงขึ้นทุกคืน เสียงไซเรนเรือดังจากแม่น้ำที่ไม่มีเรือ"
+     },
+     {
+      "id": "tibet",
+      "name": "Tibet",
+      "emoji": "🏔️",
+      "tier": "normal",
+      "desc": "ธงมนต์สะบัดทั้งที่ไม่มีลม พระที่นั่งสมาธิบนเขาไม่หายใจมาหลายร้อยปี"
+     },
+     {
+      "id": "delhi",
+      "name": "Delhi",
+      "emoji": "🐘",
+      "tier": "normal",
+      "desc": "ฝูงชนแน่นถนนแต่ไม่มีใครส่งเสียง เครื่องเทศหอมจนลืมไปว่ากลิ่นเน่า"
+     },
+     {
+      "id": "xinjiang",
+      "name": "Xinjiang",
+      "emoji": "🐫",
+      "tier": "normal",
+      "desc": "ทะเลทรายสีส้มที่เนินทรายย้ายที่เอง กองคาราวานเดินวนไม่ถึงไหน"
+     },
+     {
+      "id": "tehran",
+      "name": "Tehran",
+      "emoji": "🕌",
+      "tier": "hard",
+      "desc": "ตลาดบาซาร์วงกตไร้ทางออก พรมทอเป็นภาพของผู้ที่หลงเข้าไป"
+     },
+     {
+      "id": "qatar",
+      "name": "Qatar",
+      "emoji": "🏜️",
+      "tier": "hard",
+      "desc": "เมืองทองคำกลางทะเลทราย ความร้อนละลายเงาจนไหลไปตามพื้น"
+     },
+     {
+      "id": "tel_aviv",
+      "name": "Tel Aviv",
+      "emoji": "🌊",
+      "tier": "hard",
+      "desc": "ชายหาดที่คลื่นซัดเศษเนื้อขึ้นฝั่ง เสียงเพลงจากผับดังขึ้นแต่ไม่มีใครเต้น"
+     },
+     {
+      "id": "jerusalem",
+      "name": "Jerusalem",
+      "emoji": "🕯️",
+      "tier": "epic",
+      "desc": "นครศักดิ์สิทธิ์ที่เสียงสวดทุกภาษาปนกันจนกลายเป็นเสียงเคี้ยว — ที่มั่นของ Beelzebub"
+     }
+    ]
+   },
+   {
+    "id": "america",
+    "name": "America",
+    "emoji": "🗽",
+    "icon": "Belphegor",
+    "door": "blue",
+    "shop": [
+     "bandage",
+     "canned_beans",
+     "grilled_meat",
+     "leather_coat",
+     "old_shotgun",
+     "lighter"
+    ],
+    "cities": [
+     {
+      "id": "british_columbia",
+      "name": "British Columbia",
+      "emoji": "🌲",
+      "tier": "easy",
+      "desc": "ป่าสนสูงเสียดฟ้า ต้นไม้บางต้นมีเปลือกเป็นผิวหนังคน"
+     },
+     {
+      "id": "texas",
+      "name": "Texas",
+      "emoji": "🤠",
+      "tier": "easy",
+      "desc": "ทุ่งกว้างไร้ขอบ วัวที่เลี้ยงไว้ยืนมองคุณด้วยดวงตามนุษย์"
+     },
+     {
+      "id": "new_york",
+      "name": "New York",
+      "emoji": "🗽",
+      "tier": "easy",
+      "desc": "รถไฟใต้ดินวิ่งไม่หยุดสถานี ไทม์สแควร์ฉายโฆษณาของสิ่งที่ไม่มีอยู่จริง"
+     },
+     {
+      "id": "mexico_city",
+      "name": "Mexico City",
+      "emoji": "💀",
+      "tier": "normal",
+      "desc": "เทศกาลวันแห่งความตายไม่เคยจบ หน้ากากหัวกะโหลกบางอันไม่ใช่หน้ากาก"
+     },
+     {
+      "id": "quebec",
+      "name": "Quebec",
+      "emoji": "🍁",
+      "tier": "normal",
+      "desc": "เมืองเก่ากำแพงหิน หิมะสีแดงเหมือนน้ำเชื่อมเมเปิลไหลจากฟ้า"
+     },
+     {
+      "id": "miami",
+      "name": "Miami",
+      "emoji": "🌴",
+      "tier": "normal",
+      "desc": "แสงนีออนชมพูกลางคืนนิรันดร์ จระเข้ในบึงพูดภาษาคนได้"
+     },
+     {
+      "id": "greenland",
+      "name": "Greenland",
+      "emoji": "🧊",
+      "tier": "hard",
+      "desc": "ธารน้ำแข็งกว้างสุดตา มีร่างแช่แข็งนับพันอยู่ใต้ผิวน้ำแข็ง ลืมตาทุกร่าง"
+     },
+     {
+      "id": "haiti",
+      "name": "Haiti",
+      "emoji": "🥁",
+      "tier": "hard",
+      "desc": "เสียงกลองดังจากทุกทิศ ศพที่ฝังไว้ลุกขึ้นมาเต้นตามจังหวะ"
+     },
+     {
+      "id": "panama",
+      "name": "Panama",
+      "emoji": "🚢",
+      "tier": "hard",
+      "desc": "คลองที่ประตูน้ำเปิดสู่ความมืด เรือที่แล่นผ่านไปไม่เคยกลับออกมา"
+     },
+     {
+      "id": "north_pole",
+      "name": "North Pole",
+      "emoji": "🌌",
+      "tier": "epic",
+      "desc": "ปลายสุดของโลก แสงเหนือสีฟ้าส่องลงมาเป็นความสิ้นหวัง — ที่มั่นของ Belphegor"
+     }
+    ]
+   },
+   {
+    "id": "south_america",
+    "name": "South America",
+    "emoji": "🦜",
+    "icon": "Belphegor",
+    "door": "blue",
+    "shop": [
+     "bandage",
+     "mate_tea",
+     "fetal_flesh",
+     "bone_club",
+     "blood_apron"
+    ],
+    "cities": [
+     {
+      "id": "quito",
+      "name": "Quito",
+      "emoji": "⛰️",
+      "tier": "easy",
+      "desc": "เมืองบนเส้นศูนย์สูตรที่เงาไม่เคยตกลงพื้น ภูเขาไฟรอบเมืองหายใจเป็นจังหวะ"
+     },
+     {
+      "id": "barranquilla",
+      "name": "Barranquilla",
+      "emoji": "🎭",
+      "tier": "easy",
+      "desc": "คาร์นิวัลที่ไม่มีวันเลิก นักเต้นสวมหน้ากากที่ถอดไม่ออกแล้ว"
+     },
+     {
+      "id": "rio",
+      "name": "Rio",
+      "emoji": "🏖️",
+      "tier": "easy",
+      "desc": "รูปปั้นบนยอดเขากางแขนกว้างขึ้นทุกวัน ชายหาดเต็มไปด้วยคนนอนไม่ขยับ"
+     },
+     {
+      "id": "lima",
+      "name": "Lima",
+      "emoji": "🌫️",
+      "tier": "normal",
+      "desc": "หมอกทะเลคลุมเมืองตลอดปี ในหมอกมีเสียงเรียกชื่อคุณ"
+     },
+     {
+      "id": "la_paz",
+      "name": "La Paz",
+      "emoji": "🚡",
+      "tier": "normal",
+      "desc": "เมืองที่สูงที่สุด อากาศเบาบางจนความคิดหลุดลอยออกจากหัว กระเช้าลอยฟ้าไม่เคยจอด"
+     },
+     {
+      "id": "montevideo",
+      "name": "Montevideo",
+      "emoji": "⚓",
+      "tier": "normal",
+      "desc": "ท่าเรือเงียบงัน เรือประมงกลับมาพร้อมแหที่เต็มไปด้วยมือคน"
+     },
+     {
+      "id": "santa_cruz",
+      "name": "Santa Cruz",
+      "emoji": "🌾",
+      "tier": "hard",
+      "desc": "ทุ่งราบร้อนชื้นไร้ขอบ พืชไร่โน้มตัวตามคนที่เดินผ่าน"
+     },
+     {
+      "id": "iquique",
+      "name": "Iquique",
+      "emoji": "🏜️",
+      "tier": "hard",
+      "desc": "เมืองชายทะเลทรายที่แห้งที่สุดในโลก ฝนไม่ตกมาร้อยปี แต่พื้นดินยังชุ่มเลือด"
+     },
+     {
+      "id": "amazonas",
+      "name": "Amazonas",
+      "emoji": "🌳",
+      "tier": "epic",
+      "desc": "ป่าดิบที่กลืนทุกอย่าง แม่น้ำไหลย้อนกลับ ความสิ้นหวังหนาจนหายใจไม่ออก — ที่มั่นของ Belphegor"
+     }
+    ]
+   },
+   {
+    "id": "africa",
+    "name": "Africa",
+    "emoji": "🦁",
+    "icon": "Sophia",
+    "door": "green",
+    "shop": [
+     "myrrh_balm",
+     "alchemy_salve",
+     "wild_flour",
+     "bone_saw",
+     "sigil"
+    ],
+    "cities": [
+     {
+      "id": "cape_town",
+      "name": "Cape Town",
+      "emoji": "🏔️",
+      "tier": "easy",
+      "desc": "ภูเขาโต๊ะถูกเมฆเนื้อคลุมไว้ ลมแหลมพัดพากลิ่นคาวจากทะเล"
+     },
+     {
+      "id": "cairo",
+      "name": "Cairo",
+      "emoji": "🐪",
+      "tier": "easy",
+      "desc": "พีระมิดงอกเพิ่มกลางเมืองทุกคืน ตลาดขายเครื่องรางที่ยังเต้นอยู่"
+     },
+     {
+      "id": "alexandria",
+      "name": "Alexandria",
+      "emoji": "📜",
+      "tier": "easy",
+      "desc": "หอสมุดที่ไฟไม่เคยดับ หนังสือเขียนประวัติของคนที่เพิ่งเดินเข้ามา"
+     },
+     {
+      "id": "khartoum",
+      "name": "Khartoum",
+      "emoji": "🌅",
+      "tier": "normal",
+      "desc": "จุดที่แม่น้ำไนล์สองสายบรรจบ สายหนึ่งขาว อีกสายแดงฉาน"
+     },
+     {
+      "id": "burundi",
+      "name": "Burundi",
+      "emoji": "🥁",
+      "tier": "normal",
+      "desc": "เนินเขาเขียวขจีที่เสียงกลองดังจากใต้ดิน ต้นไม้ออกผลเป็นดวงตา"
+     },
+     {
+      "id": "tanganyika",
+      "name": "Tanganyika",
+      "emoji": "🏞️",
+      "tier": "normal",
+      "desc": "ทะเลสาบลึกไม่มีก้นบึ้ง ปลาที่จับได้มีฟันมนุษย์"
+     },
+     {
+      "id": "rwanda",
+      "name": "Rwanda",
+      "emoji": "🦍",
+      "tier": "hard",
+      "desc": "ภูเขาพันลูกในหมอก ฝูงกอริลลาเฝ้ามองด้วยดวงตาที่มากเกินไป"
+     },
+     {
+      "id": "kano",
+      "name": "Kano",
+      "emoji": "🧱",
+      "tier": "hard",
+      "desc": "กำแพงดินโบราณล้อมเมือง บ่อย้อมผ้าเดือดเป็นสีของเนื้อสด"
+     },
+     {
+      "id": "sahara",
+      "name": "Sahara",
+      "emoji": "☀️",
+      "tier": "epic",
+      "desc": "ทะเลทรายไร้ที่สิ้นสุด ทรายทุกเม็ดคือเนื้อที่งอกใหม่ไม่หยุด — ที่มั่นของ Sophia"
+     }
+    ]
+   },
+   {
+    "id": "australia",
+    "name": "Australia",
+    "emoji": "🦘",
+    "icon": "Hastur",
+    "door": "yellow",
+    "shop": [
+     "eucalyptus_oil",
+     "alchemy_salve",
+     "fresh_cut",
+     "rusted_armor"
+    ],
+    "cities": [
+     {
+      "id": "australia",
+      "name": "Australia",
+      "emoji": "🦘",
+      "tier": "epic",
+      "desc": "ทวีปทั้งทวีปที่แผ่นดินแดงฉานเงียบสนิท สัตว์ทุกตัวจ้องมองจากความมืด ความกลัวกลายเป็นอากาศ — ที่มั่นของ Hastur"
+     }
+    ]
+   },
+   {
+    "id": "antarctica",
+    "name": "Antarctica",
+    "emoji": "🐧",
+    "icon": "Wendigo",
+    "door": "white",
+    "shop": [
+     "whale_blubber",
+     "fresh_cut",
+     "alchemy_salve",
+     "rusted_armor",
+     "old_shotgun"
+    ],
+    "cities": [
+     {
+      "id": "antarctica",
+      "name": "Antarctica",
+      "emoji": "🧊",
+      "tier": "epic",
+      "desc": "ความหนาวที่ไม่ได้ฆ่า แต่ทำให้ทรมานไม่สิ้นสุด ใต้น้ำแข็งมีบางอย่างหิวโหย — ที่มั่นของ Wendigo"
+     }
+    ]
+   }
+  ]
+ },
+ "icons": [
+  {
+   "id": "beelzebub",
+   "name": "Beelzebub",
+   "title": "ตัวตนแห่งตัณหาที่ไม่มีวันพอ (Gluttony)",
+   "emoji": "🍖",
+   "door": "orange",
+   "doorName": "ประตูสีส้ม",
+   "concept": "\"ความหิวคือศาสนา\"",
+   "blessing": "แรงฟื้นเร็ว x2 · กินเนื้อแล้วได้แรงเพิ่ม",
+   "repercussion": "ความเป็นมนุษย์ลดเร็วขึ้น 50% (ผิวลอก เหลือแต่เนื้อแดง)"
+  },
+  {
+   "id": "hastur",
+   "name": "Hastur",
+   "title": "ตัวตนแห่งความกลัว (Fear)",
+   "emoji": "👁️",
+   "door": "yellow",
+   "doorName": "ประตูสีเหลือง",
+   "concept": "\"ความกลัวคือสัญชาตญาณที่ทำให้รอด\"",
+   "blessing": "ว่องไว +2 · มองเห็นสิ่งที่ซ่อนอยู่ (เห็นคำใบ้ทางเลือก)",
+   "repercussion": "สติแตกง่าย เสียสติมากขึ้น 50% · ภาพหลอนสะสม"
+  },
+  {
+   "id": "loki",
+   "name": "Loki",
+   "title": "ตัวตนแห่งภาพลวง (Distortion)",
+   "emoji": "🎭",
+   "door": "gray",
+   "doorName": "ประตูสีเทา",
+   "concept": "\"ความจริงเป็นเพียงก้อนเนื้อที่ปั้นใหม่ได้\"",
+   "blessing": "บิดกฎฟิสิกส์ — ทอยพลาดมีโอกาส 35% ทอยใหม่",
+   "repercussion": "ทุกครั้งที่บิดกฎ ตัวตนพร่าเลือน (ความเป็นมนุษย์ -2)"
+  },
+  {
+   "id": "belphegor",
+   "name": "Belphegor",
+   "title": "ตัวตนแห่งความสิ้นหวัง (Despair)",
+   "emoji": "⛓️",
+   "door": "blue",
+   "doorName": "ประตูสีน้ำเงิน",
+   "concept": "\"ความทรมานคือการชำระล้าง\"",
+   "blessing": "ยิ่งใกล้ตายยิ่งเก่ง — เนื้อกายต่ำกว่า 30% ทุกค่าเช็ค +4",
+   "repercussion": "ตายทุกครั้งพิการถาวร (เนื้อกายสูงสุด -3)"
+  },
+  {
+   "id": "sophia",
+   "name": "Sophia",
+   "title": "ตัวตนผู้ให้กำเนิด (Birth / The Progenitor)",
+   "emoji": "🥚",
+   "door": "green",
+   "doorName": "ประตูสีเขียว",
+   "concept": "\"ชีวิตคือการขยายชีวมวล\"",
+   "blessing": "ฟื้นฟูเนื้อกายเองตลอด · ตายแล้วถูกให้กำเนิดใหม่โดยไม่เสียเนื้อสด",
+   "repercussion": "เนื้องอกโตไม่หยุด — ทุกเลเวลงอกอวัยวะใหม่และเสียความเป็นมนุษย์"
+  },
+  {
+   "id": "thanatos",
+   "name": "Thanatos",
+   "title": "ตัวตนแห่งการเน่าสลาย (Decay / The Destroyer)",
+   "emoji": "💀",
+   "door": "purple",
+   "doorName": "ประตูสีม่วง",
+   "concept": "\"ไม่มีสิ่งใดคงอยู่\"",
+   "blessing": "ต้านทาน Miasma สมบูรณ์ · คำสาปเน่า พละ +2",
+   "repercussion": "ร่างกายไม่ฟื้นฟูเอง — พักไม่ได้เนื้อกายคืน ต้องใช้ยา/เล่นแร่แปรธาตุ"
+  },
+  {
+   "id": "wendigo",
+   "name": "Wendigo",
+   "title": "ตัวตนแห่งความอดอยาก (Destitution)",
+   "emoji": "🦌",
+   "door": "white",
+   "doorName": "ประตูสีขาวซีด",
+   "concept": "\"ความทุกข์คือสัจธรรม\"",
+   "blessing": "ทนทานสุดขีด (ลดดาเมจ 2) · จิตมั่นคง เสียสติครึ่งเดียว · ใช้ของกินคุ้ม x1.5",
+   "repercussion": "ทรมานกายใจตลอดเวลา — แรงสูงสุด -2 · พักได้ผลครึ่งเดียว"
+  }
+ ],
+ "roles": [
+  {
+   "id": "maid",
+   "name": "Maid / Butcher แห่ง M.A.I.D.S",
+   "emoji": "🔪",
+   "short": "ผู้จัดสรรเนื้อ แล่ไร้ที่ติ แยกเกรดเนื้อได้ทันที",
+   "perks": [
+    "แยกแยะเกรดเนื้อ: ขายของได้ราคา +50%",
+    "คำปฏิญาณอดกลั้น: กินเนื้อเสียความเป็นมนุษย์ครึ่งเดียว",
+    "มียศ Grade D → A ตามเลเวล"
+   ],
+   "stats": {
+    "str": 2,
+    "agi": 2,
+    "int": 3
+   },
+   "maxHp": 32,
+   "maxStamina": 11
+  },
+  {
+   "id": "hound",
+   "name": "Hound (นักล่าเนื้อ)",
+   "emoji": "🐺",
+   "short": "นักล่าบ้าบิ่นผู้แลกความเป็นมนุษย์กับพลัง",
+   "perks": [
+    "พละ +1 ทุกเช็คนอก Rouge Land",
+    "ล่าเก่ง: ได้เนื้อสดจากการล่า +25%"
+   ],
+   "stats": {
+    "str": 4,
+    "agi": 2,
+    "int": 0
+   },
+   "maxHp": 40,
+   "maxStamina": 12
+  },
+  {
+   "id": "bar",
+   "name": "Bar Staff / Bar Owner",
+   "emoji": "🍷",
+   "short": "ผู้ถักทอเศษเนื้อ ปรุงเนื้อเน่าให้กินได้ บรรเทาคำสาป",
+   "perks": [
+    "ปรุงอาหาร /cook ไม่มีพลาด และมีโอกาสได้เพิ่ม",
+    "Closing Shift: หมดสติ 1 ชั่วโมงต่อวัน (เวลาเฉพาะตัว)"
+   ],
+   "stats": {
+    "str": 1,
+    "agi": 2,
+    "int": 3
+   },
+   "maxHp": 30,
+   "maxStamina": 11
+  },
+  {
+   "id": "patron",
+   "name": "Patron / Flesh Remnant",
+   "emoji": "🎩",
+   "short": "อดีตมนุษย์ร่างเนื้อผู้มั่งคั่ง ลูกค้าที่ควรค่าแก่การรับใช้",
+   "perks": [
+    "มั่งคั่ง: เริ่มด้วยเนื้อสด 120",
+    "ได้รับการปรนนิบัติ: ซื้อของถูกลง 25%"
+   ],
+   "stats": {
+    "str": 2,
+    "agi": 1,
+    "int": 2
+   },
+   "maxHp": 38,
+   "maxStamina": 10
+  },
+  {
+   "id": "outsider",
+   "name": "Outsider (คนหลงมิติ)",
+   "emoji": "📱",
+   "short": "คนจากโลกจริงที่ตกลงรอยแยกมิติ ยังเป็นมนุษย์เต็มตัว",
+   "perks": [
+    "ความเป็นมนุษย์ 100 — แต่ยังมองไม่เห็นคนพายเรือที่ Cypress",
+    "พกของวินเทจจากโลกจริง (Patron ชอบมาก)",
+    "ต้องหาประตูแดงและสละความเป็นมนุษย์เพื่อเข้า Rouge Land"
+   ],
+   "stats": {
+    "str": 1,
+    "agi": 3,
+    "int": 2
+   },
+   "maxHp": 28,
+   "maxStamina": 12
+  },
+  {
+   "id": "survivor",
+   "name": "Rouge Land Survivor",
+   "emoji": "🧭",
+   "short": "อดีตเศษเดนเนื้อที่หนีออกมา ผู้นำทางของนักล่ามือใหม่",
+   "perks": [
+    "ผู้นำทาง: เห็นคำใบ้ทุกทางเลือก",
+    "Miasma ทำร้ายน้อยลงครึ่งหนึ่ง"
+   ],
+   "stats": {
+    "str": 2,
+    "agi": 2,
+    "int": 2
+   },
+   "maxHp": 34,
+   "maxStamina": 12
+  }
+ ],
+ "items": [
+  {
+   "id": "fetal_flesh",
+   "name": "เนื้อทารกผิดรูป",
+   "emoji": "🍼",
+   "type": "consumable",
+   "isFlesh": true,
+   "value": 8,
+   "heal": 12,
+   "humanity": -3,
+   "description": "เนื้อจากรกในผนังดันเจียนเขียว จืดแต่อยู่ท้อง (+12 เนื้อกาย, -3 ความเป็นมนุษย์)"
+  },
+  {
+   "id": "fresh_cut",
+   "name": "เนื้อสดเกรดพรีเมียม",
+   "emoji": "🥩",
+   "type": "consumable",
+   "isFlesh": true,
+   "value": 30,
+   "heal": 25,
+   "stamina": 3,
+   "humanity": -6,
+   "description": "หอมหวานจนคลั่ง (+25 เนื้อกาย, +3 แรง, -6 ความเป็นมนุษย์)"
+  },
+  {
+   "id": "rotten_flesh",
+   "name": "เนื้อเน่า",
+   "emoji": "🦠",
+   "type": "material",
+   "value": 1,
+   "description": "ต้นกำเนิด Miasma อย่ากินดิบ — เอาไปให้บาร์ปรุงด้วย /cook"
+  },
+  {
+   "id": "blood_wine",
+   "name": "ไวน์โลหิต",
+   "emoji": "🍷",
+   "type": "consumable",
+   "value": 10,
+   "stamina": 3,
+   "sanity": 4,
+   "description": "หมักจากเลือด ใช้ปรุงอาหารได้ (+3 แรง, +4 สติ)"
+  },
+  {
+   "id": "raw_meat",
+   "name": "เนื้อดิบ",
+   "emoji": "🥓",
+   "type": "material",
+   "value": 5,
+   "description": "เนื้อจากสิ่งมีชีวิตใน Old Realm — ไม่ใช่เนื้อสด ปนเปื้อนจนกินดิบไม่ได้ ขายหรือเอาไปย่างที่บาร์"
+  },
+  {
+   "id": "fiend_fang",
+   "name": "เขี้ยว Fiend",
+   "emoji": "🦷",
+   "type": "material",
+   "value": 18,
+   "description": "เขี้ยวจากสัตว์ประหลาดที่เคยเป็นมนุษย์ ช่างทำอาวุธในเกาะรับซื้อ"
+  },
+  {
+   "id": "eye_fruit",
+   "name": "ผลดวงตา",
+   "emoji": "👁️",
+   "type": "material",
+   "value": 6,
+   "description": "ขึ้นตามโขดหินที่มีกองเนื้อเยอะ ๆ บางทีก็กระพริบ"
+  },
+  {
+   "id": "wild_flour",
+   "name": "แป้งต้นฟีตัส",
+   "emoji": "🌾",
+   "type": "material",
+   "value": 4,
+   "description": "แป้งจากธัญพืชป่าและต้นฟีตัสตามทุ่งร้าง"
+  },
+  {
+   "id": "instant_noodle",
+   "name": "บะหมี่กึ่งสำเร็จรูป",
+   "emoji": "🍜",
+   "type": "consumable",
+   "value": 12,
+   "stamina": 4,
+   "sanity": 10,
+   "description": "จากดันเจียนเทา รสชาติของบ้าน... (+4 แรง, +10 สติ)"
+  },
+  {
+   "id": "bourguignon",
+   "name": "มีตบูร์กีญง",
+   "emoji": "🍲",
+   "type": "consumable",
+   "value": 40,
+   "heal": 15,
+   "sanity": 25,
+   "humanity": 5,
+   "description": "เนื้อตุ๋นไวน์โลหิต นุ่มจนน้ำในเนื้อระเบิดในปาก (+15 เนื้อกาย, +25 สติ, +5 ความเป็นมนุษย์)"
+  },
+  {
+   "id": "taragege",
+   "name": "ทารกเกะ",
+   "emoji": "🍗",
+   "type": "consumable",
+   "value": 30,
+   "heal": 20,
+   "stamina": 4,
+   "humanity": 3,
+   "description": "คาราเกะเนื้อทารกผิดรูป ทอดกรอบ (+20 เนื้อกาย, +4 แรง, +3 ความเป็นมนุษย์)"
+  },
+  {
+   "id": "remnant_stew",
+   "name": "สตูว์ถักทอเศษเนื้อ",
+   "emoji": "🥘",
+   "type": "consumable",
+   "value": 20,
+   "heal": 8,
+   "sanity": 12,
+   "humanity": 4,
+   "description": "สูตรประจำบาร์ บรรเทาผลกรรมของ Icon (+8 เนื้อกาย, +12 สติ, +4 ความเป็นมนุษย์)"
+  },
+  {
+   "id": "grilled_meat",
+   "name": "เนื้อดิบย่างถ่าน",
+   "emoji": "🍖",
+   "type": "consumable",
+   "value": 16,
+   "heal": 14,
+   "stamina": 2,
+   "humanity": -1,
+   "description": "เนื้อสัตว์จาก Old Realm ย่างจนไหม้ ไม่ใช่เนื้อสด แต่กินได้ (+14 เนื้อกาย, +2 แรง, -1 ความเป็นมนุษย์)"
+  },
+  {
+   "id": "absinthe",
+   "name": "แอบซินธ์สีเขียว",
+   "emoji": "🍸",
+   "type": "consumable",
+   "value": 14,
+   "stamina": 1,
+   "sanity": 12,
+   "description": "เหล้ายุโรปที่ทำให้เห็นนางฟ้าสีเขียว... หรืออะไรที่คล้ายกัน (+1 แรง, +12 สติ)"
+  },
+  {
+   "id": "spice_jerky",
+   "name": "เนื้อแห้งเครื่องเทศ",
+   "emoji": "🌶️",
+   "type": "consumable",
+   "value": 12,
+   "heal": 10,
+   "stamina": 2,
+   "description": "เนื้อดิบหมักพริกจนกลบกลิ่น ไม่ใช่เนื้อสด (+10 เนื้อกาย, +2 แรง)"
+  },
+  {
+   "id": "canned_beans",
+   "name": "ถั่วกระป๋อง",
+   "emoji": "🥫",
+   "type": "consumable",
+   "value": 10,
+   "heal": 8,
+   "sanity": 6,
+   "description": "ฉลากยังเป็นยี่ห้อจากโลกจริง รสชาติของบ้าน (+8 เนื้อกาย, +6 สติ)"
+  },
+  {
+   "id": "mate_tea",
+   "name": "ชามาเต้",
+   "emoji": "🧉",
+   "type": "consumable",
+   "value": 10,
+   "stamina": 4,
+   "sanity": 3,
+   "description": "ดูดผ่านหลอดเงิน ขมจนตาสว่าง (+4 แรง, +3 สติ)"
+  },
+  {
+   "id": "myrrh_balm",
+   "name": "ขี้ผึ้งมดยอบ",
+   "emoji": "🏺",
+   "type": "consumable",
+   "value": 18,
+   "heal": 16,
+   "humanity": 1,
+   "description": "ยาโบราณของคนดองศพ ทาแล้วแผลหายเร็ว (+16 เนื้อกาย, +1 ความเป็นมนุษย์)"
+  },
+  {
+   "id": "eucalyptus_oil",
+   "name": "น้ำมันยูคาลิปตัส",
+   "emoji": "🌿",
+   "type": "consumable",
+   "value": 16,
+   "sanity": 15,
+   "description": "กลิ่นแรงพอจะไล่เสียงกระซิบของ Hastur ไปได้สักพัก (+15 สติ)"
+  },
+  {
+   "id": "whale_blubber",
+   "name": "ไขมันวาฬ",
+   "emoji": "🐋",
+   "type": "consumable",
+   "value": 20,
+   "heal": 18,
+   "stamina": 3,
+   "description": "ไขมันข้นจากวาฬในน้ำแข็ง กันหนาวได้ดีกว่าเสื้อผ้า (+18 เนื้อกาย, +3 แรง)"
+  },
+  {
+   "id": "bandage",
+   "name": "ผ้าพันแผลเปื้อนเลือด",
+   "emoji": "🩹",
+   "type": "consumable",
+   "value": 8,
+   "heal": 10,
+   "description": "ห้ามเลือดได้ (+10 เนื้อกาย)"
+  },
+  {
+   "id": "alchemy_salve",
+   "name": "ยาเล่นแร่แปรธาตุ",
+   "emoji": "⚗️",
+   "type": "consumable",
+   "value": 25,
+   "heal": 22,
+   "description": "ยาที่สาวก Thanatos พึ่งพา (+22 เนื้อกาย)"
+  },
+  {
+   "id": "pipe",
+   "name": "ท่อเหล็ก",
+   "emoji": "🔧",
+   "type": "weapon",
+   "value": 4,
+   "atk": 1,
+   "description": "+1 พละ"
+  },
+  {
+   "id": "walking_cane",
+   "name": "ไม้เท้าหัวกะโหลก",
+   "emoji": "🦯",
+   "type": "weapon",
+   "value": 15,
+   "atk": 1,
+   "description": "+1 พละ ดูดีสำหรับคนมีฐานะ"
+  },
+  {
+   "id": "kris",
+   "name": "กริช",
+   "emoji": "🗡️",
+   "type": "weapon",
+   "value": 18,
+   "atk": 2,
+   "description": "+2 พละ แบบเดียวกับของบาทหลวงดาเมียโน"
+  },
+  {
+   "id": "carving_knife",
+   "name": "มีดแล่เนื้อประจำตัว",
+   "emoji": "🔪",
+   "type": "weapon",
+   "value": 25,
+   "atk": 2,
+   "description": "+2 พละ คมพอจะแล่โดยไม่เหลือเศษ"
+  },
+  {
+   "id": "bone_club",
+   "name": "กระบองกระดูกปีศาจ",
+   "emoji": "🦴",
+   "type": "weapon",
+   "value": 20,
+   "atk": 2,
+   "description": "+2 พละ"
+  },
+  {
+   "id": "bone_saw",
+   "name": "เลื่อยกระดูก",
+   "emoji": "🪚",
+   "type": "weapon",
+   "value": 70,
+   "atk": 4,
+   "description": "+4 พละ"
+  },
+  {
+   "id": "old_shotgun",
+   "name": "ลูกซองยุค 1920",
+   "emoji": "🔫",
+   "type": "weapon",
+   "value": 120,
+   "atk": 5,
+   "description": "+5 พละ ของวินเทจที่ยังยิงได้"
+  },
+  {
+   "id": "blood_apron",
+   "name": "ผ้ากันเปื้อนคราบเลือด",
+   "emoji": "🦺",
+   "type": "armor",
+   "value": 12,
+   "def": 1,
+   "description": "ลดดาเมจ 1"
+  },
+  {
+   "id": "leather_coat",
+   "name": "โค้ทหนังเก่า",
+   "emoji": "🧥",
+   "type": "armor",
+   "value": 25,
+   "def": 2,
+   "description": "ลดดาเมจ 2"
+  },
+  {
+   "id": "rusted_armor",
+   "name": "เกราะอัศวินขึ้นสนิม",
+   "emoji": "🛡️",
+   "type": "armor",
+   "value": 90,
+   "def": 4,
+   "description": "ลดดาเมจ 4 ยังมีคราบของเจ้าของเดิม"
+  },
+  {
+   "id": "lighter",
+   "name": "ไฟแช็ก",
+   "emoji": "🔥",
+   "type": "vintage",
+   "value": 35,
+   "description": "แสงสว่างที่ช่วยชีวิตในดันเจียนเหลือง"
+  },
+  {
+   "id": "dead_phone",
+   "name": "มือถือไร้สัญญาณ",
+   "emoji": "📱",
+   "type": "vintage",
+   "value": 60,
+   "description": "ใช้ไม่ได้ แต่ Patron ยอมจ่ายแพง"
+  },
+  {
+   "id": "family_photo",
+   "name": "รูปถ่ายครอบครัว",
+   "emoji": "🖼️",
+   "type": "vintage",
+   "value": 45,
+   "description": "หน้าคนในรูปเริ่มเลือนลาง"
+  },
+  {
+   "id": "pocket_watch",
+   "name": "นาฬิกาพก",
+   "emoji": "⌚",
+   "type": "vintage",
+   "value": 55,
+   "description": "เข็มเดินถอยหลัง"
+  },
+  {
+   "id": "vinyl_record",
+   "name": "แผ่นเสียงไวนิล",
+   "emoji": "💿",
+   "type": "vintage",
+   "value": 70,
+   "description": "เพลงที่ไม่มีใครในเกาะจำได้"
+  },
+  {
+   "id": "bone",
+   "name": "กระดูก",
+   "emoji": "🦴",
+   "type": "material",
+   "value": 3,
+   "description": "ไม่ใช่ของคุณ... หวังว่านะ"
+  },
+  {
+   "id": "sophia_rite",
+   "name": "พิธีชุบชีวิตของ Sophia",
+   "emoji": "🥚",
+   "type": "material",
+   "value": 0,
+   "description": "ไข่เนื้อสีชมพูที่ยังเต้นตุบ จากศาลของ Sophia — ใช้ /revive นำเพื่อนที่กลายเป็น Fiend กลับมา"
+  },
+  {
+   "id": "sigil",
+   "name": "ตราสัญลักษณ์ Icon",
+   "emoji": "🔯",
+   "type": "material",
+   "value": 50,
+   "description": "ใช้ในพิธีติดต่อ Icon"
+  }
+ ],
+ "bestiary": [
+  {
+   "id": "starved_remnant",
+   "name": "เศษเดนเนื้อหิวโหย",
+   "emoji": "🧟",
+   "desc": "ผู้หลงมิติที่ทนความหิวไม่ไหว กัดกินแม้แต่เนื้อตัวเอง",
+   "hp": 8,
+   "ac": 9,
+   "dmg": [
+    2,
+    4
+   ],
+   "hit": 0.55,
+   "xp": 6,
+   "drops": [
+    {
+     "item": "raw_meat",
+     "chance": 0.9,
+     "qty": [
+      1,
+      2
+     ]
+    },
+    {
+     "item": "bone",
+     "chance": 0.3
+    },
+    {
+     "item": "pipe",
+     "chance": 0.05
+    }
+   ]
+  },
+  {
+   "id": "rot_crawler",
+   "name": "ซากคลานเน่า",
+   "emoji": "🦠",
+   "desc": "ก้อนเนื้อเน่าคลานได้ ทิ้งรอย Miasma ไว้ตามทาง",
+   "hp": 10,
+   "ac": 8,
+   "dmg": [
+    1,
+    3
+   ],
+   "hit": 0.5,
+   "xp": 7,
+   "miasma": 3,
+   "drops": [
+    {
+     "item": "rotten_flesh",
+     "chance": 0.8,
+     "qty": [
+      1,
+      2
+     ]
+    },
+    {
+     "item": "raw_meat",
+     "chance": 0.3
+    }
+   ]
+  },
+  {
+   "id": "stretched_shade",
+   "name": "เงายืดยาว",
+   "emoji": "👤",
+   "desc": "เงาของคนจริงที่ถูกยืดจนแขนยาวถึงพื้น มันไม่ควรขยับได้",
+   "hp": 7,
+   "ac": 12,
+   "dmg": [
+    2,
+    3
+   ],
+   "hit": 0.6,
+   "xp": 8,
+   "sanity": 3,
+   "drops": [
+    {
+     "item": "eye_fruit",
+     "chance": 0.4
+    },
+    {
+     "item": "raw_meat",
+     "chance": 0.4
+    },
+    {
+     "item": "pocket_watch",
+     "chance": 0.06
+    }
+   ]
+  },
+  {
+   "id": "maw_hound",
+   "name": "หมาร้อยปาก",
+   "emoji": "🐕",
+   "desc": "สุนัขที่ผิวหนังเต็มไปด้วยปาก — ผลงานของ Beelzebub",
+   "hp": 12,
+   "ac": 10,
+   "dmg": [
+    3,
+    5
+   ],
+   "hit": 0.6,
+   "xp": 10,
+   "minLevel": 2,
+   "drops": [
+    {
+     "item": "raw_meat",
+     "chance": 1,
+     "qty": [
+      2,
+      3
+     ]
+    },
+    {
+     "item": "bone",
+     "chance": 0.5
+    },
+    {
+     "item": "fiend_fang",
+     "chance": 0.15
+    }
+   ]
+  },
+  {
+   "id": "heretic",
+   "name": "สาวกนอกรีต",
+   "emoji": "🕯️",
+   "desc": "ผู้บูชาสิ่งอื่นนอกจาก 7 Icon ท่องบทสวดผิดเพี้ยนไม่หยุด",
+   "hp": 11,
+   "ac": 11,
+   "dmg": [
+    2,
+    5
+   ],
+   "hit": 0.55,
+   "xp": 12,
+   "minLevel": 2,
+   "sanity": 2,
+   "drops": [
+    {
+     "item": "raw_meat",
+     "chance": 0.6
+    },
+    {
+     "item": "sigil",
+     "chance": 0.12
+    },
+    {
+     "item": "bandage",
+     "chance": 0.3
+    },
+    {
+     "item": "kris",
+     "chance": 0.05
+    }
+   ]
+  },
+  {
+   "id": "spore_husk",
+   "name": "เปลือกสปอร์แห้ง",
+   "emoji": "🍄",
+   "desc": "Fiend ของ Thanatos ร่างแห้งกรังพ่นสปอร์ทุกครั้งที่ขยับ",
+   "hp": 14,
+   "ac": 10,
+   "dmg": [
+    2,
+    4
+   ],
+   "hit": 0.5,
+   "xp": 14,
+   "minLevel": 3,
+   "miasma": 5,
+   "drops": [
+    {
+     "item": "rotten_flesh",
+     "chance": 0.7,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "alchemy_salve",
+     "chance": 0.15
+    },
+    {
+     "item": "fiend_fang",
+     "chance": 0.2
+    }
+   ]
+  },
+  {
+   "id": "shifting_fiend",
+   "name": "Fiend เรขาคณิต",
+   "emoji": "🔷",
+   "desc": "Fiend ของ Loki รูปร่างหักมุมเปลี่ยนไปทุกครั้งที่กะพริบตา",
+   "hp": 18,
+   "ac": 13,
+   "dmg": [
+    3,
+    6
+   ],
+   "hit": 0.6,
+   "xp": 22,
+   "minLevel": 5,
+   "sanity": 4,
+   "drops": [
+    {
+     "item": "raw_meat",
+     "chance": 0.8,
+     "qty": [
+      2,
+      4
+     ]
+    },
+    {
+     "item": "fiend_fang",
+     "chance": 0.4
+    },
+    {
+     "item": "sigil",
+     "chance": 0.2
+    },
+    {
+     "item": "rusted_armor",
+     "chance": 0.04
+    }
+   ]
+  }
+ ]
+}

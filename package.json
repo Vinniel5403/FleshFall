@@ -12,7 +12,8 @@
     "web": "tsx watch src/web/standalone.ts",
     "api": "tsx watch src/web/standalone.ts",
     "web:dev": "npm run dev -w web",
-    "web:build": "npm run build -w web"
+    "web:build": "npm run build -w web",
+    "web:data": "tsx src/web/export-data.ts"
   },
   "engines": {
     "node": ">=20"

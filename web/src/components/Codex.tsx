@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useApi } from "@/lib/api";
+import { useGame } from "@/lib/game";
 import { doorVar } from "@/lib/md";
 import type { Icon, Item, Monster, Role } from "@/lib/types";
 
@@ -10,7 +10,7 @@ type Tab = keyof typeof TABS;
 const ITEM_TYPES = { all: "ทั้งหมด", consumable: "🍽️ ของกิน/ยา", weapon: "🗡️ อาวุธ", armor: "🛡️ เกราะ", material: "🧱 วัตถุดิบ", vintage: "📻 ของวินเทจ" } as const;
 
 function Icons() {
-  const { data } = useApi<Icon[]>("icons");
+  const { data } = useGame("icons");
   return (
     <>
       <p className="lead">มีเพียงเจ็ดเท่านั้น สิ่งอื่นนอกจากนี้คือนอกรีต — พรทุกอย่างมีผลกรรม</p>
@@ -35,7 +35,7 @@ function Icons() {
 }
 
 function Roles() {
-  const { data } = useApi<Role[]>("roles");
+  const { data } = useGame("roles");
   return (
     <div className="grid roles">
       {data?.map((r) => (
@@ -63,7 +63,7 @@ function Roles() {
 }
 
 function Bestiary() {
-  const { data } = useApi<Monster[]>("bestiary");
+  const { data } = useGame("bestiary");
   return (
     <div className="grid beasts">
       {data?.map((m) => (
@@ -87,7 +87,7 @@ function Bestiary() {
 }
 
 function Items() {
-  const { data } = useApi<Item[]>("items");
+  const { data } = useGame("items");
   const [type, setType] = useState<keyof typeof ITEM_TYPES>("all");
   return (
     <>

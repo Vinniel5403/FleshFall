@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { IconGallery } from "@/components/IconGallery";
-import { LiveStats } from "@/components/LiveStats";
 import { ART } from "@/lib/art";
 import { backgroundSlides } from "@/lib/backgrounds";
 
@@ -40,7 +39,6 @@ export default function Home() {
   return (
     <>
       <HeroCarousel slides={backgroundSlides()} />
-      <LiveStats />
 
       {/* INTRO + CW */}
       <section className="intro">

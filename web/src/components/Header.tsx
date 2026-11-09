@@ -8,7 +8,6 @@ import { useEffect, useState } from "react";
 const NAV_ITEMS = [
   { href: "/world", label: "แผนที่" },
   { href: "/codex", label: "คัมภีร์" },
-  { href: "/leaderboard", label: "ทำเนียบ" },
 ];
 const CTA = { href: "/create", label: "✦ สร้างตัวละคร" };
 
