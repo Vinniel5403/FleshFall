@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
-import { Cinzel, Noto_Serif_Thai, Sarabun } from "next/font/google";
+import { Cinzel, Kanit } from "next/font/google";
 import { Header } from "@/components/Header";
 import "./globals.css";
+import "./kv.css";
+import "./nav.css";
+import "./landing.css";
+import "./icons.css";
 
 const cinzel = Cinzel({ variable: "--font-cinzel", subsets: ["latin"], weight: ["600", "800"] });
-const serif = Noto_Serif_Thai({ variable: "--font-serif", subsets: ["thai", "latin"], weight: ["400", "600", "800"] });
-const sarabun = Sarabun({ variable: "--font-sarabun", subsets: ["thai", "latin"], weight: ["300", "400", "600"] });
+const kanit = Kanit({ variable: "--font-kanit", subsets: ["thai", "latin"], weight: ["300", "400", "500", "600", "700", "800"] });
 
 export const metadata: Metadata = {
   title: { default: "FleshFall", template: "%s · FleshFall" },
@@ -14,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="th" className={`${cinzel.variable} ${serif.variable} ${sarabun.variable}`}>
+    <html lang="th" className={`${cinzel.variable} ${kanit.variable}`}>
       <body>
         <div className="grain" aria-hidden="true" />
         <Header />
