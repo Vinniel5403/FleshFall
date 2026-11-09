@@ -78,7 +78,7 @@ export default function Home() {
           </ul>
         </Reveal>
         <Reveal from="right" delay={0.15} className="lore-art" aria-hidden="true">
-          <Image src={ART.cleaver.src} alt="" fill sizes="(max-width: 900px) 90vw, 40vw" style={{ objectFit: "contain", objectPosition: "50% 100%" }} />
+          <Image src={ART.haloMaid.src} alt="" fill sizes="(max-width: 900px) 90vw, 40vw" style={{ objectFit: "contain", objectPosition: "50% 100%" }} />
         </Reveal>
       </section>
 

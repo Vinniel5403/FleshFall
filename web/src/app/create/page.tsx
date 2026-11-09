@@ -22,8 +22,8 @@ const DESIGN = [
     body: "ผู้รักษาเขตปลอดภัย เจ้าของบาร์มี “สภาวะไม่แน่นอน” — Closing Shift หมดสติชั่วคราวช่วงเวลาเดิม ๆ ของวัน",
   },
   {
-    title: "ผู้หลงมิติ / ผู้รอดจาก Meat Land",
-    body: "ผู้หลงมิติพกของจากโลกจริงติดตัว ผู้รอดมีร่องรอย “งอก” หรือ “ผุพัง” เช่นแขนเนื้อกึ่งพืช หรือดวงตาที่มองเห็นความกลัว",
+    title: "ผู้หลงมิติ",
+    body: "หลงมาจากโลกจริง พกของจากโลกจริงติดตัว — ไฟแช็ก มือถือไร้สัญญาณ รูปถ่าย — และค่อย ๆ เสียความเป็นมนุษย์ระหว่างทาง",
   },
 ];
 
@@ -43,7 +43,7 @@ export default function CreatePage() {
               </div>
             </header>
             <div className="guide-grid">
-              {GAME.roles.map((r) => (
+              {GAME.roles.filter((r) => r.id !== "survivor").map((r) => (
                 <article key={r.id} className="guide-card">
                   <h4>
                     {r.emoji} {r.name}
