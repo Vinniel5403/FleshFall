@@ -116,7 +116,7 @@ export default function CreatePage() {
               ))}
             </div>
             <div className="cw" style={{ marginTop: 20 }}>
-              <span className="cw-age">18+</span>
+              <span className="cw-age">20+</span>
               <span>แท็กผลงาน: #FleshFall_ARG #FF_ARG #เมดเนื้อ · CW: gore, violence</span>
             </div>
           </div>

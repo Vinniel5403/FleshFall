@@ -44,7 +44,7 @@ export default function Home() {
           ผู้เล่นต้องเอาชีวิตรอดในโลกวังวนสุดวิปลาส
         </p>
         <div className="cw">
-          <span className="cw-age">18+</span>
+          <span className="cw-age">20+</span>
           <span>CW: gore · disturbing images · violence · religion</span>
         </div>
         <div className="tags">
@@ -79,7 +79,7 @@ export default function Home() {
           </ul>
         </Reveal>
         <Reveal from="right" delay={0.15} className="lore-art" aria-hidden="true">
-          <Image src={ART.haloMaid.src} alt="" fill sizes="(max-width: 900px) 90vw, 40vw" style={{ objectFit: "contain", objectPosition: "50% 100%" }} />
+          <Image src={ART.blanc.src} alt="" fill sizes="(max-width: 900px) 90vw, 40vw" style={{ objectFit: "contain", objectPosition: "50% 100%" }} />
         </Reveal>
       </section>
 

@@ -3,8 +3,9 @@ import { SectionHead } from "./SectionHead";
 
 /** Credits. Edit roles/names here. */
 const STAFF: { role: string; names: string[] }[] = [
-  { role: "Created by", names: ["DON"] },
-  { role: "Team", names: ["Vinniel", "Morjor", "reiginleifz"] },
+  { role: "Created by", names: ["Lilium"] },
+  { role: "Tech Dev", names: ["Vinniel"] },
+  { role: "Team", names: [ "Morjor", "reiginleifz","Dee Dadee"] },
 ];
 
 export function Staff() {

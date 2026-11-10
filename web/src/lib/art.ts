@@ -23,6 +23,7 @@ export const ART = {
   patron: { src: asset("patron-bride.webp"), alt: "ลูกค้าปีศาจร่างครึ่งสัตว์ในชุดขาว", pos: "50% 20%" }, // cut-out
   outsider: { src: asset("outsider.webp"), alt: "ผู้หลงมิติสวมแว่นถือหนังสือ", pos: "50% 20%" }, // cut-out
   ladyDoll: { src: asset("lady-doll.webp"), alt: "หญิงชุดดำกับตุ๊กตากระต่าย", pos: "50% 20%" }, // cut-out, unused
+  blanc: { src: asset("blanc.webp"), alt: "Blanc — เมดผมสีเงิน", pos: "50% 20%" },
   haloMaid: { src: asset("maid-halo.webp"), alt: "เมดมีวงแหวนถือเนื้อ", pos: "50% 30%" }, // cut-out, LORE section
 } satisfies Record<string, Art>;
 
