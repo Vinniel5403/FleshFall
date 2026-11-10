@@ -11,6 +11,9 @@ import { mods } from '../game/icons.js';
 import { getItem, itemLabel } from '../game/items.js';
 import type { Character, ItemType, Outcome } from '../game/types.js';
 import { CONTINENTS, citiesByContinent, currentZone, getZone, startTravel, TIERS, zoneLabel, type Continent } from '../game/zones.js';
+import { renderInventoryCard, renderShopCard, renderUpgradeCard } from '../render/itemCards.js';
+import { renderMapCard } from '../render/mapCard.js';
+import { imagePayload, type ImagePayload } from '../render/view.js';
 import { COLORS, fmtDuration, resultEmbed } from '../ui.js';
 import { idleError } from './guard.js';
 
@@ -28,8 +31,9 @@ export function toReply(r: ActionResult, ephemeral = false): InteractionReplyOpt
   return { content: r.content, embeds: r.embeds ?? [], flags: !r.ok || ephemeral ? MessageFlags.Ephemeral : undefined };
 }
 
+/** `files: []` clears any card image left on the message being updated. */
 export function toUpdate(r: ActionResult): InteractionUpdateOptions {
-  return { content: r.content ?? '', embeds: r.embeds ?? [] };
+  return { content: r.content ?? '', embeds: r.embeds ?? [], files: [] };
 }
 
 
@@ -58,6 +62,10 @@ export function inventoryEmbed(char: Character): EmbedBuilder {
   if (entries.length === 0) embed.setDescription('*ว่างเปล่า มีแต่คราบเลือด*');
   for (const [type, lines] of entries) embed.addFields({ name: TYPE_TITLES[type], value: lines.join('\n').slice(0, 1024) });
   return embed;
+}
+
+export function inventoryPayload(char: Character): Promise<ImagePayload> {
+  return imagePayload('inventory', COLORS.bone, () => renderInventoryCard(char), () => [inventoryEmbed(char)]);
 }
 
 /** Inventory entries of the given types, for pickers. */
@@ -153,6 +161,25 @@ export function shopEmbed(char: Character, src: ShopSrc = autoSrc(char)): EmbedB
     .setFooter({
       text: `คุณมี 🥩 ${char.flesh}${char.role === 'maid' ? ' · Maid ขายได้ +50%' : ''}${char.role === 'patron' ? ' · Patron ลด 25%' : ''}`,
     });
+}
+
+export function shopPayload(char: Character, src: ShopSrc = autoSrc(char), extraNote?: string): Promise<ImagePayload> {
+  const z = currentZone(char);
+  const ct = z.continent ? CONTINENTS[z.continent] : undefined;
+  const notes = [char.role === 'maid' ? 'Maid ขายได้ +50%' : '', char.role === 'patron' ? 'Patron ลด 25%' : '', extraNote ?? ''].filter(Boolean);
+  return imagePayload(
+    'shop',
+    COLORS.blood,
+    () =>
+      renderShopCard(char, {
+        en: src === 'home' ? 'M.A.I.D.S STORE' : `${(ct?.name ?? 'FIELD').toUpperCase()} MARKET`,
+        th: src === 'home' ? 'ร้านของ M.A.I.D.S' : `ร้านประจำทวีป · ${z.name}`,
+        flavor: src === 'home' ? 'Grade D ยิ้มให้คุณอย่างไร้อารมณ์' : 'พ่อค้าเงาไร้หน้าวางของบนผ้าเปื้อนเลือด รับแต่เนื้อสด',
+        stock: shopStock(char, src).map((id) => ({ id, price: buyPrice(char, id) })),
+        notes,
+      }),
+    () => [shopEmbed(char, src)],
+  );
 }
 
 export function buyItem(char: Character, id: string, qty: number, src: ShopSrc = autoSrc(char)): ActionResult {
@@ -334,6 +361,20 @@ ${list}`;
     );
 }
 
+/** Travel picker as a world map (zoomed to `focus` once a continent is picked). City list lives in the dropdowns. */
+export function travelPayload(char: Character, focus?: Continent): Promise<ImagePayload> {
+  const mins = Math.round(balance.travelMs / 60_000);
+  const home = char.location === 'rouge_land';
+  const text = [
+    home ? 'ประตูหลังร้านเนื้อเปิดสู่ Old Realm ได้ทุกเมือง — เลือกทวีป แล้วเลือกเมืองปลายทาง คุณจะไปถึงทันที' : `ตอนนี้อยู่ที่ **${zoneLabel(currentZone(char))}**`,
+    `-# ${Object.values(TIERS).map((t) => `${t.emoji} ${t.name} Lv ${t.rec}+`).join(' · ')}`,
+    home
+      ? `-# ออกจาก Rouge Land ถึงทันที · กลับมาใช้เวลา ${mins} นาที · ข้างนอกใช้ร้านใน Rouge Land ไม่ได้ มีแต่ร้านประจำทวีป`
+      : `-# ข้ามเมือง / กลับ Rouge Land ใช้เวลา ${mins} นาที · ระหว่างทางล่า/สำรวจ/ซื้อของไม่ได้`,
+  ].join('\n');
+  return imagePayload('map', COLORS.bone, () => renderMapCard(char, focus), () => [travelEmbed(char)], text);
+}
+
 export function travelAction(char: Character, to: string): ActionResult {
   const err = idleError(char);
   if (err) return fail(err);
@@ -396,6 +437,15 @@ export function upgradeEmbed(char: Character): EmbedBuilder {
     .setDescription('ช่างตาเดียวหยิบอาวุธของคุณขึ้นมาส่อง *"กระดูกกับเขี้ยว... เอามา แล้วข้าจะทำให้มันหิวกว่าเดิม"*')
     .addFields(field('weapon'), field('armor'))
     .setFooter({ text: `คุณมี 🥩 ${char.flesh} · อัปได้สูงสุด +${MAX_GEAR_LEVEL}` });
+}
+
+export function upgradePayload(char: Character): Promise<ImagePayload> {
+  const slots = (['weapon', 'armor'] as const).map((slot) => {
+    const id = char.equipped[slot];
+    const lv = gearLevel(char, id);
+    return { slot, id, lv, max: MAX_GEAR_LEVEL, cost: id && lv < MAX_GEAR_LEVEL ? upgradeCost(slot, lv + 1) : undefined };
+  });
+  return imagePayload('forge', COLORS.bone, () => renderUpgradeCard(char, slots), () => [upgradeEmbed(char)]);
 }
 
 export function upgradeGear(char: Character, slot: GearSlot): ActionResult {

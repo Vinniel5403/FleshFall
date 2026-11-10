@@ -2,7 +2,7 @@ import { MessageFlags, type ButtonInteraction } from 'discord.js';
 import { loadCharacter, saveCharacter } from '../game/character.js';
 import { advance, exitDungeon, resolveChoice, retreat, type ExitChoice } from '../game/engine.js';
 import type { Character } from '../game/types.js';
-import { COLORS, dungeonButtons, eventButtons, eventEmbed, resultEmbed } from '../ui.js';
+import { COLORS, dungeonButtons, eventButtons, eventPayload, resultEmbed } from '../ui.js';
 
 /** Ephemeral if the clicked message was ephemeral (e.g. dungeon entered from a panel hunt). */
 const sameVisibility = (i: ButtonInteraction) => (i.message.flags.has(MessageFlags.Ephemeral) ? MessageFlags.Ephemeral : undefined);
@@ -35,7 +35,7 @@ export async function handleEventButton(i: ButtonInteraction): Promise<unknown> 
   const body = [`*${event.description}*`, '', `➡️ **${choice.emoji ?? ''} ${choice.label}**`, outcome.text, ...notes, '', ...applied.lines];
   const color = applied.becameFiend ? COLORS.fiend : applied.died ? COLORS.blood : COLORS.rot;
   const nav = dungeonButtons(char);
-  return i.update({ embeds: [resultEmbed(char, event.title, body, color)], components: nav ? [nav] : [] });
+  return i.update({ embeds: [resultEmbed(char, event.title, body, color)], files: [], components: nav ? [nav] : [] });
 }
 
 /** dg:<userId>:next | dg:<userId>:leave | dg:<userId>:exit:<black|red|icon> */
@@ -53,9 +53,8 @@ export async function handleDungeonButton(i: ButtonInteraction): Promise<unknown
     if (!step.event) {
       return i.followUp({ flags: sameVisibility(i), embeds: [resultEmbed(char, 'ร่างของคุณทนไม่ไหว', step.lines, COLORS.blood)] });
     }
-    const embed = eventEmbed(char, step.event);
-    if (step.lines.length) embed.setDescription(`-# ${step.lines.join(' · ')}\n\n${embed.data.description ?? ''}`);
-    return i.followUp({ flags: sameVisibility(i), embeds: [embed], components: [eventButtons(char, step.event)] });
+    const v = await eventPayload(char, step.event, step.lines.length ? [`-# ${step.lines.join(' · ')}`, ''] : []);
+    return i.followUp({ flags: sameVisibility(i), ...v, components: [eventButtons(char, step.event)] });
   }
 
   if (action === 'leave') {

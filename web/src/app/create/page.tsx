@@ -5,6 +5,7 @@ import { ART } from "@/lib/art";
 import { GAME } from "@/lib/game";
 import { SectionHead } from "@/components/SectionHead";
 import { doorVar } from "@/lib/md";
+import { Backdrop, Brackets } from "@/components/Dossier";
 
 export const metadata: Metadata = { title: "สร้างตัวละคร" };
 
@@ -103,7 +104,8 @@ export default function CreatePage() {
           </section>
         </section>
 
-        <section className="block design">
+        <section className="block design ff-host">
+          <Backdrop word="DESIGN" band />
           <div className="design-copy">
             <SectionHead en="DESIGN" th="แนวทางออกแบบตัวละคร" />
             <p className="lead">วาดตัวละครของคุณเองได้ — ทุกชุดไม่จำกัดเพศ ✅</p>
@@ -121,6 +123,7 @@ export default function CreatePage() {
             </div>
           </div>
           <div className="design-art" aria-hidden="true">
+            <Brackets label="M.A.I.D.S · DESIGN GUIDE" />
             <Image src={ART.cleaver.src} alt="" fill sizes="(max-width: 900px) 80vw, 34vw" style={{ objectFit: "contain", objectPosition: "50% 100%" }} />
           </div>
         </section>

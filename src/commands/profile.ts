@@ -3,7 +3,7 @@ import { loadCharacter, saveCharacter } from '../game/character.js';
 import { ICONS } from '../game/icons.js';
 import { ROLES } from '../game/roles.js';
 import { DOORS, getMoonMode, isCrimsonMoon, LOCATIONS, nextCrimsonMoon, setMoonMode, type MoonMode } from '../game/world.js';
-import { COLORS, profileEmbed } from '../ui.js';
+import { COLORS, profilePayload } from '../ui.js';
 import type { Command } from './types.js';
 
 export const profile: Command = {
@@ -18,7 +18,8 @@ export const profile: Command = {
       return i.reply({ content: `${user.id === i.user.id ? 'คุณ' : user.username}ยังไม่มีตัวละคร`, flags: MessageFlags.Ephemeral });
     }
     saveCharacter(char); // persist regen
-    return i.reply({ embeds: [profileEmbed(char)] });
+    await i.deferReply(); // card render can exceed the 3s window on small hosts
+    return i.editReply(await profilePayload(char));
   },
 };
 

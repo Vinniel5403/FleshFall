@@ -69,7 +69,22 @@ export function CharacterSelect() {
   const go = (d: number) => setI((n) => (n + d + ROLES.length) % ROLES.length);
 
   return (
-    <section className="cs" aria-label="Characters">
+    <section className="cs ff-host" aria-label="Characters">
+      {/* backdrop wordmark follows the selected role */}
+      <div className="ff-bg" aria-hidden="true">
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={r.id}
+            className="ff-word"
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -40 }}
+            transition={{ duration: 0.6, ease }}
+          >
+            {r.en.toUpperCase()}
+          </motion.span>
+        </AnimatePresence>
+      </div>
       <SectionHead en="CHARACTERS" th="คุณจะเป็นใครบนเกาะนี้" center />
 
       <div className="cs-tabs" role="tablist">

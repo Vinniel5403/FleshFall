@@ -1,7 +1,7 @@
 import { MessageFlags, SlashCommandBuilder, type AutocompleteInteraction } from 'discord.js';
 import { loadCharacter } from '../game/character.js';
 import type { ItemType } from '../game/types.js';
-import { equipItem, inventoryEmbed, ownedItems, toReply, useItem } from './actions.js';
+import { equipItem, inventoryPayload, ownedItems, toReply, useItem } from './actions.js';
 import { requireActive, requireCharacter } from './guard.js';
 import type { Command } from './types.js';
 
@@ -23,7 +23,8 @@ export const inventory: Command = {
   async execute(i) {
     const char = await requireCharacter(i);
     if (!char) return;
-    return i.reply({ embeds: [inventoryEmbed(char)], flags: MessageFlags.Ephemeral });
+    await i.deferReply({ flags: MessageFlags.Ephemeral }); // card render can exceed the 3s window
+    return i.editReply(await inventoryPayload(char));
   },
 };
 

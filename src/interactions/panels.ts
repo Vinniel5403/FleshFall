@@ -31,11 +31,11 @@ import {
   buyPrice,
   cookRecipe,
   drinkAction,
-  upgradeEmbed,
+  upgradePayload,
   upgradeGear,
   type GearSlot,
   equipItem,
-  inventoryEmbed,
+  inventoryPayload,
   needsText,
   ownedItems,
   prayAction,
@@ -43,7 +43,7 @@ import {
   restAction,
   sellItem,
   sellPrice,
-  shopEmbed,
+  shopPayload,
   homeError,
   shopError,
   shopStock,
@@ -51,13 +51,13 @@ import {
   toReply,
   toUpdate,
   travelAction,
-  travelEmbed,
+  travelPayload,
   useItem,
   type ActionResult,
 } from '../commands/actions.js';
 import { requireActive, requireCharacter } from '../commands/guard.js';
-import { COLORS, profileEmbed } from '../ui.js';
-import { exploreStart } from '../commands/explore.js';
+import { COLORS, profilePayload } from '../ui.js';
+import { exploreStart, exploreView } from '../commands/explore.js';
 import { openHunt } from './hunt.js';
 
 export type PanelType = string;
@@ -302,7 +302,8 @@ export async function handlePanelButton(i: ButtonInteraction): Promise<unknown> 
     const char = await requireCharacter(i);
     if (!char) return;
     saveCharacter(char); // persist regen
-    return i.reply({ embeds: [action === 'profile' ? profileEmbed(char) : inventoryEmbed(char)], flags: ephemeral });
+    await i.deferReply({ flags: ephemeral }); // card render can exceed the 3s window on small hosts
+    return i.editReply(await (action === 'inv' ? inventoryPayload(char) : profilePayload(char)));
   }
 
   const char = await requireActive(i);
@@ -311,23 +312,31 @@ export async function handlePanelButton(i: ButtonInteraction): Promise<unknown> 
   switch (action) {
     case 'hunt':
       return openHunt(i, arg!);
-    case 'explore':
-      return i.reply({ ...exploreStart(char, arg), flags: ephemeral });
+    case 'explore': {
+      const step = exploreStart(char, arg); // sync: mutate + save before any await
+      if (step.kind === 'error') return i.reply({ content: step.content, flags: ephemeral });
+      await i.deferReply({ flags: ephemeral });
+      return i.editReply(await exploreView(char, step));
+    }
     case 'home': {
       const r = travelAction(char, 'rouge_land');
       return i.reply(toReply(r, true));
     }
     case 'upgrade':
       if (homeError(char)) return i.reply({ content: homeError(char), flags: ephemeral });
-      return i.reply({ embeds: [upgradeEmbed(char)], components: [upgradeRow(char)], flags: ephemeral });
+      await i.deferReply({ flags: ephemeral });
+      return i.editReply({ ...(await upgradePayload(char)), components: [upgradeRow(char)] });
     case 'upg': {
       const r = upgradeGear(char, arg as GearSlot);
-      return i.update({ content: r.ok ? '' : `⚠️ ${r.content}`, embeds: [...(r.embeds ?? []), upgradeEmbed(char)], components: [upgradeRow(char)] });
+      await i.deferUpdate();
+      const v = await upgradePayload(char);
+      return i.editReply({ content: r.ok ? '' : `⚠️ ${r.content}`, embeds: [...v.embeds, ...(r.embeds ?? [])], files: v.files, components: [upgradeRow(char)] });
     }
     case 'drink':
       return i.reply(toReply(drinkAction(char), true));
     case 'travel': {
-      return i.reply({ embeds: [travelEmbed(char)], components: cityPickers(char), flags: ephemeral });
+      await i.deferReply({ flags: ephemeral }); // map render can exceed the 3s window
+      return i.editReply({ ...(await travelPayload(char, currentZone(char).continent)), components: cityPickers(char) });
     }
     case 'go': {
       const r = travelAction(char, arg!);
@@ -351,7 +360,8 @@ export async function handlePanelButton(i: ButtonInteraction): Promise<unknown> 
       const src: ShopSrc = arg === 'field' ? 'field' : 'home';
       const err = shopError(char, src);
       if (err) return i.reply({ content: err, flags: ephemeral });
-      return i.reply({ embeds: [shopEmbed(char, src)], components: [buyPicker(char, src)], flags: ephemeral });
+      await i.deferReply({ flags: ephemeral });
+      return i.editReply({ ...(await shopPayload(char, src)), components: [buyPicker(char, src)] });
     }
     case 'cook':
       if (homeError(char)) return i.reply({ content: homeError(char), flags: ephemeral });
@@ -395,7 +405,8 @@ export async function handlePanelSelect(i: StringSelectMenuInteraction): Promise
 
   switch (action) {
     case 'travelc':
-      return i.update({ components: cityPickers(active, value as Continent) });
+      await i.deferUpdate();
+      return i.editReply({ ...(await travelPayload(active, value as Continent)), components: cityPickers(active, value as Continent) });
     case 'travel': {
       const r = travelAction(active, value);
       if (!r.ok) return i.reply({ content: r.content, flags: ephemeral });

@@ -1,0 +1,122 @@
+/*
+ * Dossier accent layer — FGO ornate base + a light NIKKE touch (see designsystem.md → "Dossier accents").
+ * Borrowed (softened): backdrop wordmark (outlined serif), one feathered diagonal blood band,
+ * bracket corners, plate corner triangle + split underline.
+ * Not borrowed: //// stripes, cut corners, grid, light-gray UI.
+ * Loaded after hud.css.
+ */
+:root {
+  --plate-rule: linear-gradient(90deg, var(--crimson) 0 34%, var(--blood) 34% 36%, rgba(163, 18, 27, .25) 36%, transparent);
+}
+
+/* ---------- backdrop ---------- */
+.ff-host { position: relative; overflow: hidden; isolation: isolate; }
+.ff-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.ff-word {
+  position: absolute; right: -2%; top: 6%;
+  font: 800 clamp(120px, 21vw, 300px)/.85 var(--font-cinzel), serif; letter-spacing: .02em;
+  color: transparent; -webkit-text-stroke: 1px rgba(230, 184, 162, .14);
+  white-space: nowrap; user-select: none;
+}
+.ff-band {
+  position: absolute; right: 8%; top: 0; width: 34%; height: 100%; transform: skewX(-28deg);
+  background: linear-gradient(180deg, transparent, rgba(163, 18, 27, .5) 18%, rgba(163, 18, 27, .2) 65%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+}
+
+/* ---------- bracket corners + vertical file label ---------- */
+.ff-corner { position: absolute; width: 26px; height: 26px; z-index: 2; border: 0 solid var(--hair); pointer-events: none; }
+.ff-corner.tl { top: 8%; left: 4%; border-top-width: 1px; border-left-width: 1px; }
+.ff-corner.br { bottom: 64px; right: 4%; border-bottom-width: 1px; border-right-width: 1px; }
+.ff-corner.tl::after { content: ""; position: absolute; left: -1px; top: -1px; width: 6px; height: 6px; background: var(--crimson); }
+.ff-file {
+  position: absolute; right: 2%; top: 12%; z-index: 2; margin: 0; pointer-events: none;
+  writing-mode: vertical-rl; font: 600 10px/1 var(--font-cinzel), serif; letter-spacing: .3em; color: rgba(230, 184, 162, .45);
+}
+
+/* ---------- plates: corner triangle + split underline (backgrounds, so ::before/::after stay free) ---------- */
+.ff-plate, .card, .guide-card, .step, .land {
+  background:
+    linear-gradient(225deg, var(--plate-c, var(--crimson)) 50%, transparent 50%) top right / 12px 12px no-repeat,
+    var(--plate-rule) bottom left / 100% 2px no-repeat,
+    var(--plate-bg, linear-gradient(180deg, var(--panel), var(--bg2)));
+}
+.guide-card { --plate-bg: var(--bg); }
+.guide-card.icon, .icon-card { --plate-c: var(--door); }
+.ff-plate { position: relative; padding: 14px 22px 16px; border: 1px solid var(--line); border-bottom: 0; --plate-bg: linear-gradient(100deg, rgba(26, 12, 12, .92), rgba(20, 9, 9, .6)); }
+.ff-plate h3 { font: 500 18px/1.4 var(--font-kanit), sans-serif; color: var(--bone); }
+.ff-plate p { margin: 4px 0 0; color: #cdbfb6; font-size: 15px; line-height: 1.7; }
+
+/* tabs: selected tab gets the corner triangle */
+.tab.on { background: linear-gradient(225deg, var(--crimson) 50%, transparent 50%) top right / 8px 8px no-repeat, var(--panel); }
+
+/* CW notice as a file tag */
+.cw { padding: 0 14px 0 0; border-color: rgba(163, 18, 27, .7); flex-wrap: nowrap; }
+.cw > span:not(.cw-age) { padding: 8px 0; }
+.cw-age { align-self: stretch; display: grid; place-items: center; padding: 8px 10px; border-radius: 0; }
+
+/* command line on /create */
+.cmd { position: relative; padding-top: 26px; }
+.cmd::before {
+  content: "◆ COMMAND"; position: absolute; left: -1px; top: -1px; padding: 4px 10px 3px;
+  font: 600 10px/1 var(--font-cinzel), serif; letter-spacing: .2em; background: var(--blood); color: var(--bone);
+}
+
+/* ---------- placements ---------- */
+.dossier, .design.ff-host { /* shared two-column "file" layout: copy left, cut-out right */
+  display: grid; grid-template-columns: 1.1fr .9fr; gap: 24px; align-items: end;
+}
+.dossier {
+  max-width: 1240px; margin: 0 auto; padding: 72px 16px 0; min-height: 800px;
+  background-image: radial-gradient(var(--dots) 1.2px, transparent 1.6px); background-size: 22px 22px;
+}
+.dz-copy { padding-bottom: 72px; }
+.dz-lead { color: #d8ccc4; font-size: 17px; max-width: 620px; margin: 0; }
+.dz-lead b { color: var(--flesh); }
+.dz-rules { display: grid; gap: 14px; margin-top: 28px; max-width: 600px; }
+.dz-rule { display: grid; }
+.dz-rule .ff-plate { transition: border-color .3s cubic-bezier(.2, .8, .2, 1), transform .3s cubic-bezier(.2, .8, .2, 1); }
+.dz-rule:hover .ff-plate { border-color: rgba(224, 30, 55, .4); transform: translateX(4px); }
+.dz-art, .design-art { position: relative; height: 780px; }
+.dz-art::before { content: ""; position: absolute; inset: 20% 5% 0; background: radial-gradient(closest-side, rgba(163, 18, 27, .4), transparent); filter: blur(30px); }
+
+/* /create design block */
+.design.ff-host { padding-left: 16px; padding-right: 16px; margin: 0 -16px; }
+.design.ff-host { padding-top: clamp(140px, 15vw, 220px); }
+.design.ff-host .ff-word { top: 24px; right: -2%; font-size: clamp(100px, 14vw, 210px); } /* sits above the heading, never behind it */
+.design-art { height: 660px; }
+.design-art .ff-corner.br { bottom: 24px; }
+
+/* /create steps */
+
+/* sub-page banner */
+.banner .ff-bg { z-index: 0; }
+.banner .ff-word { top: 72px; right: -2%; font-size: clamp(80px, 11vw, 170px); -webkit-text-stroke-color: rgba(233, 224, 212, .14); } /* upper area; heading stays bottom-left */
+.banner .ff-band { right: 14%; width: 22%; opacity: .7; }
+.banner .ff-corner.tl { top: 96px; left: auto; right: 6%; }
+.banner .ff-corner.br { bottom: 28px; }
+.banner .ff-file { top: 96px; right: 2%; }
+
+/* home: story art, icons, characters */
+.story-art .ff-corner.tl { top: 24px; left: 24px; }
+.story-art .ff-corner.br { bottom: 24px; right: 18%; }
+.cs .ff-word { left: 50%; right: auto; top: 40%; translate: -50% 0; font-size: clamp(110px, 17vw, 260px); }
+
+@media (max-width: 900px) {
+  .dossier, .design.ff-host { grid-template-columns: 1fr; }
+  .dossier { min-height: 0; padding-top: 56px; }
+  .dz-copy { padding-bottom: 0; }
+  .dz-art, .design-art { height: 520px; }
+  .ff-word { top: auto; bottom: 30%; right: -6%; font-size: 34vw; }
+  .ff-band { right: 4%; width: 60%; top: 35%; height: 65%; }
+  .cs .ff-word { top: 22%; bottom: auto; font-size: 26vw; }
+  .banner .ff-corner, .banner .ff-file { display: none; }
+  .banner .ff-word { top: 64px; bottom: auto; font-size: 16vw; }
+  .design.ff-host .ff-word { top: 24px; bottom: auto; font-size: 18vw; }
+  .design.ff-host { padding-top: 110px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dz-rule .ff-plate { transition: none; }
+  .dz-rule:hover .ff-plate { transform: none; }
+}

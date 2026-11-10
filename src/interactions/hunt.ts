@@ -11,7 +11,9 @@ import { DOORS } from '../game/world.js';
 import { currentZone, getZone, tierLabel } from '../game/zones.js';
 import { toUpdate, travelAction } from '../commands/actions.js';
 import { idleError, requireActive, travelingText } from '../commands/guard.js';
-import { bar, COLORS, dungeonButtons, dungeonStatusEmbed } from '../ui.js';
+import { renderHuntCard } from '../render/sceneCards.js';
+import { imagePayload, type ImagePayload } from '../render/view.js';
+import { bar, COLORS, dungeonButtons, dungeonPayload } from '../ui.js';
 
 export function huntEmbed(char: Character, lines: string[], ended?: string): EmbedBuilder {
   const h = char.hunt;
@@ -39,6 +41,13 @@ export function huntEmbed(char: Character, lines: string[], ended?: string): Emb
   e.setDescription(parts.join('\n\n').slice(0, 4000));
   e.setFooter({ text: `🩸 ${char.hp}/${char.maxHp} · ⚡ ${char.stamina}/${char.maxStamina} · 🧠 ${char.sanity} · 🫀 ${char.humanity}` });
   return e;
+}
+
+/** Battle card (monsters, loot, status) + combat log as text. */
+export function huntPayload(char: Character, lines: string[], ended?: string): Promise<ImagePayload> {
+  const h = char.hunt;
+  const color = ended === 'died' ? COLORS.blood : h?.won ? COLORS.bone : COLORS.rot;
+  return imagePayload('hunt', color, () => renderHuntCard(char, ended), () => [huntEmbed(char, lines, ended)], lines.join('\n'));
 }
 
 function btn(uid: string, action: string, label: string, style: ButtonStyle, emoji?: string) {
@@ -79,7 +88,10 @@ export function huntButtons(char: Character): ActionRowBuilder<ButtonBuilder>[] 
 export async function openHunt(i: RepliableInteraction, zoneId: string): Promise<unknown> {
   const char = await requireActive(i);
   if (!char) return;
-  if (char.hunt && !char.hunt.won) return i.reply({ embeds: [huntEmbed(char, ['-# กลับมาสู้ต่อ'])], components: huntButtons(char), flags: MessageFlags.Ephemeral });
+  if (char.hunt && !char.hunt.won) {
+    await i.deferReply({ flags: MessageFlags.Ephemeral });
+    return i.editReply({ ...(await huntPayload(char, ['-# กลับมาสู้ต่อ'])), components: huntButtons(char) });
+  }
   const road = travelingText(char);
   if (road) return i.reply({ content: road, flags: MessageFlags.Ephemeral });
   const zone = getZone(zoneId);
@@ -91,7 +103,8 @@ export async function openHunt(i: RepliableInteraction, zoneId: string): Promise
   const r = startHunt(char);
   if (!r.ok) return i.reply({ content: r.error, flags: MessageFlags.Ephemeral });
   saveCharacter(char);
-  return i.reply({ embeds: [huntEmbed(char, r.hunt.log)], components: huntButtons(char), flags: MessageFlags.Ephemeral });
+  await i.deferReply({ flags: MessageFlags.Ephemeral }); // card render can exceed the 3s window
+  return i.editReply({ ...(await huntPayload(char, r.hunt.log)), components: huntButtons(char) });
 }
 
 export async function handleHuntButton(i: ButtonInteraction): Promise<unknown> {
@@ -112,7 +125,8 @@ export async function handleHuntButton(i: ButtonInteraction): Promise<unknown> {
     const r = startHunt(char);
     if (!r.ok) return i.reply({ content: r.error, flags: MessageFlags.Ephemeral });
     saveCharacter(char);
-    return i.update({ embeds: [huntEmbed(char, r.hunt.log)], components: huntButtons(char) });
+    await i.deferUpdate();
+    return i.editReply({ ...(await huntPayload(char, r.hunt.log)), components: huntButtons(char) });
   }
 
   if (!char.hunt) return i.update({ components: [] }); // stale
@@ -121,12 +135,14 @@ export async function handleHuntButton(i: ButtonInteraction): Promise<unknown> {
     if (!enterHuntDoor(char)) return i.update({ components: [] });
     saveCharacter(char);
     const row = dungeonButtons(char);
-    return i.update({ embeds: [dungeonStatusEmbed(char)], components: row ? [row] : [] });
+    await i.deferUpdate();
+    return i.editReply({ ...(await dungeonPayload(char)), components: row ? [row] : [] });
   }
   if (action === 'leave') {
     leaveHunt(char);
     saveCharacter(char);
-    return i.update({ embeds: [huntEmbed(char, ['🚶 คุณหันหลังให้ประตู มันค่อย ๆ จางหายไปในหมอก'])], components: huntButtons(char) });
+    await i.deferUpdate();
+    return i.editReply({ ...(await huntPayload(char, ['🚶 คุณหันหลังให้ประตู มันค่อย ๆ จางหายไปในหมอก'])), components: huntButtons(char) });
   }
 
   const r = action === 'flee' ? flee(char) : attack(char, Number(arg));
@@ -135,5 +151,6 @@ export async function handleHuntButton(i: ButtonInteraction): Promise<unknown> {
   if (r.ended === 'died') lines.push('', '-# การล่าจบลง');
   // after death/fiend the hunt is gone; show the final state without fight buttons
   const components = r.ended === 'died' ? [] : huntButtons(char);
-  return i.update({ embeds: [huntEmbed(char, lines, r.ended)], components });
+  await i.deferUpdate();
+  return i.editReply({ ...(await huntPayload(char, lines, r.ended)), components });
 }

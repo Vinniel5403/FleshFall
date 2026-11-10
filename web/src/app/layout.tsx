@@ -8,6 +8,7 @@ import "./landing.css";
 import "./icons.css";
 import "./characters.css";
 import "./hud.css";
+import "./dossier.css";
 
 const cinzel = Cinzel({ variable: "--font-cinzel", subsets: ["latin"], weight: ["600", "800"] });
 const logo = UnifrakturMaguntia({ variable: "--font-logo", subsets: ["latin"], weight: "400" });

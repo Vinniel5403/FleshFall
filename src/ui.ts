@@ -1,5 +1,9 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 import { balance } from './config.js';
+import { noEmoji } from './render/kit.js';
+import { renderProfileCard } from './render/profileCard.js';
+import { DOOR_EN, renderSceneCard } from './render/sceneCards.js';
+import { imagePayload, type ImagePayload } from './render/view.js';
 import { gearAtk, gearDef, humanityTier, seesHints, statMod } from './game/character.js';
 import { exitOptions, visibleChoices } from './game/engine.js';
 import { ICON_BY_DOOR, ICONS } from './game/icons.js';
@@ -89,6 +93,77 @@ export function profileEmbed(char: Character): EmbedBuilder {
     text: `🥩 ${char.flesh} เนื้อสด · ดันเจียน ${char.dungeonsCleared} · ตาย ${char.deaths} · สติแตก ${char.breakdowns}${extra}`,
   });
   return e;
+}
+
+/**
+ * Profile as a rendered card image. The embed carries only what the image can't:
+ * live travel countdown, Crimson Moon, blessings, mutations, Closing Shift.
+ * Falls back to the text embed if rendering fails.
+ */
+export function profilePayload(char: Character): Promise<ImagePayload> {
+  const lines = [
+    char.traveling
+      ? `🧭 กำลังเดินทางไป **${getZone(char.traveling.to)?.name ?? char.traveling.to}** — ถึง <t:${Math.ceil(char.traveling.arriveAt / 1000)}:R>`
+      : null,
+    isCrimsonMoon() ? '🌕 **Crimson Moon กำลังส่องแสง**' : null,
+    blessingsText(char) ? `**✨ พรเทพ**\n${blessingsText(char)}` : null,
+    char.mutations.length ? `**🧬 การกลายพันธุ์**\n${char.mutations.map((m) => `• ${m}`).join('\n')}` : null,
+    char.role === 'bar' ? `-# ⏰ Closing Shift ${String(closingShiftHour(char.userId)).padStart(2, '0')}:00 น.` : null,
+  ].filter(Boolean);
+  return imagePayload('profile', char.fiend ? COLORS.fiend : COLORS.blood, () => renderProfileCard(char), () => [profileEmbed(char)], lines.join('\n'));
+}
+
+function sceneEyebrow(char: Character): string {
+  if (char.run) return `${DOOR_EN[char.run.door]} DOOR`;
+  const z = currentZone(char);
+  if (z.region === 'rouge_land') return 'ROUGE LAND';
+  if (z.region === 'cypress') return 'CYPRESS ISLE';
+  return `OLD REALM · ${noEmoji(z.name).toUpperCase()}`;
+}
+
+/** Event: scene banner image + description/hints as text. `prefix` = small notes shown above the prose. */
+export function eventPayload(char: Character, event: GameEventDef, prefix: string[] = []): Promise<ImagePayload> {
+  const embed = eventEmbed(char, event);
+  const text = [...prefix, embed.data.description ?? ''].join('\n');
+  const run = char.run;
+  return imagePayload(
+    'scene',
+    isCrimsonMoon() ? COLORS.crimson : COLORS.rot,
+    () =>
+      renderSceneCard(char, {
+        eyebrow: sceneEyebrow(char),
+        title: event.title,
+        door: run?.door ?? event.door,
+        pips: run ? [run.depth, run.maxDepth] : undefined,
+        boss: event.boss,
+      }),
+    () => [prefix.length ? embed.setDescription(text.slice(0, 4096)) : embed],
+    text,
+  );
+}
+
+/** Dungeon between rooms / at the exit: banner with room pips (and exit doors). */
+export function dungeonPayload(char: Character): Promise<ImagePayload> {
+  const run = char.run!;
+  const d = DOORS[run.door];
+  const exits = run.stage === 'exit' ? exitOptions(char) : [];
+  return imagePayload(
+    'scene',
+    COLORS.rot,
+    () =>
+      renderSceneCard(char, {
+        eyebrow: `${DOOR_EN[run.door]} DOOR · DUNGEON`,
+        title: `ดันเจียน${d.name.replace('ประตู', '')}`,
+        subtitle: run.stage === 'exit' ? 'ห้องสุดท้าย — ประตูหลายสีปรากฏขึ้นตรงหน้า' : DUNGEON_RULES[run.door].note,
+        door: run.door,
+        pips: [run.depth, run.maxDepth],
+        chips: exits.map((o) =>
+          o === 'icon' ? { label: `ศาลของ ${ICON_BY_DOOR[run.door].name}`, color: run.door } : { label: DOORS[o].name, color: o },
+        ),
+      }),
+    () => [dungeonStatusEmbed(char)],
+    run.stage === 'exit' && exits.includes('icon') ? `คุณมองเห็น**${d.name}** ที่คนอื่นมองไม่เห็น...` : undefined,
+  );
 }
 
 const STYLE: Record<string, ButtonStyle> = {

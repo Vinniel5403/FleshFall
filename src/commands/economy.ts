@@ -1,7 +1,7 @@
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { loadCharacter } from '../game/character.js';
 import { getItem } from '../game/items.js';
-import { autoSrc, buyItem, buyPrice, cookRecipe, RECIPES, sellItem, shopEmbed, shopError, shopStock, STOCK, toReply } from './actions.js';
+import { autoSrc, buyItem, buyPrice, cookRecipe, RECIPES, sellItem, shopError, shopPayload, shopStock, STOCK, toReply } from './actions.js';
 import { requireActive } from './guard.js';
 import { inventoryAutocomplete } from './inventory.js';
 import type { Command } from './types.js';
@@ -13,9 +13,8 @@ export const shop: Command = {
     if (!char) return;
     const err = shopError(char, autoSrc(char));
     if (err) return i.reply({ content: err, flags: MessageFlags.Ephemeral });
-    const e = shopEmbed(char);
-    e.setFooter({ text: `${e.data.footer?.text ?? ''} · ซื้อ /buy · ขาย /sell` });
-    return i.reply({ embeds: [e], flags: MessageFlags.Ephemeral });
+    await i.deferReply({ flags: MessageFlags.Ephemeral }); // card render can exceed the 3s window
+    return i.editReply(await shopPayload(char, autoSrc(char), 'ซื้อ /buy · ขาย /sell'));
   },
 };
 

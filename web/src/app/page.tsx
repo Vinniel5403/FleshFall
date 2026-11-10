@@ -7,6 +7,8 @@ import { Reveal, RevealGroup, RevealItem } from "@/components/Reveal";
 import { ART } from "@/lib/art";
 import { SectionHead } from "@/components/SectionHead";
 import { Staff } from "@/components/Staff";
+import { LoreDossier } from "@/components/LoreDossier";
+import { Brackets } from "@/components/Dossier";
 import { backgroundSlides } from "@/lib/backgrounds";
 
 const LANDS = [
@@ -55,37 +57,13 @@ export default function Home() {
         </Reveal>
       </section>
 
-      {/* LORE: rules of the world, with the cleaver maid cut-out */}
-      <section className="lore">
-        <Reveal from="left" className="lore-copy">
-          <SectionHead en="LORE" th="เนื้อคือทุกสิ่ง" />
-          <p>
-            หลังเกาะถูกแยกออกจากกัน <b>เนื้อสด</b> คือทรัพยากรที่มีค่าที่สุดและเป็นแหล่งพลังงานเพียงหนึ่งเดียว — ทั้งอาหาร พลัง อำนาจ และเงินตรา —
-            ถูกกุมไว้โดยสาวรับใช้ของร้านเนื้อ <b>เมดผู้หิวโหย</b>
-          </p>
-          <ul className="rules">
-            <li>
-              <b>การแลกเปลี่ยนที่เท่าเทียม</b>
-              <span>จะได้เนื้อมา ต้องแลกด้วยคำสัญญา แรงงาน และอวัยวะ</span>
-            </li>
-            <li>
-              <b>พันธสัญญาแห่งเทพ</b>
-              <span>รับพร (Buff) จากเทพได้ แต่ต้องแลกด้วยผลข้างเคียงที่กัดกินความเป็นมนุษย์</span>
-            </li>
-            <li>
-              <b>เนื้อเน่า → Miasma</b>
-              <span>ต้นตอของกระแสลมประหลาด ทำให้หลอนและแปรสภาพ ใช้เป็นอาวุธชีวภาพได้ วังวนรอบเกาะเต็มไปด้วยมัน</span>
-            </li>
-          </ul>
-        </Reveal>
-        <Reveal from="right" delay={0.15} className="lore-art" aria-hidden="true">
-          <Image src={ART.blanc.src} alt="" fill sizes="(max-width: 900px) 90vw, 40vw" style={{ objectFit: "contain", objectPosition: "50% 100%" }} />
-        </Reveal>
-      </section>
+      {/* LORE — dossier layout */}
+      <LoreDossier />
 
       {/* BACKSTORY: vintage subspace */}
       <section className="story">
         <Reveal from="left" className="story-art">
+          <Brackets label="ARCHIVE · 19XX · SUBSPACE" />
           <Image src={ART.gramophone.src} alt={ART.gramophone.alt} fill sizes="(max-width: 900px) 100vw, 55vw" style={{ objectPosition: ART.gramophone.pos }} />
         </Reveal>
         <Reveal from="right" delay={0.1} className="story-copy">
