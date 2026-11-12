@@ -90,6 +90,10 @@ export function detachImage(char: Character, key: string): boolean {
 export const SPRITE_MAX_PARTS = 40;
 export const SPRITE_MAX_EDGE = 4096;
 
+export const HEIGHT_RANGE = [50, 300] as const;
+export const cleanHeight = (v: unknown): number | undefined =>
+  typeof v === 'number' && Number.isFinite(v) && v >= HEIGHT_RANGE[0] && v <= HEIGHT_RANGE[1] ? Math.round(v) : undefined;
+
 export const spriteKeys = (s: CharSprite | undefined): string[] => (s ? s.parts.map((p) => `${s.base}/${p.id}.${p.ext}`) : []);
 
 /** Validate + copy a sprite manifest from the website (whitelisted fields only). */
@@ -117,7 +121,10 @@ export function cleanSprite(userId: string, raw: unknown, now = Date.now()): Cha
     if (p.id === 'weapon' && (p.hand === 'l' || p.hand === 'r')) part.hand = p.hand;
     parts.push(part);
   }
-  return { base: r.base, width: W, height: H, parts, at: now };
+  const sprite: CharSprite = { base: r.base, width: W, height: H, parts, at: now };
+  const heightCm = cleanHeight(r.heightCm);
+  if (heightCm) sprite.heightCm = heightCm;
+  return sprite;
 }
 
 /** What the website may see about a player's own character (no Discord ids). */

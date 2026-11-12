@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { doorVar } from "@/lib/md";
 import type { ParsedSprite } from "@/lib/psd";
 import templateRig from "@/data/sprite-template.json";
-import { TEMPLATE_GROUPS, type Rig } from "@/lib/rig";
+import { HEIGHT_DEFAULT, HEIGHT_MAX, HEIGHT_MIN, TEMPLATE_GROUPS, type Rig } from "@/lib/rig";
 
 /** Default sprite (split from the template PSD by `npm run web:template`) shown until a player uploads their own. */
 const TEMPLATE_RIG = templateRig as Rig;
@@ -330,6 +330,29 @@ function SpriteSection(props: { character: AccountView; onChange: (c: AccountVie
   const [busy, setBusy] = useState<"parse" | "save" | "delete" | null>(null);
   const [draft, setDraft] = useState<(ParsedSprite & { urls: Map<string, string> }) | null>(null);
   const [debug, setDebug] = useState(false);
+  /** slider value; null = use whatever the shown sprite has saved */
+  const [heightEdit, setHeightEdit] = useState<number | null>(null);
+  const shownHeight = draft?.rig.heightCm ?? saved?.heightCm ?? HEIGHT_DEFAULT;
+  const heightCm = heightEdit ?? shownHeight;
+  const heightDirty = !draft && !!saved && heightEdit !== null && heightEdit !== (saved.heightCm ?? HEIGHT_DEFAULT);
+
+  const saveHeight = async () => {
+    setBusy("save");
+    props.onError(null);
+    try {
+      const r = await api<{ character: AccountView }>("/api/me/sprite", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ heightCm }),
+      });
+      props.onChange(r.character);
+      setHeightEdit(null);
+    } catch (err) {
+      props.onError((err as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const dropDraft = useCallback(() => {
     setDraft((d) => {
@@ -351,7 +374,8 @@ function SpriteSection(props: { character: AccountView; onChange: (c: AccountVie
       const { parsePsdFile } = await import("@/lib/psd");
       const parsed = await parsePsdFile(file);
       const urls = new Map([...parsed.files].map(([id, b]) => [id, URL.createObjectURL(b as Blob)]));
-      setDraft({ ...parsed, urls });
+      setDraft({ ...parsed, rig: { ...parsed.rig, heightCm: heightEdit ?? saved?.heightCm ?? HEIGHT_DEFAULT }, urls });
+      setHeightEdit(null);
     } catch (err) {
       props.onError((err as Error).message);
     } finally {
@@ -366,7 +390,7 @@ function SpriteSection(props: { character: AccountView; onChange: (c: AccountVie
     props.onError(null);
     try {
       const fd = new FormData();
-      fd.set("rig", JSON.stringify(draft.rig));
+      fd.set("rig", JSON.stringify({ ...draft.rig, heightCm }));
       for (const p of draft.rig.parts) fd.set(`p_${p.id}`, draft.files.get(p.id) as Blob, `${p.id}.${p.ext}`);
       const r = await api<{ character: AccountView }>("/api/me/sprite", { method: "POST", body: fd });
       props.onChange(r.character);
@@ -405,17 +429,36 @@ function SpriteSection(props: { character: AccountView; onChange: (c: AccountVie
       <div className="sprite-wrap">
         <div className="sprite-view">
           {draft && draftSrc ? (
-            <SpriteStage rig={draft.rig} src={draftSrc} label="ตัวอย่างสไปรต์" debug={debug} />
+            <SpriteStage rig={draft.rig} src={draftSrc} label="ตัวอย่างสไปรต์" debug={debug} heightCm={heightCm} />
           ) : saved && savedSrc ? (
-            <SpriteStage rig={saved} src={savedSrc} label={`สไปรต์ ${props.character.name}`} debug={debug} />
+            <SpriteStage rig={saved} src={savedSrc} label={`สไปรต์ ${props.character.name}`} debug={debug} heightCm={heightCm} />
           ) : (
             <div className="sprite-template">
-              <SpriteStage rig={TEMPLATE_RIG} src={templateSrc} label="สไปรต์ตัวอย่างจากเทมเพลต" debug={debug} />
+              <SpriteStage rig={TEMPLATE_RIG} src={templateSrc} label="สไปรต์ตัวอย่างจากเทมเพลต" debug={debug} heightCm={heightCm} />
               <span className="sprite-tag">TEMPLATE</span>
             </div>
           )}
         </div>
         <div className="sprite-side">
+          <div className="sprite-height">
+            <label htmlFor="sprite-height">
+              ส่วนสูง <b>{heightCm} cm</b>
+            </label>
+            <input
+              id="sprite-height"
+              type="range"
+              min={HEIGHT_MIN}
+              max={HEIGHT_MAX}
+              step={1}
+              value={heightCm}
+              onChange={(e) => setHeightEdit(Number(e.target.value))}
+            />
+            {heightDirty && (
+              <button type="button" className="cta" onClick={saveHeight} disabled={!!busy}>
+                {busy === "save" ? "กำลังบันทึก…" : "บันทึกส่วนสูง"}
+              </button>
+            )}
+          </div>
           {(
             <label className="sprite-debug">
               <input type="checkbox" checked={debug} onChange={(e) => setDebug(e.target.checked)} /> แสดงจุดหมุน (debug)

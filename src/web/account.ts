@@ -3,7 +3,7 @@
  * The website verifies the Discord login; the bot owns the character store and the guild.
  * Every handler keeps load → mutate → save synchronous (no await in between).
  */
-import { accountView, attachImage, cleanName, cleanSprite, detachImage, isSlot, spriteKeys } from '../game/account.js';
+import { accountView, attachImage, cleanHeight, cleanName, cleanSprite, detachImage, isSlot, spriteKeys } from '../game/account.js';
 import { createCharacter, loadCharacter, saveCharacter } from '../game/character.js';
 import { ICONS } from '../game/icons.js';
 import { ROLES } from '../game/roles.js';
@@ -91,6 +91,16 @@ export function setSprite(userId: string, b: Record<string, unknown>): Reply {
   char.sprite = sprite;
   saveCharacter(char);
   return ok({ character: accountView(char), evicted });
+}
+
+export function setSpriteHeight(userId: string, b: Record<string, unknown>): Reply {
+  const heightCm = cleanHeight(b.heightCm);
+  if (!heightCm) return fail(400, 'ส่วนสูงไม่ถูกต้อง');
+  const char = loadCharacter(userId);
+  if (!char?.sprite) return fail(404, 'ยังไม่มีสไปรต์');
+  char.sprite.heightCm = heightCm;
+  saveCharacter(char);
+  return ok({ character: accountView(char) });
 }
 
 export function clearSprite(userId: string): Reply {

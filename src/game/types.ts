@@ -88,6 +88,8 @@ export interface CharSprite {
   width: number;
   height: number;
   parts: SpritePart[];
+  /** character height in cm (website slider) */
+  heightCm?: number;
   at: number;
 }
 

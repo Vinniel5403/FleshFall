@@ -56,6 +56,7 @@ async function handleAccount(req: IncomingMessage, res: ServerResponse, p: strin
     case '/api/account/image/remove': r = account.removeImage(uid, b); break;
     case '/api/account/sprite/set': r = account.setSprite(uid, b); break;
     case '/api/account/sprite/clear': r = account.clearSprite(uid); break;
+    case '/api/account/sprite/height': r = account.setSpriteHeight(uid, b); break;
     default: r = { code: 404, body: { error: 'not found' } };
   }
   return json(res, r.code, r.body);

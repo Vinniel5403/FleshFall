@@ -23,7 +23,11 @@ export interface Rig {
   width: number;
   height: number;
   parts: RigPart[];
+  /** character height in cm (feet to top of head) — drives uniform scale against the cm ruler */
+  heightCm?: number;
 }
+
+export const HEIGHT_MIN = 100, HEIGHT_MAX = 220, HEIGHT_DEFAULT = 160;
 
 export type PartKind =
   | "hair_tail" | "back_hair" | "bang" | "back_acc" | "weapon" | "skirt" | "torso" | "head_blink" | "iris" | "eyes" | "head" | "arm" | "leg";

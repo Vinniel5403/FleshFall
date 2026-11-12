@@ -13,7 +13,7 @@ export interface AccountReply {
   error?: string;
 }
 
-export async function bot(path: "get" | "create" | "join" | "image/add" | "image/remove" | "sprite/set" | "sprite/clear", body: Record<string, unknown>) {
+export async function bot(path: "get" | "create" | "join" | "image/add" | "image/remove" | "sprite/set" | "sprite/clear" | "sprite/height", body: Record<string, unknown>) {
   const base = process.env.BOT_API_URL;
   const secret = process.env.BOT_API_SECRET;
   if (!base || !secret) throw new Error("BOT_API_URL / BOT_API_SECRET missing");
