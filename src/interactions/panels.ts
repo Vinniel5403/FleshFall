@@ -299,8 +299,27 @@ function upgradeRow(char: Character) {
 
 // ---------- handlers ----------
 
-/** Panel buttons: open an ephemeral view for the clicker. */
+/** Last panel reply per user. Opening a new one deletes it, so only one ephemeral view stays on screen. */
+const lastView = new Map<string, ButtonInteraction>();
+/** Buttons inside an already-open view: they edit it in place instead of opening a new one. */
+const IN_PLACE = new Set(['upg', 'go', 'buyq', 'sellq']);
+
+/** Panel buttons: open an ephemeral view for the clicker (replacing their previous one). */
 export async function handlePanelButton(i: ButtonInteraction): Promise<unknown> {
+  const action = i.customId.split(':')[1] ?? '';
+  try {
+    return await openPanelView(i);
+  } finally {
+    if (!IN_PLACE.has(action) && (i.replied || i.deferred)) {
+      const prev = lastView.get(i.user.id);
+      lastView.set(i.user.id, i);
+      // ephemeral replies can only be deleted through their own interaction token (valid 15 min)
+      if (prev && prev.id !== i.id) prev.deleteReply().catch(() => {});
+    }
+  }
+}
+
+async function openPanelView(i: ButtonInteraction): Promise<unknown> {
   const [, action, arg, qtyArg, srcArg] = i.customId.split(':');
 
   if (action === 'profile' || action === 'inv') {
