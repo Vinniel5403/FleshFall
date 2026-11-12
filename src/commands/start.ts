@@ -50,6 +50,6 @@ export const start: Command = {
       role === 'outsider'
         ? `**${char.name}** ลืมตาขึ้นในห้องนอนของตัวเอง... แต่สัดส่วนผิดเพี้ยนไป กลิ่น Miasma ทำให้อาเจียนทันที\nยินดีต้อนรับสู่ ${LOCATIONS['old_realm'].name}`
         : `**${char.name}** ปฏิญาณตนต่อ **${ICONS[icon].name}** — *${ICONS[icon].concept}*\nยินดีต้อนรับสู่ ${LOCATIONS[char.location].name}`;
-    return i.reply({ content: intro, embeds: [profileEmbed(char)] });
+    return i.reply({ content: intro, embeds: [profileEmbed(char)], flags: MessageFlags.Ephemeral });
   },
 };
