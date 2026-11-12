@@ -324,7 +324,7 @@ function Dossier(props: {
               <button type="button" className="ghost" onClick={() => (setEditing(false), setNewName(c.name))}>
                 ยกเลิก
               </button>
-              <span className="sub">เปลี่ยนได้ชั่วโมงละครั้ง · ชื่อเล่นใน Discord เปลี่ยนตาม</span>
+              <span className="sub">เปลี่ยนได้ชั่วโมงละครั้ง · ห้อง RP ใน Discord จะโพสต์ด้วยชื่อนี้</span>
             </form>
           ) : (
             <h3 className="forge-name">

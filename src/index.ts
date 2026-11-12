@@ -10,13 +10,19 @@ import { loadCharacter } from './game/character.js';
 import { handleDungeonButton, handleEventButton } from './interactions/buttons.js';
 import { handleHuntButton } from './interactions/hunt.js';
 import { handlePanelButton, handlePanelSelect } from './interactions/panels.js';
+import { proxyEnabled, startProxy } from './proxy.js';
 
 /** Kick members who join without a website character (needs the privileged Server Members intent). */
 const REQUIRE_CHARACTER = process.env.REQUIRE_CHARACTER === '1';
 const WEB_URL = process.env.WEB_URL ?? 'https://fleshfall.org';
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, ...(REQUIRE_CHARACTER ? [GatewayIntentBits.GuildMembers] : [])],
+  intents: [
+    GatewayIntentBits.Guilds,
+    ...(REQUIRE_CHARACTER ? [GatewayIntentBits.GuildMembers] : []),
+    // RP proxy reads message text: Message Content is privileged (enable it in the Developer Portal)
+    ...(proxyEnabled ? [GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] : []),
+  ],
 });
 
 // Characters are created on the website, which adds the player to the guild (OAuth guilds.join).
@@ -31,6 +37,7 @@ client.on(Events.GuildMemberAdd, async (m) => {
 client.once(Events.ClientReady, (c) => {
   console.log(`🩸 FleshFall online as ${c.user.tag}`);
   void startZoneSync(c);
+  startProxy(c);
 });
 
 /** Role name that grants god mode (env GOD_ROLE, default "Dev"). */
@@ -76,19 +83,15 @@ if (process.env.API_PORT) {
   const gate: GuildGate | undefined = guildId
     ? {
         guildId,
-        async join(userId, accessToken, nick) {
+        async join(userId, accessToken) {
+          // no nick: members keep their own Discord name (the RP proxy shows the character instead)
           const guild = await client.guilds.fetch(guildId);
-          await guild.members.add(userId, { accessToken, nick });
+          await guild.members.add(userId, { accessToken });
           void syncMember(userId).catch(() => {});
         },
         async isMember(userId) {
           const guild = await client.guilds.fetch(guildId);
           return guild.members.fetch(userId).then(() => true, () => false);
-        },
-        async setNick(userId, nick) {
-          const guild = await client.guilds.fetch(guildId);
-          const member = await guild.members.fetch(userId).catch(() => null);
-          if (member && member.id !== guild.ownerId) await member.setNickname(nick, 'FleshFall: character renamed');
         },
       }
     : undefined;

@@ -13,10 +13,8 @@ import type { IconId, RoleId } from '../game/types.js';
 export interface GuildGate {
   guildId: string;
   /** Add the user to the guild with their OAuth token (scope guilds.join). */
-  join(userId: string, accessToken: string, nick: string): Promise<void>;
+  join(userId: string, accessToken: string): Promise<void>;
   isMember(userId: string): Promise<boolean>;
-  /** Best effort: keep the server nickname in sync with the character name. */
-  setNick(userId: string, nick: string): Promise<void>;
 }
 
 /** Website renames: one per hour. */
@@ -26,10 +24,10 @@ type Reply = { code: number; body: unknown };
 const ok = (body: unknown): Reply => ({ code: 200, body });
 const fail = (code: number, error: string): Reply => ({ code, body: { error } });
 
-async function joinSafe(gate: GuildGate, userId: string, token: unknown, nick: string): Promise<boolean> {
+async function joinSafe(gate: GuildGate, userId: string, token: unknown): Promise<boolean> {
   if (typeof token !== 'string' || !token) return gate.isMember(userId);
   try {
-    await gate.join(userId, token, nick);
+    await gate.join(userId, token);
     return true;
   } catch (e) {
     console.warn('guild join failed', (e as Error).message);
@@ -55,12 +53,12 @@ export async function createAccount(gate: GuildGate, userId: string, b: Record<s
   const evicted = [...(existing?.images ?? []).map((i) => i.key), ...spriteKeys(existing?.sprite)];
   const char = createCharacter(userId, name, b.role as RoleId, b.icon as IconId);
   // saved — now it's safe to await
-  const inGuild = await joinSafe(gate, userId, b.accessToken, name);
+  const inGuild = await joinSafe(gate, userId, b.accessToken);
   return ok({ character: accountView(char), inGuild, guildId: gate.guildId, evicted });
 }
 
 /** Rename the character (website). Cooldown via cooldowns.rename (= next allowed time). */
-export async function renameAccount(gate: GuildGate, userId: string, b: Record<string, unknown>): Promise<Reply> {
+export function renameAccount(userId: string, b: Record<string, unknown>): Reply {
   const name = cleanName(b.name);
   if (!name) return fail(400, 'ชื่อต้องยาว 2–32 ตัว ใช้ได้แค่ตัวอักษร ตัวเลข เว้นวรรค . _ \' -');
   const char = loadCharacter(userId);
@@ -72,8 +70,6 @@ export async function renameAccount(gate: GuildGate, userId: string, b: Record<s
   char.name = name;
   char.cooldowns.rename = now + RENAME_COOLDOWN_MS;
   saveCharacter(char);
-  // saved — now it's safe to await
-  await gate.setNick(userId, name).catch((e) => console.warn('nick sync failed', (e as Error).message));
   return ok({ character: accountView(char) });
 }
 
@@ -81,7 +77,7 @@ export async function renameAccount(gate: GuildGate, userId: string, b: Record<s
 export async function joinGuild(gate: GuildGate, userId: string, b: Record<string, unknown>): Promise<Reply> {
   const char = loadCharacter(userId);
   if (!char) return fail(404, 'ยังไม่มีตัวละคร');
-  const inGuild = await joinSafe(gate, userId, b.accessToken, char.name);
+  const inGuild = await joinSafe(gate, userId, b.accessToken);
   return ok({ inGuild, guildId: gate.guildId });
 }
 
