@@ -7,25 +7,27 @@ import { LOCATIONS } from '../game/world.js';
 import { profileEmbed } from '../ui.js';
 import type { Command } from './types.js';
 
+const WEB_URL = process.env.WEB_URL;
+
 const cut = (s: string) => (s.length > 100 ? s.slice(0, 99) + '…' : s);
 
 export const start: Command = {
   data: new SlashCommandBuilder()
     .setName('start')
-    .setDescription('สร้างตัวละคร — เลือกบทบาทและ Icon ที่บูชา')
-    .addStringOption((o) => o.setName('name').setDescription('ชื่อตัวละคร').setRequired(true).setMaxLength(32))
+    .setDescription('สร้างตัวละคร (บนเว็บ FleshFall)')
+    .addStringOption((o) => o.setName('name').setDescription('ชื่อตัวละคร').setRequired(false).setMaxLength(32))
     .addStringOption((o) =>
       o
         .setName('role')
         .setDescription('บทบาท')
-        .setRequired(true)
+        .setRequired(false)
         .addChoices(...Object.values(ROLES).map((r) => ({ name: cut(`${r.emoji} ${r.name} — ${r.short}`), value: r.id }))),
     )
     .addStringOption((o) =>
       o
         .setName('icon')
         .setDescription('Icon ที่บูชา (ให้พรและผลกรรม)')
-        .setRequired(true)
+        .setRequired(false)
         .addChoices(...Object.values(ICONS).map((c) => ({ name: cut(`${c.emoji} ${c.name} — ${c.blessing}`), value: c.id }))),
     ),
   async execute(i) {
@@ -33,9 +35,16 @@ export const start: Command = {
     if (existing && !existing.fiend) {
       return i.reply({ content: 'คุณมีตัวละครอยู่แล้ว ดูที่ `/profile`', flags: MessageFlags.Ephemeral });
     }
-    const name = i.options.getString('name', true).trim();
-    const role = i.options.getString('role', true) as RoleId;
-    const icon = i.options.getString('icon', true) as IconId;
+    // Characters (and their art) are made on the website; in-Discord creation is a local-dev fallback.
+    if (WEB_URL) {
+      return i.reply({ content: `🩸 สร้างตัวละครและอัปโหลดภาพได้ที่เว็บ → ${WEB_URL}/create`, flags: MessageFlags.Ephemeral });
+    }
+    const name = i.options.getString('name')?.trim();
+    const role = i.options.getString('role') as RoleId | null;
+    const icon = i.options.getString('icon') as IconId | null;
+    if (!name || !role || !icon) {
+      return i.reply({ content: 'ใส่ name, role และ icon ให้ครบ', flags: MessageFlags.Ephemeral });
+    }
     const char = createCharacter(i.user.id, name, role, icon);
     const intro =
       role === 'outsider'

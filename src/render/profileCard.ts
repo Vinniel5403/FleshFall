@@ -1,5 +1,6 @@
 /** Profile card — character portrait + stats. */
 import { balance } from '../config.js';
+import { imageUrl, pickImage } from '../game/account.js';
 import { gearAtk, gearDef, humanityTier, statMod } from '../game/character.js';
 import { ICONS } from '../game/icons.js';
 import { getItem } from '../game/items.js';
@@ -9,6 +10,8 @@ import { STAT_NAMES } from '../game/world.js';
 import { currentZone, getZone } from '../game/zones.js';
 import {
   art,
+  cover,
+  remoteArt,
   background,
   bar,
   box,
@@ -76,7 +79,11 @@ export const CARD_H = 720;
 export async function renderProfileCard(char: Character): Promise<Buffer> {
   const role = ROLES[char.role];
   const icon = ICONS[char.icon];
-  const [portrait, iconImg] = await Promise.all([art(ROLE_ART[char.role]), art(ICON_ART[char.icon])]);
+  // the player's own uploaded art (website → R2) wins over the stock role art
+  const own = pickImage(char, ['art', 'portrait', 'gallery']);
+  const ownUrl = own && imageUrl(own.key);
+  const [custom, iconImg] = await Promise.all([ownUrl ? remoteArt(ownUrl) : null, art(ICON_ART[char.icon])]);
+  const portrait = custom ?? (await art(ROLE_ART[char.role]));
   const { cv, ctx } = canvas(CARD_W, CARD_H);
   const accent = char.fiend ? C.blood : C.crimson;
 
@@ -125,7 +132,11 @@ export async function renderProfileCard(char: Character): Promise<Buffer> {
     ctx.shadowColor = 'rgba(0,0,0,.8)';
     ctx.shadowBlur = 30;
     if (char.fiend) ctx.filter = 'grayscale(1) contrast(1.25) brightness(.8)';
-    ctx.drawImage(portrait, PX + (PW - w) / 2, PY + PH - dh, w, dh);
+    if (custom) {
+      // uploaded art usually has its own background: fill the frame, keep the face (top) in view
+      ctx.shadowBlur = 0;
+      cover(ctx, custom, PX + 1, PY + 1, PW - 2, PH - 2, 0.5, own?.slot === 'portrait' ? 0.5 : 0.15);
+    } else ctx.drawImage(portrait, PX + (PW - w) / 2, PY + PH - dh, w, dh);
     if (char.fiend) {
       // blood-red multiply tint: the remnant is gone, only the Fiend remains
       ctx.filter = 'none';

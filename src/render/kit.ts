@@ -114,6 +114,31 @@ export function art(path: string): Promise<Image | null> {
   return p;
 }
 
+/**
+ * Player-uploaded art from R2 (public URL). Keys are never reused, so a URL's bytes never change:
+ * cache forever (bounded). Failures aren't cached, so a flaky fetch retries next render.
+ */
+const remoteCache = new Map<string, Promise<Image | null>>();
+const REMOTE_MAX = 200;
+export function remoteArt(url: string): Promise<Image | null> {
+  let p = remoteCache.get(url);
+  if (!p) {
+    p = (async () => {
+      const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (Number(res.headers.get('content-length') ?? 0) > 8_000_000) throw new Error('too large');
+      return loadImage(Buffer.from(await res.arrayBuffer()));
+    })().catch((err) => {
+      console.warn(`[render] remote art ${url}:`, err?.message ?? err);
+      remoteCache.delete(url);
+      return null;
+    });
+    remoteCache.set(url, p);
+    if (remoteCache.size > REMOTE_MAX) remoteCache.delete(remoteCache.keys().next().value!);
+  }
+  return p;
+}
+
 /** Draw an image covering (x,y,w,h), focus point fx/fy in 0..1. */
 export function cover(ctx: Ctx, img: Image, x: number, y: number, w: number, h: number, fx = 0.5, fy = 0.5): void {
   const s = Math.max(w / img.width, h / img.height);

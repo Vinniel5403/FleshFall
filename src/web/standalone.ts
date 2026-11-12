@@ -21,4 +21,4 @@ const players = (): Character[] => {
 };
 
 const { startApi } = await import('./server.js');
-startApi(Number(process.env.API_PORT ?? 3001), players);
+startApi(Number(process.env.API_PORT ?? 3001), { players });

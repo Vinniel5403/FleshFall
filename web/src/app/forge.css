@@ -1,0 +1,79 @@
+/* /create — character forge (login → create → dossier + image slots). Builds on landing.css .step/.guide-card + dossier plates. */
+.forge { display: grid; gap: 22px; scroll-margin-top: 80px; }
+.forge-loading { color: var(--muted); }
+.forge-error { margin: 0; padding: 12px 16px; border: 1px solid rgba(224, 30, 55, .6); background: rgba(163, 18, 27, .14); color: #f1c9c3; }
+.forge-note { margin: 0; padding: 12px 16px; border: 1px dashed var(--line); color: var(--flesh); }
+.forge-cta { margin-top: 18px; }
+
+/* account bar */
+.forge-account { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; color: var(--muted); font-size: 14px; }
+.forge-account img { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); }
+.forge-account b { color: var(--bone); font-weight: 500; }
+.forge-link, .forge-link:hover {
+  padding: 0; border: 0; background: none; box-shadow: none; transform: none;
+  color: var(--flesh); font: 400 14px var(--font-kanit), sans-serif; text-decoration: underline; text-underline-offset: 3px;
+}
+
+/* selectable guide cards (buttons) */
+.guide-card.pick { display: block; width: 100%; text-align: left; color: var(--bone); font: inherit; cursor: pointer; box-shadow: none; transform: none; }
+.guide-card.pick:hover { transform: none; box-shadow: none; }
+.guide-card.pick.on { border-color: var(--crimson); outline-color: rgba(230, 184, 162, .45); box-shadow: 0 0 0 1px var(--crimson), 0 0 28px rgba(224, 30, 55, .18); }
+.guide-card.icon.pick.on { border-color: var(--door); box-shadow: 0 0 0 1px var(--door), 0 0 28px rgba(255, 255, 255, .08); }
+.guide-card.pick:focus-visible { outline: 2px solid var(--flesh); outline-offset: 2px; }
+
+/* name + submit */
+.forge-name { display: flex; gap: 12px; flex-wrap: wrap; }
+.forge-name input {
+  flex: 1; min-width: 220px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 0;
+  background: #050303; color: var(--bone); font: 400 17px var(--font-kanit), sans-serif;
+}
+.forge-name input:focus { outline: none; border-color: var(--crimson); }
+.forge-name .cta { border-radius: 0; }
+
+/* dossier: portrait in a double frame + identity */
+.forge-dossier { display: grid; grid-template-columns: minmax(160px, 240px) 1fr; gap: 28px; align-items: center; --plate-c: var(--door); }
+.forge-portrait {
+  position: relative; aspect-ratio: 1; display: grid; place-items: center; overflow: hidden;
+  border: 1px solid rgba(230, 184, 162, .35); background: radial-gradient(circle at 50% 40%, rgba(224, 30, 55, .14), transparent 70%), var(--bg);
+}
+.forge-portrait::after { content: ""; position: absolute; inset: 8px; border: 1px solid rgba(230, 184, 162, .14); pointer-events: none; }
+.forge-portrait img { width: 100%; height: 100%; object-fit: cover; }
+.forge-portrait span { font: 600 13px var(--font-cinzel), serif; letter-spacing: .2em; color: var(--muted); text-transform: uppercase; }
+.forge-file { margin: 0 0 6px; font: 600 12px var(--font-cinzel), serif; letter-spacing: .18em; color: var(--crimson); }
+.forge-id h3 { font-size: clamp(26px, 3.4vw, 40px); line-height: 1.2; }
+.forge-id > .sub { margin: 6px 0 18px; color: var(--flesh); }
+.forge-discord { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.forge-discord .cta { border-radius: 0; }
+.forge-discord .sub { color: var(--muted); font-size: 14px; }
+
+/* image slots */
+.forge-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.forge-slot { padding: 16px; border: 1px solid var(--line); background: var(--bg); }
+.forge-slot.slot-gallery { grid-column: 1 / -1; }
+.forge-slot header { margin-bottom: 12px; }
+.forge-slot h4 { margin: 0 0 2px; font-size: 17px; }
+.forge-slot .sub { color: var(--muted); font-size: 13px; }
+.forge-thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+.slot-art .forge-thumbs, .slot-sheet .forge-thumbs, .slot-portrait .forge-thumbs { grid-template-columns: 1fr; }
+.forge-thumbs figure { position: relative; margin: 0; aspect-ratio: 3 / 4; border: 1px solid rgba(230, 184, 162, .25); background: #050303; }
+.slot-portrait .forge-thumbs figure { aspect-ratio: 1; }
+.slot-sheet .forge-thumbs figure { aspect-ratio: 16 / 10; }
+.forge-thumbs a { display: block; width: 100%; height: 100%; }
+.forge-thumbs img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.slot-portrait .forge-thumbs img { object-fit: cover; }
+.forge-x, .forge-x:hover {
+  position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; padding: 0; border-radius: 0;
+  border: 1px solid rgba(233, 224, 212, .4); background: rgba(11, 6, 6, .75); color: var(--bone);
+  font-size: 14px; line-height: 1; box-shadow: none; transform: none;
+}
+.forge-x:hover { border-color: var(--crimson); color: #fff; }
+.forge-add, .forge-add:hover {
+  min-height: 120px; width: 100%; padding: 12px; border-radius: 0; border: 1px dashed rgba(230, 184, 162, .35);
+  background: rgba(26, 12, 12, .5); color: var(--flesh); font: 400 15px var(--font-kanit), sans-serif; box-shadow: none; transform: none;
+}
+.forge-add:hover:not(:disabled) { border-color: var(--crimson); color: var(--bone); }
+
+@media (max-width: 700px) {
+  .forge-dossier { grid-template-columns: 1fr; }
+  .forge-portrait { max-width: 260px; }
+}

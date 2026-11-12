@@ -122,7 +122,7 @@ EN serif ตรงกลาง ขนาบเส้นเรียวแดง�
 ## 7. Content rules
 
 - ไทยเป็นหลัก ชื่อเฉพาะคงอังกฤษ (Icon, M.A.I.D.S, Rouge Land, Fiend, Miasma)
-- เว็บ **static ล้วน** — ข้อมูลเกมจาก `src/data/game.json` (`npm run web:data` ที่ root)
+- หน้าเว็บ **static** — ข้อมูลเกมจาก `src/data/game.json` (`npm run web:data` ที่ root) · ยกเว้น `/create` ที่ client component `CharacterForge` เรียก `/api/me/*` (ล็อกอิน Discord / สร้างตัวละคร / อัปโหลดภาพ) — สไตล์ใน `app/forge.css`
 - **ไม่แสดงค่าพลัง/ตัวเลขเกม** ในหน้าแรกและ `/create`
 - ป้าย **20+ / CW** ในส่วนต้อนรับและแนวทางออกแบบ
 

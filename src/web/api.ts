@@ -1,6 +1,7 @@
 /**
  * Web API: read-only views of the game world. Discord-free; never writes to the player store.
  */
+import { IMAGE_SLOTS } from '../game/account.js';
 import { MONSTERS } from '../game/hunt.js';
 import { ICONS } from '../game/icons.js';
 import { ITEMS } from '../game/items.js';
@@ -47,6 +48,7 @@ export const icons = () => Object.values(ICONS).map(({ mods: _m, ...rest }) => r
 export const roles = () => Object.values(ROLES).map(({ id, name, emoji, short, perks, stats, maxHp, maxStamina }) => ({ id, name, emoji, short, perks, stats, maxHp, maxStamina }));
 export const items = () => Object.values(ITEMS);
 export const bestiary = () => Object.values(MONSTERS);
+export const imageSlots = () => Object.values(IMAGE_SLOTS);
 
 export function leaderboard(src: PlayerSource) {
   return realPlayers(src)

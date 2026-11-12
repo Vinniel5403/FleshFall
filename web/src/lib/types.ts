@@ -79,3 +79,33 @@ export interface Monster {
 
 
 
+
+/** Character image slots (src/game/account.ts IMAGE_SLOTS). */
+export type ImageSlot = "portrait" | "art" | "sheet" | "gallery";
+
+export interface ImageSlotDef {
+  id: ImageSlot;
+  name: string;
+  desc: string;
+  max: number;
+}
+
+/** The logged-in player's own character (src/game/account.ts accountView). */
+export interface AccountView {
+  name: string;
+  role: string;
+  icon: string;
+  level: number;
+  fiend: boolean;
+  createdAt: number;
+  images: { slot: ImageSlot; key: string; at: number; url?: string }[];
+}
+
+/** GET /api/me response (website route handler). */
+export interface MeResponse {
+  user: { username: string; avatar: string | null } | null;
+  character: AccountView | null;
+  inGuild: boolean;
+  guildUrl: string | null;
+  error?: string;
+}

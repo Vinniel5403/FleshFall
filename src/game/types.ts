@@ -54,6 +54,16 @@ export interface Hunt {
   won?: boolean;
 }
 
+/** Character image slots (website uploads). Defined in account.ts IMAGE_SLOTS. */
+export type ImageSlot = 'portrait' | 'art' | 'sheet' | 'gallery';
+
+/** Uploaded character image. `key` = object key in R2 (public URL = IMAGE_BASE_URL + key). */
+export interface CharImage {
+  slot: ImageSlot;
+  key: string;
+  at: number;
+}
+
 export const CHAR_VERSION = 2;
 
 export interface Character {
@@ -92,6 +102,8 @@ export interface Character {
   gearLevels?: Record<string, number>;
   /** Blessing tier per Icon (0–5), earned at Icon shrines. */
   blessings?: Partial<Record<IconId, number>>;
+  /** Character art uploaded on the website (portrait, full art, sheet, gallery). */
+  images?: CharImage[];
   fiend: boolean;
   lastRegenAt: number;
   createdAt: number;

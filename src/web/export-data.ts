@@ -17,7 +17,7 @@ process.env.DATA_FILE = join(tmpdir(), 'fleshfall-export-sandbox.json');
 const api = await import('./api.js');
 
 const out = fileURLToPath(new URL('../../web/src/data/game.json', import.meta.url));
-const data = { world: api.world(), icons: api.icons(), roles: api.roles(), items: api.items(), bestiary: api.bestiary() };
+const data = { world: api.world(), icons: api.icons(), roles: api.roles(), items: api.items(), bestiary: api.bestiary(), imageSlots: api.imageSlots() };
 mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, JSON.stringify(data, null, 1) + '\n');
 console.log(`✓ ${out} — ${data.icons.length} icons, ${data.roles.length} roles, ${data.items.length} items, ${data.bestiary.length} monsters, ${data.world.continents.length} continents`);
