@@ -139,7 +139,7 @@ export function duelAct(d: Duel, action: DuelAction): DuelStep {
 
   if (foe.hp <= 0) {
     d.winner = d.turn;
-    lines.push(`🏆 **${me.name}** ชนะการดวล! **${foe.name}** นอนกองกับพื้น (แค่ในเกมดวล — ตัวจริงไม่เป็นไร)`);
+    lines.push(`🏆 **${me.name}** ชนะการดวล! **${foe.name}** นอนกองกับพื้น`);
   } else {
     d.turn = d.turn === 0 ? 1 : 0;
     if (d.turn === 0) d.round += 1;

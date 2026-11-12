@@ -7,7 +7,7 @@ import type { Command } from './types.js';
 export const duel: Command = {
   data: new SlashCommandBuilder()
     .setName('duel')
-    .setDescription('ท้าดวลผู้เล่นอื่นในแชท (ขำ ๆ ไม่เสียเลือดจริง)')
+    .setDescription('ท้าดวลผู้เล่นอื่นในแชท')
     .addUserOption((o) => o.setName('opponent').setDescription('คนที่จะท้าดวล').setRequired(true)),
   async execute(i) {
     const me = await requireActive(i);

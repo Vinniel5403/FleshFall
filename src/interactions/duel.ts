@@ -54,7 +54,7 @@ export function challengeView(id: string, challengerName: string, targetName: st
         .setTitle('⚔️ คำท้าดวล!')
         .setDescription(
           `**${challengerName}** ขว้างถุงมือเปื้อนเลือดใส่หน้า **${targetName}**\n\n` +
-            `-# ดวลขำ ๆ — เลือดในการดวลไม่กระทบตัวจริง · หมดเวลาใน ${CHALLENGE_MS / 1000} วิ`,
+            `-# หมดเวลาใน ${CHALLENGE_MS / 1000} วิ`,
         ),
     ],
     components: [
