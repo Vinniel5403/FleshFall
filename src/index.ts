@@ -11,7 +11,7 @@ import { handleDungeonButton, handleEventButton } from './interactions/buttons.j
 import { handleHuntButton } from './interactions/hunt.js';
 import { handleDuelButton } from './interactions/duel.js';
 import { handlePanelButton, handlePanelSelect } from './interactions/panels.js';
-import { proxyEnabled, startProxy } from './proxy.js';
+import { proxyEnabled, startProxy } from './rpProxy.js';
 
 /** Kick members who join without a website character (needs the privileged Server Members intent). */
 const REQUIRE_CHARACTER = process.env.REQUIRE_CHARACTER === '1';
