@@ -73,7 +73,27 @@
 }
 .forge-add:hover:not(:disabled) { border-color: var(--crimson); color: var(--bone); }
 
+/* sprite (PSD paper doll) */
+.sprite-wrap { display: grid; grid-template-columns: minmax(220px, 360px) 1fr; gap: 24px; align-items: start; }
+.sprite-view { border: 1px solid rgba(230, 184, 162, .3); background: radial-gradient(circle at 50% 45%, rgba(224, 30, 55, .12), transparent 70%), #050303; }
+.sprite-stage { position: relative; width: 100%; max-height: 70vh; margin: 0 auto; }
+.sprite-stage canvas { display: block; width: 100%; height: 100%; touch-action: none; user-select: none; }
+.sprite-note, .sprite-empty {
+  position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted);
+  font: 600 13px var(--font-cinzel), serif; letter-spacing: .2em; text-transform: uppercase;
+}
+.sprite-empty { position: static; aspect-ratio: 2 / 3; }
+.sprite-groups { margin: 4px 0 16px; color: var(--flesh); font-size: 14px; line-height: 1.8; }
+.sprite-map { list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px 16px; font-size: 14px; }
+.sprite-map li { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--line); padding: 3px 0; }
+.sprite-map code { color: var(--flesh); font-size: 12px; }
+.sprite-warn { margin: 0 0 14px; padding: 10px 14px 10px 28px; border: 1px dashed rgba(227, 179, 65, .5); color: #e8d29a; font-size: 13px; }
+.sprite-debug { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; color: var(--muted); font-size: 14px; cursor: pointer; }
+.sprite-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.sprite-actions .cta { border-radius: 0; }
+
 @media (max-width: 700px) {
+  .sprite-wrap { grid-template-columns: 1fr; }
   .forge-dossier { grid-template-columns: 1fr; }
   .forge-portrait { max-width: 260px; }
 }

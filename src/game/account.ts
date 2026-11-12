@@ -2,7 +2,7 @@
  * Web account rules: character creation from the website + character images.
  * Pure + Discord-free. Image bytes live in object storage (R2); the character only stores keys.
  */
-import type { CharImage, Character, ImageSlot } from './types.js';
+import type { CharImage, CharSprite, Character, ImageSlot, SpritePart } from './types.js';
 
 export interface ImageSlotDef {
   id: ImageSlot;
@@ -85,6 +85,41 @@ export function detachImage(char: Character, key: string): boolean {
   return char.images.length < before;
 }
 
+// ---------- sprite (paper doll from PSD) ----------
+
+export const SPRITE_MAX_PARTS = 40;
+export const SPRITE_MAX_EDGE = 4096;
+
+export const spriteKeys = (s: CharSprite | undefined): string[] => (s ? s.parts.map((p) => `${s.base}/${p.id}.${p.ext}`) : []);
+
+/** Validate + copy a sprite manifest from the website (whitelisted fields only). */
+export function cleanSprite(userId: string, raw: unknown, now = Date.now()): CharSprite | string {
+  if (!raw || typeof raw !== 'object') return 'bad sprite';
+  const r = raw as Record<string, unknown>;
+  const int = (v: unknown, lo: number, hi: number) => typeof v === 'number' && Number.isInteger(v) && v >= lo && v <= hi;
+  if (typeof r.base !== 'string' || !new RegExp(`^sprites/${userId}/[a-z0-9]{12,32}$`).test(r.base)) return 'bad base';
+  if (!int(r.width, 1, SPRITE_MAX_EDGE) || !int(r.height, 1, SPRITE_MAX_EDGE)) return 'bad size';
+  const W = r.width as number, H = r.height as number;
+  if (!Array.isArray(r.parts) || r.parts.length < 1 || r.parts.length > SPRITE_MAX_PARTS) return 'bad parts';
+  const seen = new Set<string>();
+  const parts: SpritePart[] = [];
+  for (const p of r.parts as Record<string, unknown>[]) {
+    if (typeof p?.id !== 'string' || !/^[a-z0-9_]{1,40}$/.test(p.id) || seen.has(p.id)) return 'bad part id';
+    if (!int(p.w, 1, W) || !int(p.h, 1, H) || !int(p.x, 0, W - 1) || !int(p.y, 0, H - 1) || !int(p.z, 0, 999)) return `bad part ${p.id}`;
+    if (p.ext !== 'webp' && p.ext !== 'png') return `bad ext ${p.id}`;
+    const pt = (v: unknown): [number, number] | undefined =>
+      Array.isArray(v) && v.length === 2 && int(v[0], 0, W) && int(v[1], 0, H) ? [v[0] as number, v[1] as number] : undefined;
+    seen.add(p.id);
+    const part: SpritePart = { id: p.id, x: p.x as number, y: p.y as number, w: p.w as number, h: p.h as number, z: p.z as number, ext: p.ext };
+    const top = pt(p.top), bot = pt(p.bot);
+    if (top) part.top = top;
+    if (bot) part.bot = bot;
+    if (p.id === 'weapon' && (p.hand === 'l' || p.hand === 'r')) part.hand = p.hand;
+    parts.push(part);
+  }
+  return { base: r.base, width: W, height: H, parts, at: now };
+}
+
 /** What the website may see about a player's own character (no Discord ids). */
 export function accountView(char: Character) {
   return {
@@ -95,6 +130,7 @@ export function accountView(char: Character) {
     fiend: char.fiend,
     createdAt: char.createdAt,
     images: (char.images ?? []).map(({ slot, key, at }: CharImage) => ({ slot, key, at })),
+    sprite: char.sprite ?? null,
   };
 }
 export type AccountView = ReturnType<typeof accountView>;

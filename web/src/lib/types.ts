@@ -99,6 +99,8 @@ export interface AccountView {
   fiend: boolean;
   createdAt: number;
   images: { slot: ImageSlot; key: string; at: number; url?: string }[];
+  /** paper-doll sprite from PSD; part file = `${url}/${id}.${ext}` */
+  sprite: (import("./rig").Rig & { base: string; at: number; url?: string }) | null;
 }
 
 /** GET /api/me response (website route handler). */

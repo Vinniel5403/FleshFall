@@ -64,6 +64,33 @@ export interface CharImage {
   at: number;
 }
 
+/** One cut-out sprite part (a PSD group), placed in rig canvas space. File = `${base}/${id}.${ext}`. */
+export interface SpritePart {
+  id: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  /** draw order (PSD group order, bottom = 0) */
+  z: number;
+  ext: 'webp' | 'png';
+  /** pixel anchors (rig coords): top/bottom band centroid — shoulder/hand, hip, hair root */
+  top?: [number, number];
+  bot?: [number, number];
+  /** weapon: which arm holds it (screen side) */
+  hand?: 'l' | 'r';
+}
+
+/** Paper-doll sprite built from the player's PSD (parsed in the browser). Pivots/parents come from part ids (web/src/lib/rig.ts). */
+export interface CharSprite {
+  /** R2 prefix, e.g. sprites/<uid>/<rand> */
+  base: string;
+  width: number;
+  height: number;
+  parts: SpritePart[];
+  at: number;
+}
+
 export const CHAR_VERSION = 2;
 
 export interface Character {
@@ -104,6 +131,8 @@ export interface Character {
   blessings?: Partial<Record<IconId, number>>;
   /** Character art uploaded on the website (portrait, full art, sheet, gallery). */
   images?: CharImage[];
+  /** Animated paper-doll sprite from the player's PSD. */
+  sprite?: CharSprite;
   fiend: boolean;
   lastRegenAt: number;
   createdAt: number;

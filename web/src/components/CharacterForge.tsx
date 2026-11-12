@@ -1,7 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { doorVar } from "@/lib/md";
+import type { ParsedSprite } from "@/lib/psd";
+import { TEMPLATE_GROUPS } from "@/lib/rig";
+import { SpriteStage } from "./SpriteStage";
 import type { AccountView, ImageSlot, ImageSlotDef, MeResponse } from "@/lib/types";
 
 export interface ForgeRole { id: string; name: string; emoji: string; short: string }
@@ -308,7 +311,163 @@ function Dossier(props: {
           ))}
         </div>
       </section>
+
+      <SpriteSection character={c} onChange={setChar} onError={props.onError} />
     </div>
+  );
+}
+
+/** PSD → animated paper doll. Parsed in the browser; only the trimmed parts are uploaded. */
+function SpriteSection(props: { character: AccountView; onChange: (c: AccountView) => void; onError: (e: string | null) => void }) {
+  const saved = props.character.sprite;
+  const input = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState<"parse" | "save" | "delete" | null>(null);
+  const [draft, setDraft] = useState<(ParsedSprite & { urls: Map<string, string> }) | null>(null);
+  const [debug, setDebug] = useState(false);
+
+  const dropDraft = useCallback(() => {
+    setDraft((d) => {
+      d?.urls.forEach((u) => URL.revokeObjectURL(u));
+      return null;
+    });
+  }, []);
+  useEffect(() => dropDraft, [dropDraft]);
+
+  const savedUrl = saved?.url;
+  const savedSrc = useMemo(() => (savedUrl ? (id: string, ext: string) => `${savedUrl}/${id}.${ext}` : null), [savedUrl]);
+  const draftSrc = useMemo(() => (draft ? (id: string) => draft.urls.get(id) ?? "" : null), [draft]);
+
+  const pick = async (file: File) => {
+    setBusy("parse");
+    props.onError(null);
+    dropDraft();
+    try {
+      const { parsePsdFile } = await import("@/lib/psd");
+      const parsed = await parsePsdFile(file);
+      const urls = new Map([...parsed.files].map(([id, b]) => [id, URL.createObjectURL(b as Blob)]));
+      setDraft({ ...parsed, urls });
+    } catch (err) {
+      props.onError((err as Error).message);
+    } finally {
+      setBusy(null);
+      if (input.current) input.current.value = "";
+    }
+  };
+
+  const save = async () => {
+    if (!draft) return;
+    setBusy("save");
+    props.onError(null);
+    try {
+      const fd = new FormData();
+      fd.set("rig", JSON.stringify(draft.rig));
+      for (const p of draft.rig.parts) fd.set(`p_${p.id}`, draft.files.get(p.id) as Blob, `${p.id}.${p.ext}`);
+      const r = await api<{ character: AccountView }>("/api/me/sprite", { method: "POST", body: fd });
+      props.onChange(r.character);
+      dropDraft();
+    } catch (err) {
+      props.onError((err as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const remove = async () => {
+    if (!confirm("ลบสไปรต์ตัวละคร?")) return;
+    setBusy("delete");
+    props.onError(null);
+    try {
+      props.onChange((await api<{ character: AccountView }>("/api/me/sprite", { method: "DELETE" })).character);
+    } catch (err) {
+      props.onError((err as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <section className="step">
+      <header>
+        <span className="step-no">06</span>
+        <div>
+          <h3>สไปรต์ตัวละคร (PSD)</h3>
+          <p className="sub">
+            อัปโหลดไฟล์ .psd ที่แยกส่วนเป็น group ตามเทมเพลต — ระบบประกอบร่างและขยับให้อัตโนมัติ · ไฟล์ถูกแยกในเครื่องคุณ อัปโหลดแค่ชิ้นส่วน
+          </p>
+        </div>
+      </header>
+      <div className="sprite-wrap">
+        <div className="sprite-view">
+          {draft && draftSrc ? (
+            <SpriteStage rig={draft.rig} src={draftSrc} label="ตัวอย่างสไปรต์" debug={debug} />
+          ) : saved && savedSrc ? (
+            <SpriteStage rig={saved} src={savedSrc} label={`สไปรต์ ${props.character.name}`} debug={debug} />
+          ) : (
+            <div className="sprite-empty">No Sprite</div>
+          )}
+        </div>
+        <div className="sprite-side">
+          {(draft || saved) && (
+            <label className="sprite-debug">
+              <input type="checkbox" checked={debug} onChange={(e) => setDebug(e.target.checked)} /> แสดงจุดหมุน (debug)
+            </label>
+          )}
+          {draft ? (
+            <>
+              <p className="forge-file">PREVIEW · ยังไม่บันทึก</p>
+              <ul className="sprite-map">
+                {draft.mapping.map((m) => (
+                  <li key={m.id}>
+                    <span>{m.name}</span>
+                    <code>{m.id}</code>
+                  </li>
+                ))}
+              </ul>
+              {draft.warnings.length > 0 && (
+                <ul className="sprite-warn">
+                  {draft.warnings.map((w) => (
+                    <li key={w}>{w}</li>
+                  ))}
+                </ul>
+              )}
+              <div className="sprite-actions">
+                <button type="button" className="cta" onClick={save} disabled={!!busy}>
+                  {busy === "save" ? "กำลังบันทึก…" : "✦ บันทึกสไปรต์"}
+                </button>
+                <button type="button" className="forge-link" onClick={dropDraft} disabled={!!busy}>
+                  ยกเลิก
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="sub">ชื่อ group ที่ระบบรู้จัก (สะกดคล้าย ๆ ได้ · ซ้าย/ขวาเดาจากตำแหน่งได้):</p>
+              <p className="sprite-groups">{TEMPLATE_GROUPS.join(" · ")}</p>
+              <div className="sprite-actions">
+                <button type="button" className="cta" onClick={() => input.current?.click()} disabled={!!busy}>
+                  {busy === "parse" ? "กำลังแยกชิ้นส่วน…" : saved ? "อัปโหลด PSD ใหม่" : "✦ อัปโหลด PSD"}
+                </button>
+                {saved && (
+                  <button type="button" className="forge-link" onClick={remove} disabled={!!busy}>
+                    ลบสไปรต์
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+      <input
+        ref={input}
+        type="file"
+        accept=".psd,image/vnd.adobe.photoshop"
+        hidden
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void pick(f);
+        }}
+      />
+    </section>
   );
 }
 

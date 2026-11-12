@@ -43,7 +43,7 @@ async function handleAccount(req: IncomingMessage, res: ServerResponse, p: strin
   if (!o.gate || !o.secret) return json(res, 503, { error: 'account api disabled' });
   if (!authorized(req, o.secret)) return json(res, 401, { error: 'unauthorized' });
   if (req.method !== 'POST') return json(res, 405, { error: 'method not allowed' });
-  const b = await readJson(req).catch(() => null);
+  const b = await readJson(req, 65_536).catch(() => null);
   if (!b) return json(res, 400, { error: 'bad json' });
   const uid = b.userId;
   if (!isUserId(uid)) return json(res, 400, { error: 'bad user' });
@@ -54,6 +54,8 @@ async function handleAccount(req: IncomingMessage, res: ServerResponse, p: strin
     case '/api/account/join': r = await account.joinGuild(o.gate, uid, b); break;
     case '/api/account/image/add': r = account.addImage(uid, b); break;
     case '/api/account/image/remove': r = account.removeImage(uid, b); break;
+    case '/api/account/sprite/set': r = account.setSprite(uid, b); break;
+    case '/api/account/sprite/clear': r = account.clearSprite(uid); break;
     default: r = { code: 404, body: { error: 'not found' } };
   }
   return json(res, r.code, r.body);

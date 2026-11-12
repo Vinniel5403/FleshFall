@@ -5,7 +5,13 @@ import { publicUrl } from "./r2";
 import type { Session } from "./session";
 
 export const withUrls = (c: AccountView | null | undefined): AccountView | null =>
-  c ? { ...c, images: c.images.map((i) => ({ ...i, url: publicUrl(i.key) })) } : null;
+  c
+    ? {
+        ...c,
+        images: c.images.map((i) => ({ ...i, url: publicUrl(i.key) })),
+        sprite: c.sprite ? { ...c.sprite, url: publicUrl(c.sprite.base) } : null,
+      }
+    : null;
 
 export function meResponse(s: Session, r: AccountReply): MeResponse {
   return {

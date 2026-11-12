@@ -3,7 +3,7 @@
  * The website verifies the Discord login; the bot owns the character store and the guild.
  * Every handler keeps load → mutate → save synchronous (no await in between).
  */
-import { accountView, attachImage, cleanName, detachImage, isSlot } from '../game/account.js';
+import { accountView, attachImage, cleanName, cleanSprite, detachImage, isSlot, spriteKeys } from '../game/account.js';
 import { createCharacter, loadCharacter, saveCharacter } from '../game/character.js';
 import { ICONS } from '../game/icons.js';
 import { ROLES } from '../game/roles.js';
@@ -47,7 +47,7 @@ export async function createAccount(gate: GuildGate, userId: string, b: Record<s
 
   const existing = loadCharacter(userId);
   if (existing && !existing.fiend) return fail(409, 'บัญชีนี้มีตัวละครอยู่แล้ว');
-  const evicted = (existing?.images ?? []).map((i) => i.key);
+  const evicted = [...(existing?.images ?? []).map((i) => i.key), ...spriteKeys(existing?.sprite)];
   const char = createCharacter(userId, name, b.role as RoleId, b.icon as IconId);
   // saved — now it's safe to await
   const inGuild = await joinSafe(gate, userId, b.accessToken, name);
@@ -79,4 +79,25 @@ export function removeImage(userId: string, b: Record<string, unknown>): Reply {
   const removed = detachImage(char, b.key);
   if (removed) saveCharacter(char);
   return ok({ character: accountView(char), removed });
+}
+
+/** Replace the character's sprite; returns the old sprite's object keys for deletion. */
+export function setSprite(userId: string, b: Record<string, unknown>): Reply {
+  const sprite = cleanSprite(userId, b.sprite);
+  if (typeof sprite === 'string') return fail(400, sprite);
+  const char = loadCharacter(userId);
+  if (!char) return fail(404, 'ยังไม่มีตัวละคร');
+  const evicted = spriteKeys(char.sprite);
+  char.sprite = sprite;
+  saveCharacter(char);
+  return ok({ character: accountView(char), evicted });
+}
+
+export function clearSprite(userId: string): Reply {
+  const char = loadCharacter(userId);
+  if (!char) return fail(404, 'ยังไม่มีตัวละคร');
+  const evicted = spriteKeys(char.sprite);
+  delete char.sprite;
+  saveCharacter(char);
+  return ok({ character: accountView(char), evicted });
 }
