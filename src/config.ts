@@ -27,5 +27,7 @@ export const balance = {
   iconDungeonHome: 0.05,
   iconDungeonAway: 0.01,
   deathGoldLossPct: 0.25,
+  /** Outsiders (reachedRougeLand=false) may walk into Rouge Land on their own from this level; before that only red door → Cypress → ferryman. */
+  rougeLandUnlockLevel: 10,
   xpForLevel: (level: number) => 50 + (level - 1) * 35,
 };

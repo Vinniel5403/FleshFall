@@ -226,6 +226,16 @@ export function startTravel(char: Character, to: ZoneId, now = Date.now()): Trav
   const home = to === 'rouge_land';
   if (!z || (!home && (!z.channel || !z.travel))) return { ok: false, error: 'ไปที่นั่นไม่ได้' };
   if (char.traveling) return { ok: false, error: 'คุณกำลังเดินทางอยู่แล้ว' };
+  if (home && !god && !char.reachedRougeLand) {
+    // Outsiders: Rouge Land stays shut until the ferryman takes them or they're strong enough
+    if (char.level < balance.rougeLandUnlockLevel) {
+      return {
+        ok: false,
+        error: `🚪 Rouge Land ยังไม่เปิดรับคุณ — หา 🟥 ประตูแดงแล้วข้ามทะเลกับคนพายเรือที่ Cypress Isle หรือแกร่งให้ถึง **เลเวล ${balance.rougeLandUnlockLevel}**`,
+      };
+    }
+    char.reachedRougeLand = true;
+  }
   if (home ? char.location === 'rouge_land' : currentZone(char).id === to) return { ok: false, error: 'คุณอยู่ที่นั่นแล้ว' };
   // Leaving Rouge Land through the butchery door is instant; coming back (or city → city) takes time.
   const instant = god || char.location === 'rouge_land';

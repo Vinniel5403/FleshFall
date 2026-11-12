@@ -15,7 +15,7 @@ Stats: `str` พละ, `agi` ว่องไว, `int` สัมผัส. Chec
 
 ## Locations
 `old_realm` ↔ `cypress` ↔ `rouge_land`.
-- Outsider starts Old Realm, `reachedRougeLand=false`. Must find red door (event or dungeon exit) → Cypress → ferryman (visible only humanity ≤ 60; pay vintage item or own flesh) → unlock.
+- Outsider starts Old Realm, `reachedRougeLand=false`. Must find red door (event or dungeon exit) → Cypress → ferryman (visible only humanity ≤ 60; pay vintage item or own flesh) → unlock. 🏠 to Rouge Land is blocked until unlocked; reaching Lv `balance.rougeLandUnlockLevel` (10) also unlocks it.
 - Residents (maid/hound/bar/patron) start Rouge Land; survivor starts Old Realm but already unlocked. Unlocked chars `/travel` freely.
 - Old Realm explore costs +1 hp (body mass drains). Rest in Old Realm: no HP.
 

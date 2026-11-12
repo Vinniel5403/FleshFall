@@ -276,6 +276,10 @@ function levelUp(char: Character, lines: string[]): void {
   char.stats[main] += 1;
   lines.push(`🆙 **เลเวล ${char.level}!** — พลังจาก ${ICONS[char.icon].name} ไหลเข้าสู่ร่าง`);
   changeHumanity(char, -2, lines);
+  if (!char.reachedRougeLand && char.level >= balance.rougeLandUnlockLevel) {
+    char.reachedRougeLand = true;
+    lines.push('🩸 **Rouge Land เปิดรับคุณแล้ว** — ร่างนี้แกร่งพอจะเดินเข้าแผ่นดินสีแดงได้เอง กด 🏠 เมื่อพร้อม');
+  }
   if (m.mutateOnLevel) {
     const mut = MUTATIONS[Math.floor(Math.random() * MUTATIONS.length)]!;
     char.mutations.push(mut);
