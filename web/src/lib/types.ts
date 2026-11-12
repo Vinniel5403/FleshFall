@@ -98,6 +98,22 @@ export interface AccountView {
   level: number;
   fiend: boolean;
   createdAt: number;
+  /** live numbers for the dossier (keep in sync with src/game/account.ts accountView) */
+  status?: {
+    xp: number;
+    xpNext: number;
+    hp: number;
+    maxHp: number;
+    stamina: number;
+    maxStamina: number;
+    humanity: number;
+    sanity: number;
+    flesh: number;
+    stats: { str: number; agi: number; int: number };
+    where: string;
+  };
+  /** next time a rename is allowed (ms epoch) */
+  renameAt?: number;
   images: { slot: ImageSlot; key: string; at: number; url?: string }[];
   /** paper-doll sprite from PSD; part file = `${url}/${id}.${ext}` */
   sprite: (import("./rig").Rig & { base: string; at: number; url?: string }) | null;

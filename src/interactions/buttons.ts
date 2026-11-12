@@ -25,7 +25,11 @@ export async function handleEventButton(i: ButtonInteraction): Promise<unknown> 
   const [, ownerId, eventId, choiceId] = i.customId.split(':');
   const char = await ownerCheck(i, ownerId);
   if (!char) return;
-  if (char.pendingEvent?.eventId !== eventId) return i.update({ components: [] }); // stale
+  if (char.pendingEvent?.eventId !== eventId) {
+    // stale: already answered, expired, or replaced by a newer event
+    await i.update({ components: [] });
+    return i.followUp({ content: '⌛ เหตุการณ์นี้จบไปแล้ว — กด 🔍 สำรวจ เพื่อไปต่อ (ถ้ายังมีเหตุการณ์ค้างอยู่ จะเด้งกลับมาให้เลือกต่อ)', flags: MessageFlags.Ephemeral });
+  }
 
   const result = resolveChoice(char, eventId!, choiceId!);
   if (!result) return i.reply({ content: 'ทางเลือกนี้ใช้ไม่ได้แล้ว', flags: MessageFlags.Ephemeral });

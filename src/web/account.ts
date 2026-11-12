@@ -15,7 +15,12 @@ export interface GuildGate {
   /** Add the user to the guild with their OAuth token (scope guilds.join). */
   join(userId: string, accessToken: string, nick: string): Promise<void>;
   isMember(userId: string): Promise<boolean>;
+  /** Best effort: keep the server nickname in sync with the character name. */
+  setNick(userId: string, nick: string): Promise<void>;
 }
+
+/** Website renames: one per hour. */
+export const RENAME_COOLDOWN_MS = 60 * 60_000;
 
 type Reply = { code: number; body: unknown };
 const ok = (body: unknown): Reply => ({ code: 200, body });
@@ -52,6 +57,24 @@ export async function createAccount(gate: GuildGate, userId: string, b: Record<s
   // saved — now it's safe to await
   const inGuild = await joinSafe(gate, userId, b.accessToken, name);
   return ok({ character: accountView(char), inGuild, guildId: gate.guildId, evicted });
+}
+
+/** Rename the character (website). Cooldown via cooldowns.rename (= next allowed time). */
+export async function renameAccount(gate: GuildGate, userId: string, b: Record<string, unknown>): Promise<Reply> {
+  const name = cleanName(b.name);
+  if (!name) return fail(400, 'ชื่อต้องยาว 2–32 ตัว ใช้ได้แค่ตัวอักษร ตัวเลข เว้นวรรค . _ \' -');
+  const char = loadCharacter(userId);
+  if (!char) return fail(404, 'ยังไม่มีตัวละคร');
+  if (char.name === name) return ok({ character: accountView(char) });
+  const now = Date.now();
+  const next = char.cooldowns.rename ?? 0;
+  if (next > now) return fail(429, `เปลี่ยนชื่อได้อีกครั้งใน ${Math.ceil((next - now) / 60_000)} นาที`);
+  char.name = name;
+  char.cooldowns.rename = now + RENAME_COOLDOWN_MS;
+  saveCharacter(char);
+  // saved — now it's safe to await
+  await gate.setNick(userId, name).catch((e) => console.warn('nick sync failed', (e as Error).message));
+  return ok({ character: accountView(char) });
 }
 
 /** Retry the guild join (first attempt failed, or the player left the server). */

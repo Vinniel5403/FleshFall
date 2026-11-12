@@ -85,6 +85,11 @@ if (process.env.API_PORT) {
           const guild = await client.guilds.fetch(guildId);
           return guild.members.fetch(userId).then(() => true, () => false);
         },
+        async setNick(userId, nick) {
+          const guild = await client.guilds.fetch(guildId);
+          const member = await guild.members.fetch(userId).catch(() => null);
+          if (member && member.id !== guild.ownerId) await member.setNickname(nick, 'FleshFall: character renamed');
+        },
       }
     : undefined;
   if (process.env.API_SECRET && !gate) console.warn('API_SECRET set but GUILD_ID missing — account api disabled');

@@ -3,6 +3,8 @@
  * Pure + Discord-free. Image bytes live in object storage (R2); the character only stores keys.
  */
 import type { CharImage, CharSprite, Character, ImageSlot, SpritePart } from './types.js';
+import { currentZone, getZone, zoneLabel } from './zones.js';
+import { balance } from '../config.js';
 
 export interface ImageSlotDef {
   id: ImageSlot;
@@ -136,6 +138,20 @@ export function accountView(char: Character) {
     level: char.level,
     fiend: char.fiend,
     createdAt: char.createdAt,
+    status: {
+      xp: char.xp,
+      xpNext: balance.xpForLevel(char.level),
+      hp: char.hp,
+      maxHp: char.maxHp,
+      stamina: char.stamina,
+      maxStamina: char.maxStamina,
+      humanity: char.humanity,
+      sanity: char.sanity,
+      flesh: char.flesh,
+      stats: { ...char.stats },
+      where: char.traveling ? `🧭 กำลังเดินทางไป ${getZone(char.traveling.to)?.name ?? char.traveling.to}` : zoneLabel(currentZone(char)),
+    },
+    renameAt: char.cooldowns.rename ?? 0,
     images: (char.images ?? []).map(({ slot, key, at }: CharImage) => ({ slot, key, at })),
     sprite: char.sprite ?? null,
   };

@@ -259,8 +259,31 @@ function Dossier(props: {
   const icon = props.icons.find((i) => i.id === c.icon);
   const portrait = c.images.find((i) => i.slot === "portrait");
   const [joining, setJoining] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [newName, setNewName] = useState(c.name);
+  const [renaming, setRenaming] = useState(false);
 
   const setChar = (character: AccountView) => props.onChange({ ...me, character });
+
+  const rename = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRenaming(true);
+    props.onError(null);
+    try {
+      const r = await api<{ character: AccountView }>("/api/me/character", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name: newName.trim() }),
+      });
+      setChar(r.character);
+      setEditing(false);
+    } catch (err) {
+      props.onError((err as Error).message);
+    } finally {
+      setRenaming(false);
+    }
+  };
+  const st = c.status;
 
   const join = async () => {
     setJoining(true);
@@ -284,10 +307,48 @@ function Dossier(props: {
         </div>
         <div className="forge-id">
           <p className="forge-file">M.A.I.D.S · PERSONNEL FILE</p>
-          <h3>{c.name}</h3>
+          {editing ? (
+            <form className="forge-rename" onSubmit={rename}>
+              <input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                minLength={2}
+                maxLength={32}
+                required
+                autoFocus
+                aria-label="ชื่อตัวละครใหม่"
+              />
+              <button type="submit" className="cta" disabled={renaming || newName.trim() === c.name}>
+                {renaming ? "กำลังบันทึก…" : "บันทึก"}
+              </button>
+              <button type="button" className="ghost" onClick={() => (setEditing(false), setNewName(c.name))}>
+                ยกเลิก
+              </button>
+              <span className="sub">เปลี่ยนได้ชั่วโมงละครั้ง · ชื่อเล่นใน Discord เปลี่ยนตาม</span>
+            </form>
+          ) : (
+            <h3 className="forge-name">
+              {c.name}
+              <button type="button" className="forge-edit" onClick={() => setEditing(true)} aria-label="เปลี่ยนชื่อ" title="เปลี่ยนชื่อ">
+                ✎
+              </button>
+            </h3>
+          )}
           <p className="sub">
             {role ? `${role.emoji} ${role.name}` : c.role} · {icon ? `${icon.emoji} ${icon.name}` : c.icon}
           </p>
+          {st && (
+            <dl className="forge-status">
+              <div><dt>เลเวล</dt><dd>{c.level} <small>({st.xp}/{st.xpNext} XP)</small></dd></div>
+              <div><dt>เนื้อกาย</dt><dd>{st.hp}/{st.maxHp}</dd></div>
+              <div><dt>แรง</dt><dd>{st.stamina}/{st.maxStamina}</dd></div>
+              <div><dt>ความเป็นมนุษย์</dt><dd>{st.humanity}</dd></div>
+              <div><dt>สติ</dt><dd>{st.sanity}</dd></div>
+              <div><dt>เนื้อสด</dt><dd>🥩 {st.flesh}</dd></div>
+              <div><dt>พละ / ว่องไว / สัมผัส</dt><dd>{st.stats.str} / {st.stats.agi} / {st.stats.int}</dd></div>
+              <div><dt>อยู่ที่</dt><dd>{st.where}</dd></div>
+            </dl>
+          )}
           <div className="forge-discord">
             {me.inGuild && me.guildUrl ? (
               <a className="cta" href={me.guildUrl} target="_blank" rel="noreferrer">

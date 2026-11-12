@@ -42,6 +42,19 @@
 .forge-file { margin: 0 0 6px; font: 600 12px var(--font-cinzel), serif; letter-spacing: .18em; color: var(--crimson); }
 .forge-id h3 { font-size: clamp(26px, 3.4vw, 40px); line-height: 1.2; }
 .forge-id > .sub { margin: 6px 0 18px; color: var(--flesh); }
+.forge-name { display: flex; align-items: center; gap: 10px; }
+.forge-edit { background: none; border: 1px solid transparent; color: var(--muted); font-size: 18px; line-height: 1; padding: 4px 6px; cursor: pointer; }
+.forge-edit:hover, .forge-edit:focus-visible { color: var(--flesh); border-color: var(--line, rgba(230,184,162,.3)); }
+.forge-rename { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 6px; }
+.forge-rename input { flex: 1; min-width: 180px; padding: 8px 10px; font-size: 18px; background: rgba(0,0,0,.35); color: var(--flesh); border: 1px solid var(--crimson); border-radius: 0; }
+.forge-rename .cta, .forge-rename .ghost { border-radius: 0; padding: 7px 14px; font-size: 14px; }
+.forge-rename .ghost { background: none; color: var(--muted); border: 1px solid rgba(230,184,162,.3); cursor: pointer; }
+.forge-rename .sub { flex-basis: 100%; color: var(--muted); font-size: 13px; }
+.forge-status { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px 18px; margin: 0 0 18px; }
+.forge-status div { min-width: 0; }
+.forge-status dt { color: var(--muted); font-size: 12px; letter-spacing: .04em; }
+.forge-status dd { margin: 2px 0 0; color: var(--flesh); font-size: 15px; overflow-wrap: anywhere; }
+.forge-status dd small { color: var(--muted); font-size: 12px; }
 .forge-discord { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .forge-discord .cta { border-radius: 0; }
 .forge-discord .sub { color: var(--muted); font-size: 14px; }
