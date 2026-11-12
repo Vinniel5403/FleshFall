@@ -250,9 +250,11 @@ export function dungeonStatusEmbed(char: Character): EmbedBuilder {
 }
 
 export function resultEmbed(char: Character, title: string, body: string[], color: number = COLORS.rot): EmbedBuilder {
-  return new EmbedBuilder()
+  const e = new EmbedBuilder()
     .setColor(char.fiend ? COLORS.fiend : color)
     .setTitle(title)
-    .setDescription(body.join('\n').slice(0, 4000))
     .setFooter({ text: statusLine(char) });
+  const text = body.join('\n').slice(0, 4000);
+  if (text) e.setDescription(text); // Discord rejects an empty description
+  return e;
 }
