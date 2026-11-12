@@ -12,6 +12,7 @@ import { currentZone, getZone, tierLabel } from '../game/zones.js';
 import { toUpdate, travelAction } from '../commands/actions.js';
 import { idleError, requireActive, travelingText } from '../commands/guard.js';
 import { renderHuntCard } from '../render/sceneCards.js';
+import { playDice } from './dice.js';
 import { imagePayload, type ImagePayload } from '../render/view.js';
 import { bar, COLORS, dungeonButtons, dungeonPayload } from '../ui.js';
 
@@ -152,5 +153,7 @@ export async function handleHuntButton(i: ButtonInteraction): Promise<unknown> {
   // after death/fiend the hunt is gone; show the final state without fight buttons
   const components = r.ended === 'died' ? [] : huntButtons(char);
   await i.deferUpdate();
-  return i.editReply({ ...(await huntPayload(char, lines, r.ended)), components });
+  const final = huntPayload(char, lines, r.ended); // renders while the die rolls
+  await playDice(i, r.dice && [r.dice], COLORS.blood);
+  return i.editReply({ ...(await final), components });
 }

@@ -6,6 +6,7 @@ import { isDev } from './dev.js';
 import { balance } from '../config.js';
 import { addItem, applyOutcome, gearAtk, statMod, type AppliedOutcome } from './character.js';
 import { chance, rand, startRun } from './engine.js';
+import { d20Success, type DiceRoll } from './dice.js';
 import { itemLabel } from './items.js';
 import type { Character, Hunt, IconDoor, MonsterState, Outcome } from './types.js';
 import { DOORS, DUNGEON_RULES, isCrimsonMoon } from './world.js';
@@ -133,6 +134,8 @@ export interface RoundResult {
   applied?: AppliedOutcome;
   /** Hunt ended: won / died / fled. */
   ended?: 'won' | 'died' | 'fled';
+  /** The player's d20 this round (for the dice animation). */
+  dice?: DiceRoll;
 }
 
 const alive = (h: Hunt) => h.monsters.filter((m) => m.hp > 0);
@@ -206,7 +209,8 @@ export function attack(char: Character, idx: number): RoundResult {
 
   const roll = rand(1, 20);
   const mod = statMod(char, 'str');
-  const hit = roll === 20 || (roll !== 1 && roll + mod >= ac);
+  const hit = d20Success(roll, mod, ac);
+  const dice: DiceRoll = { label: `โจมตี ${def.name}`, mod, target: ac, rolls: [roll], success: hit, win: roll === 20 ? 'คริติคอล!' : 'โดน!', lose: 'พลาด' };
   if (hit) {
     let dmg = rand(1, 6) + Math.floor(char.level / 4) + gearAtk(char) + Math.floor(char.stats.str / 2);
     if (roll === 20) dmg *= 2;
@@ -221,10 +225,10 @@ export function attack(char: Character, idx: number): RoundResult {
   }
 
   const won = finishIfWon(char, h, lines);
-  if (won) return { lines, ended: won };
+  if (won) return { lines, ended: won, dice };
   const back = monstersAttack(char, h);
   lines.push(...back.lines);
-  return { lines, applied: back.applied, ended: endIfFallen(char, back.applied) };
+  return { lines, applied: back.applied, ended: endIfFallen(char, back.applied), dice };
 }
 
 /** Try to run. Agility check; failure gives the monsters a free round. */
@@ -234,14 +238,16 @@ export function flee(char: Character): RoundResult {
   const dc = 8 + alive(h).length * 2;
   const roll = rand(1, 20);
   const mod = statMod(char, 'agi');
-  if (roll === 20 || (roll !== 1 && roll + mod >= dc)) {
+  const ok = d20Success(roll, mod, dc);
+  const dice: DiceRoll = { label: 'หนี (ว่องไว)', mod, target: dc, rolls: [roll], success: ok, win: 'หนีรอด!', lose: 'หนีไม่พ้น' };
+  if (ok) {
     delete char.hunt;
-    return { lines: [`🏃 \`🎲 ว่องไว ${roll + mod}/${dc} ✅\` คุณหนีรอดมาได้`], ended: 'fled' };
+    return { lines: [`🏃 \`🎲 ว่องไว ${roll + mod}/${dc} ✅\` คุณหนีรอดมาได้`], ended: 'fled', dice };
   }
   const lines = [`🏃 \`🎲 ว่องไว ${roll + mod}/${dc} ❌\` หนีไม่พ้น!`];
   const back = monstersAttack(char, h);
   lines.push(...back.lines);
-  return { lines, applied: back.applied, ended: endIfFallen(char, back.applied) };
+  return { lines, applied: back.applied, ended: endIfFallen(char, back.applied), dice };
 }
 
 /** After a lucky victory: step through the door into a dungeon run. */

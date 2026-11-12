@@ -2,6 +2,7 @@ import { MessageFlags, type ButtonInteraction } from 'discord.js';
 import { loadCharacter, saveCharacter } from '../game/character.js';
 import { advance, exitDungeon, resolveChoice, retreat, type ExitChoice } from '../game/engine.js';
 import type { Character } from '../game/types.js';
+import { playDice } from './dice.js';
 import { COLORS, dungeonButtons, eventButtons, eventPayload, resultEmbed } from '../ui.js';
 
 /** Ephemeral if the clicked message was ephemeral (e.g. dungeon entered from a panel hunt). */
@@ -39,7 +40,11 @@ export async function handleEventButton(i: ButtonInteraction): Promise<unknown> 
   const body = [`*${event.description}*`, '', `➡️ **${choice.emoji ?? ''} ${choice.label}**`, outcome.text, ...notes, '', ...applied.lines];
   const color = applied.becameFiend ? COLORS.fiend : applied.died ? COLORS.blood : COLORS.rot;
   const nav = dungeonButtons(char);
-  return i.update({ embeds: [resultEmbed(char, event.title, body, color)], files: [], components: nav ? [nav] : [] });
+  const final = { embeds: [resultEmbed(char, event.title, body, color)], files: [], components: nav ? [nav] : [] };
+  if (!result.dice.length) return i.update(final);
+  await i.deferUpdate();
+  await playDice(i, result.dice, color);
+  return i.editReply(final);
 }
 
 /** dg:<userId>:next | dg:<userId>:leave | dg:<userId>:exit:<black|red|icon> */

@@ -1,6 +1,7 @@
 import { applyOutcome, changeHumanity, itemCount, removeItem, statMod, type AppliedOutcome } from './character.js';
 import { EVENTS, EVENTS_BY_ID } from './events/index.js';
 import { rollIconDungeon, receiveBlessing } from './blessings.js';
+import { d20Success, type DiceRoll } from './dice.js';
 import { ICON_BY_DOOR, mods } from './icons.js';
 import type { Character, EventChoice, EventContext, GameEventDef, IconDoor, Outcome } from './types.js';
 import { DOORS, DUNGEON_RULES, isCrimsonMoon, STAT_NAMES } from './world.js';
@@ -8,8 +9,8 @@ import { DOORS, DUNGEON_RULES, isCrimsonMoon, STAT_NAMES } from './world.js';
 export const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 export const chance = (p: number) => Math.random() < p;
 
-/** Build the context passed to choice resolvers. `notes` collects side effects (e.g. Loki rerolls). */
-export function makeContext(char: Character, notes: string[]): EventContext & { rerolls: () => number } {
+/** Build the context passed to choice resolvers. `notes` collects side effects (e.g. Loki rerolls), `dice` every check made. */
+export function makeContext(char: Character, notes: string[], dice: DiceRoll[] = []): EventContext & { rerolls: () => number } {
   const m = mods(char.icon);
   let rerolls = 0;
   return {
@@ -23,14 +24,17 @@ export function makeContext(char: Character, notes: string[]): EventContext & { 
       const mod = statMod(char, stat);
       const roll1 = () => rand(1, 20);
       let roll = roll1();
-      const ok = (r: number) => r === 20 || (r !== 1 && r + mod >= dc);
+      const rolls = [roll];
+      const ok = (r: number) => d20Success(r, mod, dc);
       if (!ok(roll) && m.rerollChance && chance(m.rerollChance)) {
         rerolls += 1;
         notes.push(`🎭 Loki บิดกฎฟิสิกส์ — ทอยใหม่ (${roll} → ?)`);
         roll = roll1();
+        rolls.push(roll);
       }
       const total = roll + mod;
       const success = ok(roll);
+      dice.push({ label: `ทอยเช็ก ${STAT_NAMES[stat]}`, mod, target: dc, rolls, success });
       return { success, roll, total, dc, tag: `\`🎲 ${STAT_NAMES[stat]} ${total}/${dc} ${success ? '✅' : '❌'}\`` };
     },
   };
@@ -85,6 +89,8 @@ export interface ChoiceResult {
   outcome: Outcome;
   applied: AppliedOutcome;
   notes: string[];
+  /** d20 checks made while resolving, in order (for the dice animation). */
+  dice: DiceRoll[];
 }
 
 /** Resolve a choice and mutate the character. Caller saves. */
@@ -94,7 +100,8 @@ export function resolveChoice(char: Character, eventId: string, choiceId: string
   if (!event || !choice) return null;
 
   const notes: string[] = [];
-  const ctx = makeContext(char, notes);
+  const dice: DiceRoll[] = [];
+  const ctx = makeContext(char, notes, dice);
   const outcome = choice.resolve(ctx);
   delete char.pendingEvent;
   const applied = applyOutcome(char, outcome);
@@ -107,7 +114,7 @@ export function resolveChoice(char: Character, eventId: string, choiceId: string
   } else if (alive && char.run && event.door) {
     char.run.stage = event.boss ? 'exit' : 'between';
   }
-  return { event, choice, outcome, applied, notes };
+  return { event, choice, outcome, applied, notes, dice };
 }
 
 // ---------- dungeon navigation ----------

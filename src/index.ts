@@ -9,6 +9,7 @@ import type { GuildGate } from './web/account.js';
 import { loadCharacter } from './game/character.js';
 import { handleDungeonButton, handleEventButton } from './interactions/buttons.js';
 import { handleHuntButton } from './interactions/hunt.js';
+import { handleDuelButton } from './interactions/duel.js';
 import { handlePanelButton, handlePanelSelect } from './interactions/panels.js';
 import { proxyEnabled, startProxy } from './proxy.js';
 
@@ -62,6 +63,7 @@ client.on(Events.InteractionCreate, async (i: Interaction) => {
       else if (i.customId.startsWith('dg:')) await handleDungeonButton(i);
       else if (i.customId.startsWith('pn:')) await handlePanelButton(i);
       else if (i.customId.startsWith('hn:')) await handleHuntButton(i);
+      else if (i.customId.startsWith('du:')) await handleDuelButton(i);
     } else if (i.isStringSelectMenu()) {
       if (i.customId.startsWith('pns:')) await handlePanelSelect(i);
     }
