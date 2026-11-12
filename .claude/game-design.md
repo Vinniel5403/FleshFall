@@ -32,6 +32,12 @@ Maid: sell +50%, flesh-eating humanity loss halved, Grade D→A by level (5/10/1
 ## Crimson Moon
 Every 5th day 21:00–02:59 Bangkok. Crimson-only events; sanity loss x1.5 outside Rouge Land. Override: env `CRIMSON_MOON=on|off|auto` or admin `/moon` (runtime, resets to env on restart).
 
+## Expedition (extraction) — 2026-11-13
+One inventory. Loot found on an expedition round (leave Rouge Land → return) is pending and only handed over at home; die before that and you get nothing from that round (inventory is never touched). Each hunt won on the trip = +1 depth: loot +15%/step (cap 8), rare drops +3%/step, but Miasma 2×(depth−1) per new hunt and monster dmg +depth/2. Choice every hunt: ล่าต่อ or 🏠 กลับ. Field merchants pay 70%. Outsiders who haven't reached Rouge Land carry loot directly (no home).
+
+## Role economy — 2026-11-13
+Hound hunts 🫀 เนื้อล่าสด (raw = humanity −5) → only Bar Staff cook buff dishes (+2 STR/AGI/INT or −2 dmg, 45 min) → Maid `/serve` makes them +1 stronger / 1.5× longer and earns tips (Patron ×2) → Patron posts buy orders on the player market (fillers get +20% tip, 6 order slots). Market lives in Rouge Land, escrowed, 3-day expiry.
+
 ## Content rules
 - Only the 7 canon Icons. No custom Icons.
 - Don't use the doc's "Secret Record" (gestation ritual) in content.

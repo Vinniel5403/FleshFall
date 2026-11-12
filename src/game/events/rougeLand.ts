@@ -1,7 +1,8 @@
 import { VINTAGE_IDS } from '../items.js';
+import { itemCount } from '../character.js';
 import type { Character, GameEventDef } from '../types.js';
 
-const vintageOwned = (c: Character) => VINTAGE_IDS.find((id) => (c.inventory[id] ?? 0) > 0);
+const vintageOwned = (c: Character) => VINTAGE_IDS.find((id) => itemCount(c, id) > 0);
 
 export const ROUGE_LAND_EVENTS: GameEventDef[] = [
   {
@@ -153,7 +154,7 @@ export const ROUGE_LAND_EVENTS: GameEventDef[] = [
         label: 'มอบเนื้อเน่าให้เจ้าของบาร์',
         emoji: '🦠',
         style: 'secondary',
-        visible: (c) => (c.inventory['rotten_flesh'] ?? 0) > 0,
+        visible: (c) => itemCount(c, 'rotten_flesh') > 0,
         resolve: () => ({ text: 'เจ้าของบาร์ยิ้มให้ร่างที่สั่นไหวคงรูปขึ้น และตอบแทนคุณด้วยไวน์', items: { rotten_flesh: -1, blood_wine: 1 }, humanity: 2, xp: 8 }),
       },
     ],

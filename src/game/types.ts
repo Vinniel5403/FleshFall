@@ -95,6 +95,43 @@ export interface CharSprite {
 
 export const CHAR_VERSION = 2;
 
+/** Player market order. sell = items escrowed, buy = flesh escrowed (qty × price). */
+export interface MarketOrder {
+  id: string;
+  kind: 'sell' | 'buy';
+  owner: string;
+  ownerName: string;
+  ownerRole: RoleId;
+  item: string;
+  /** remaining quantity */
+  qty: number;
+  /** flesh per unit */
+  price: number;
+  createdAt: number;
+}
+
+/** Expedition round outside Rouge Land. `loot` = pending haul (delivered at home, never if you die), `streak` = hunts won. */
+export interface Trip {
+  loot: Record<string, number>;
+  streak: number;
+}
+
+/** Meal buff from a Bar-only dish. `servedBy` = Maid who served it (stronger + longer). */
+export interface MealBuff {
+  item: string;
+  until: number;
+  servedBy?: string;
+}
+
+/** Stat bonus a dish grants while its buff lasts. */
+export interface BuffDef {
+  stat?: StatKey;
+  /** damage reduction */
+  def?: number;
+  amount: number;
+  minutes: number;
+}
+
 export interface Character {
   version: number;
   userId: string;
@@ -135,6 +172,12 @@ export interface Character {
   images?: CharImage[];
   /** Animated paper-doll sprite from the player's PSD. */
   sprite?: CharSprite;
+  /** Expedition round: pending haul + hunt streak (handed over when you get home). */
+  trip?: Trip;
+  /** Active meal buff (Bar-only recipes). */
+  buff?: MealBuff;
+  /** Last safe return home with trip loot (shown on inventory for a while). */
+  banked?: { text: string; at: number };
   fiend: boolean;
   lastRegenAt: number;
   createdAt: number;
@@ -159,6 +202,8 @@ export interface ItemDef {
   isFlesh?: boolean;
   atk?: number;
   def?: number;
+  /** eating it grants a timed meal buff */
+  buff?: BuffDef;
 }
 
 export interface Outcome {

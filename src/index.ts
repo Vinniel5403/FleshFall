@@ -11,6 +11,7 @@ import { handleDungeonButton, handleEventButton } from './interactions/buttons.j
 import { handleHuntButton } from './interactions/hunt.js';
 import { handleDuelButton } from './interactions/duel.js';
 import { handlePanelButton, handlePanelSelect } from './interactions/panels.js';
+import { handleMarketModal } from './interactions/market.js';
 import { proxyEnabled, startProxy } from './rpProxy.js';
 
 /** Kick members who join without a website character (needs the privileged Server Members intent). */
@@ -66,6 +67,8 @@ client.on(Events.InteractionCreate, async (i: Interaction) => {
       else if (i.customId.startsWith('du:')) await handleDuelButton(i);
     } else if (i.isStringSelectMenu()) {
       if (i.customId.startsWith('pns:')) await handlePanelSelect(i);
+    } else if (i.isModalSubmit()) {
+      if (i.customId.startsWith('pnm:')) await handleMarketModal(i);
     }
     if (!i.isAutocomplete()) void syncMember(i.user.id).catch(() => {});
   } catch (err) {

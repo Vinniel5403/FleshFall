@@ -4,7 +4,8 @@ import { noEmoji } from './render/kit.js';
 import { renderProfileCard } from './render/profileCard.js';
 import { DOOR_EN, renderSceneCard } from './render/sceneCards.js';
 import { imagePayload, type ImagePayload } from './render/view.js';
-import { gearAtk, gearDef, humanityTier, seesHints, statMod } from './game/character.js';
+import { activeBuff, buffLabel, gearAtk, gearDef, humanityTier, seesHints, statMod } from './game/character.js';
+import { streakText } from './game/expedition.js';
 import { exitOptions, visibleChoices } from './game/engine.js';
 import { ICON_BY_DOOR, ICONS } from './game/icons.js';
 import { blessingsText } from './game/blessings.js';
@@ -106,6 +107,8 @@ export function profilePayload(char: Character): Promise<ImagePayload> {
       ? `🧭 กำลังเดินทางไป **${getZone(char.traveling.to)?.name ?? char.traveling.to}** — ถึง <t:${Math.ceil(char.traveling.arriveAt / 1000)}:R>`
       : null,
     isCrimsonMoon() ? '🌕 **Crimson Moon กำลังส่องแสง**' : null,
+    activeBuff(char) ? `🍽️ ${buffLabel(char)} — หมด <t:${Math.ceil(activeBuff(char)!.until / 1000)}:R>` : null,
+    streakText(char),
     blessingsText(char) ? `**✨ พรเทพ**\n${blessingsText(char)}` : null,
     char.mutations.length ? `**🧬 การกลายพันธุ์**\n${char.mutations.map((m) => `• ${m}`).join('\n')}` : null,
     char.role === 'bar' ? `-# ⏰ Closing Shift ${String(closingShiftHour(char.userId)).padStart(2, '0')}:00 น.` : null,

@@ -1,7 +1,8 @@
 import { VINTAGE_IDS } from '../items.js';
+import { itemCount } from '../character.js';
 import type { Character, GameEventDef } from '../types.js';
 
-const hasVintage = (c: Character) => VINTAGE_IDS.some((id) => (c.inventory[id] ?? 0) > 0);
+const hasVintage = (c: Character) => VINTAGE_IDS.some((id) => itemCount(c, id) > 0);
 const canSeeFerryman = (c: Character) => c.humanity <= 60;
 
 export const CYPRESS_EVENTS: GameEventDef[] = [
@@ -29,7 +30,7 @@ export const CYPRESS_EVENTS: GameEventDef[] = [
         visible: (c) => canSeeFerryman(c) && hasVintage(c),
         hint: 'ค่าโดยสาร: ของวินเทจ 1 ชิ้น',
         resolve: ({ char }) => {
-          const v = VINTAGE_IDS.find((id) => (char.inventory[id] ?? 0) > 0)!;
+          const v = VINTAGE_IDS.find((id) => itemCount(char, id) > 0)!;
           return {
             text: 'คนพายเรือรับของล้ำค่านั้นไปโดยไม่พูดอะไร เรือแล่นผ่าน Abysmarine ที่ใหญ่เท่าตึกระฟ้า ไปสู่แผ่นดินที่หัวใจยังเต้น',
             items: { [v]: -1 },

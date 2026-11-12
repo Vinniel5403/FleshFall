@@ -1,3 +1,4 @@
+import { itemCount } from '../character.js';
 import type { GameEventDef } from '../types.js';
 
 export const DUNGEON_EVENTS: GameEventDef[] = [
@@ -98,7 +99,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'จุดไฟแช็ก',
         emoji: '🔥',
         style: 'success',
-        visible: (c) => (c.inventory['lighter'] ?? 0) > 0,
+        visible: (c) => itemCount(c, 'lighter') > 0,
         hint: 'มีไฟแช็ก — ปลอดภัยกว่ามาก',
         resolve: ({ rand }) => ({ text: 'แสงไฟเผยให้เห็นทาง... และเงาสูงสามเมตรที่ถอยหนีแสง', items: { bone: rand(1, 2) }, sanity: -2, xp: 14 }),
       },
@@ -279,10 +280,10 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'โยนเนื้อให้มัน',
         emoji: '🍖',
         style: 'success',
-        visible: (c) => (c.inventory['fetal_flesh'] ?? 0) > 0 || (c.inventory['rotten_flesh'] ?? 0) > 0,
+        visible: (c) => itemCount(c, 'fetal_flesh') > 0 || itemCount(c, 'rotten_flesh') > 0,
         hint: 'ป้อนเนื้อ = ผ่านอย่างปลอดภัย และได้พร',
         resolve: ({ char }) => {
-          const id = (char.inventory['rotten_flesh'] ?? 0) > 0 ? 'rotten_flesh' : 'fetal_flesh';
+          const id = itemCount(char, 'rotten_flesh') > 0 ? 'rotten_flesh' : 'fetal_flesh';
           return { text: 'ปากนับร้อยแย่งกันกิน ทันใดนั้นคุณรู้สึกอิ่ม แผลเก่าปิดสนิท', items: { [id]: -1 }, hp: 12, xp: 14 };
         },
       },
@@ -394,9 +395,9 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'กินเสบียงที่ซ่อนไว้',
         emoji: '🍜',
         style: 'secondary',
-        visible: (c) => (c.inventory['instant_noodle'] ?? 0) > 0 || (c.inventory['fetal_flesh'] ?? 0) > 0,
+        visible: (c) => itemCount(c, 'instant_noodle') > 0 || itemCount(c, 'fetal_flesh') > 0,
         resolve: ({ char }) => {
-          const id = (char.inventory['instant_noodle'] ?? 0) > 0 ? 'instant_noodle' : 'fetal_flesh';
+          const id = itemCount(char, 'instant_noodle') > 0 ? 'instant_noodle' : 'fetal_flesh';
           return { text: 'คุณแอบกินในความมืด ห้องนี้รู้ว่าคุณโกง', items: { [id]: -1 }, stamina: 2, xp: 5 };
         },
       },

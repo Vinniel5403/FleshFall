@@ -945,6 +945,74 @@
    "description": "เนื้อสัตว์จาก Old Realm ย่างจนไหม้ ไม่ใช่เนื้อสด แต่กินได้ (+14 เนื้อกาย, +2 แรง, -1 ความเป็นมนุษย์)"
   },
   {
+   "id": "hunted_flesh",
+   "name": "เนื้อล่าสด",
+   "emoji": "🫀",
+   "type": "consumable",
+   "isFlesh": true,
+   "value": 14,
+   "heal": 14,
+   "stamina": 2,
+   "humanity": -5,
+   "description": "เนื้อที่ Hound แล่จากเหยื่อสด ๆ ยังอุ่น กินดิบได้แต่มันกัดกินความเป็นมนุษย์ — ส่งให้บาร์ปรุงดีกว่า (+14 เนื้อกาย, +2 แรง, -5 ความเป็นมนุษย์)"
+  },
+  {
+   "id": "hunter_steak",
+   "name": "สเต๊กนักล่า",
+   "emoji": "🍽️",
+   "type": "consumable",
+   "value": 45,
+   "heal": 10,
+   "buff": {
+    "stat": "str",
+    "amount": 2,
+    "minutes": 45
+   },
+   "description": "เนื้อล่าย่างไฟแรงราดซอสไวน์โลหิต (+10 เนื้อกาย · บัฟ พละ +2 นาน 45 นาที)"
+  },
+  {
+   "id": "shade_tartare",
+   "name": "ทาร์ทาร์เงา",
+   "emoji": "🥗",
+   "type": "consumable",
+   "value": 45,
+   "sanity": 6,
+   "buff": {
+    "stat": "agi",
+    "amount": 2,
+    "minutes": 45
+   },
+   "description": "เนื้อล่าสับดิบคลุกผลดวงตา กินแล้วตัวเบาเหมือนเงา (+6 สติ · บัฟ ว่องไว +2 นาน 45 นาที)"
+  },
+  {
+   "id": "seer_consomme",
+   "name": "คอนซอมเมผู้หยั่งรู้",
+   "emoji": "🥣",
+   "type": "consumable",
+   "value": 45,
+   "sanity": 10,
+   "buff": {
+    "stat": "int",
+    "amount": 2,
+    "minutes": 45
+   },
+   "description": "ซุปใสจนเห็นเงาตัวเองในชาม ประสาทสัมผัสคมขึ้น (+10 สติ · บัฟ สัมผัส +2 นาน 45 นาที)"
+  },
+  {
+   "id": "bone_broth",
+   "name": "ซุปกระดูกเคี่ยวข้ามคืน",
+   "emoji": "🍵",
+   "type": "consumable",
+   "value": 45,
+   "heal": 16,
+   "buff": {
+    "def": 2,
+    "amount": 2,
+    "minutes": 45
+   },
+   "description": "เคี่ยวกระดูกกับเนื้อล่าจนข้นเหมือนกาว ผิวหนังด้านขึ้น (+16 เนื้อกาย · บัฟ ลดดาเมจ +2 นาน 45 นาที)"
+  },
+  {
    "id": "absinthe",
    "name": "แอบซินธ์สีเขียว",
    "emoji": "🍸",

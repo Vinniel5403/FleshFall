@@ -29,6 +29,17 @@ const list: ItemDef[] = [
     description: 'สูตรประจำบาร์ บรรเทาผลกรรมของ Icon (+8 เนื้อกาย, +12 สติ, +4 ความเป็นมนุษย์)' },
   { id: 'grilled_meat', name: 'เนื้อดิบย่างถ่าน', emoji: '🍖', type: 'consumable', value: 16, heal: 14, stamina: 2, humanity: -1,
     description: 'เนื้อสัตว์จาก Old Realm ย่างจนไหม้ ไม่ใช่เนื้อสด แต่กินได้ (+14 เนื้อกาย, +2 แรง, -1 ความเป็นมนุษย์)' },
+  // --- เนื้อล่า (Hound) → อาหารบัฟ (Bar เท่านั้น) ---
+  { id: 'hunted_flesh', name: 'เนื้อล่าสด', emoji: '🫀', type: 'consumable', isFlesh: true, value: 14, heal: 14, stamina: 2, humanity: -5,
+    description: 'เนื้อที่ Hound แล่จากเหยื่อสด ๆ ยังอุ่น กินดิบได้แต่มันกัดกินความเป็นมนุษย์ — ส่งให้บาร์ปรุงดีกว่า (+14 เนื้อกาย, +2 แรง, -5 ความเป็นมนุษย์)' },
+  { id: 'hunter_steak', name: 'สเต๊กนักล่า', emoji: '🍽️', type: 'consumable', value: 45, heal: 10, buff: { stat: 'str', amount: 2, minutes: 45 },
+    description: 'เนื้อล่าย่างไฟแรงราดซอสไวน์โลหิต (+10 เนื้อกาย · บัฟ พละ +2 นาน 45 นาที)' },
+  { id: 'shade_tartare', name: 'ทาร์ทาร์เงา', emoji: '🥗', type: 'consumable', value: 45, sanity: 6, buff: { stat: 'agi', amount: 2, minutes: 45 },
+    description: 'เนื้อล่าสับดิบคลุกผลดวงตา กินแล้วตัวเบาเหมือนเงา (+6 สติ · บัฟ ว่องไว +2 นาน 45 นาที)' },
+  { id: 'seer_consomme', name: 'คอนซอมเมผู้หยั่งรู้', emoji: '🥣', type: 'consumable', value: 45, sanity: 10, buff: { stat: 'int', amount: 2, minutes: 45 },
+    description: 'ซุปใสจนเห็นเงาตัวเองในชาม ประสาทสัมผัสคมขึ้น (+10 สติ · บัฟ สัมผัส +2 นาน 45 นาที)' },
+  { id: 'bone_broth', name: 'ซุปกระดูกเคี่ยวข้ามคืน', emoji: '🍵', type: 'consumable', value: 45, heal: 16, buff: { def: 2, amount: 2, minutes: 45 },
+    description: 'เคี่ยวกระดูกกับเนื้อล่าจนข้นเหมือนกาว ผิวหนังด้านขึ้น (+16 เนื้อกาย · บัฟ ลดดาเมจ +2 นาน 45 นาที)' },
   // --- ของประจำทวีป (ร้านใน Old Realm) ---
   { id: 'absinthe', name: 'แอบซินธ์สีเขียว', emoji: '🍸', type: 'consumable', value: 14, stamina: 1, sanity: 12,
     description: 'เหล้ายุโรปที่ทำให้เห็นนางฟ้าสีเขียว... หรืออะไรที่คล้ายกัน (+1 แรง, +12 สติ)' },
@@ -86,4 +97,7 @@ export function itemLabel(id: string, qty?: number): string {
   return qty !== undefined ? `${base} ×${qty}` : base;
 }
 
-export const VINTAGE_IDS = list.filter((i) => i.type === 'vintage').map((i) => i.id);
+/** Items players can trade on the market (not quest relics). */
+export const TRADEABLE_IDS = list.filter((i) => i.value > 0).map((i) => i.id);
+
+export const VINTAGE_IDS =list.filter((i) => i.type === 'vintage').map((i) => i.id);

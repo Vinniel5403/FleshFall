@@ -1,10 +1,12 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import type { Character } from '../game/types.js';
+import type { Character, MarketOrder } from '../game/types.js';
 
 interface DbShape {
   version: 1;
   characters: Record<string, Character>;
+  /** Player market orders (sell listings + buy requests), escrowed. */
+  market?: Record<string, MarketOrder>;
 }
 
 /**
@@ -40,6 +42,24 @@ export class Store {
 
   allCharacters(): Character[] {
     return Object.values(this.data.characters);
+  }
+
+  allOrders(): MarketOrder[] {
+    return Object.values(this.data.market ?? {});
+  }
+
+  getOrder(id: string): MarketOrder | undefined {
+    return this.data.market?.[id];
+  }
+
+  saveOrder(o: MarketOrder): void {
+    (this.data.market ??= {})[o.id] = o;
+    this.scheduleFlush();
+  }
+
+  deleteOrder(id: string): void {
+    if (this.data.market) delete this.data.market[id];
+    this.scheduleFlush();
   }
 
   private scheduleFlush(): void {

@@ -5,7 +5,8 @@ import { isDev } from '../game/dev.js';
  */
 import { EmbedBuilder, MessageFlags, type InteractionReplyOptions, type InteractionUpdateOptions } from 'discord.js';
 import { balance } from '../config.js';
-import { addItem, applyOutcome, consume, cooldownLeft, itemCount, removeItem, saveCharacter, setCooldown } from '../game/character.js';
+import { activeBuff, addItem, applyOutcome, buffLabel, consume, cooldownLeft, itemCount, removeItem, saveCharacter, setCooldown } from '../game/character.js';
+import { inField, streakText, tripLines } from '../game/expedition.js';
 import { chance } from '../game/engine.js';
 import { mods } from '../game/icons.js';
 import { getItem, itemLabel } from '../game/items.js';
@@ -64,8 +65,30 @@ export function inventoryEmbed(char: Character): EmbedBuilder {
   return embed;
 }
 
+/** Extra inventory text: pending haul of this round, active buff, last haul delivered at home. */
+export function inventoryNotes(char: Character): string[] {
+  const out: string[] = [];
+  const loot = tripLines(char);
+  if (inField(char)) {
+    if (loot.length) out.push(`**🎒 ของรอรับ** (ได้เมื่อกลับถึง Rouge Land · ตายก่อน = ไม่ได้): ${loot.join(', ')}`);
+    const trip = streakText(char);
+    if (trip) out.push(`-# ${trip}`);
+  }
+  const b = activeBuff(char);
+  if (b) out.push(`🍽️ ${buffLabel(char)} — หมด <t:${Math.ceil(b.until / 1000)}:R>${b.served ? ` · เสิร์ฟโดย ${b.served}` : ''}`);
+  if (char.banked && Date.now() - char.banked.at < 60 * 60_000) out.push(`-# ${char.banked.text}`);
+  return out;
+}
+
 export function inventoryPayload(char: Character): Promise<ImagePayload> {
-  return imagePayload('inventory', COLORS.bone, () => renderInventoryCard(char), () => [inventoryEmbed(char)]);
+  const notes = inventoryNotes(char);
+  return imagePayload(
+    'inventory',
+    COLORS.bone,
+    () => renderInventoryCard(char),
+    () => [inventoryEmbed(char), ...(notes.length ? [new EmbedBuilder().setColor(COLORS.bone).setDescription(notes.join('\n'))] : [])],
+    notes.join('\n'),
+  );
 }
 
 /** Inventory entries of the given types, for pickers. */
@@ -98,12 +121,15 @@ export function equipItem(char: Character, id: string): ActionResult {
 export const STOCK = ['bandage', 'alchemy_salve', 'blood_wine', 'fetal_flesh', 'fresh_cut', 'wild_flour', 'lighter', 'leather_coat', 'bone_saw', 'rusted_armor', 'sigil'];
 
 export const buyPrice = (c: Character, id: string) => Math.ceil((getItem(id)?.value ?? 0) * (c.role === 'patron' ? 0.75 : 1));
-export const sellPrice = (c: Character, id: string) => {
+/** Field merchants lowball: selling out in the Old Realm pays 70%. Bring it home for the full price. */
+export const FIELD_SELL_MULT = 0.7;
+
+export const sellPrice = (c: Character, id: string, src: ShopSrc = 'home') => {
   const def = getItem(id);
   if (!def) return 0;
   // Patrons pay full for real-world relics; maids grade meat perfectly
   const base = def.type === 'vintage' ? 1 : 0.5;
-  return Math.floor(def.value * base * (c.role === 'maid' ? 1.5 : 1));
+  return Math.floor(def.value * base * (c.role === 'maid' ? 1.5 : 1) * (src === 'field' ? FIELD_SELL_MULT : 1));
 };
 
 /** Old Realm continent shops — each city sells its continent's stock. */
@@ -207,12 +233,19 @@ export function sellItem(char: Character, id: string, qty: number, src: ShopSrc 
   if (err) return fail(err);
   const n = Math.min(qty, itemCount(char, id));
   if (n < 1) return fail('คุณไม่มีของชิ้นนี้');
-  if (!sellPrice(char, id)) return fail('ร้านไม่รับซื้อของชิ้นนี้');
-  const price = sellPrice(char, id) * n;
+  if (!sellPrice(char, id, src)) return fail('ร้านไม่รับซื้อของชิ้นนี้');
+  const price = sellPrice(char, id, src) * n;
   removeItem(char, id, n);
   char.flesh += price;
   saveCharacter(char);
-  return done(resultEmbed(char, '⚖️ ขายของ', [`🗑️ -${itemLabel(id, n)}`, `🥩 +${price} เนื้อสด (มี ${char.flesh})`], COLORS.blood));
+  return done(
+    resultEmbed(
+      char,
+      '⚖️ ขายของ',
+      [`🗑️ -${itemLabel(id, n)}`, `🥩 +${price} เนื้อสด (มี ${char.flesh})`, ...(src === 'field' ? ['-# พ่อค้าเงากดราคา 30% — ขายที่ Rouge Land ได้เต็มราคา'] : [])],
+      COLORS.blood,
+    ),
+  );
 }
 
 // ---------- cooking ----------
@@ -222,6 +255,8 @@ export interface Recipe {
   name: string;
   needs: Record<string, number>;
   makes: string;
+  /** Buff dishes: only Bar Staff can cook them. */
+  barOnly?: boolean;
 }
 
 /** From "สูตรลับตำหรับโลกเก่า" (Archive 3) + the bar's specialty. */
@@ -230,6 +265,11 @@ export const RECIPES: Recipe[] = [
   { id: 'taragege', name: 'ทารกเกะ', needs: { fetal_flesh: 2, wild_flour: 1 }, makes: 'taragege' },
   { id: 'remnant_stew', name: 'สตูว์ถักทอเศษเนื้อ', needs: { rotten_flesh: 2 }, makes: 'remnant_stew' },
   { id: 'grilled_meat', name: 'เนื้อดิบย่างถ่าน', needs: { raw_meat: 2 }, makes: 'grilled_meat' },
+  // buff dishes — need Hound's hunted flesh, only the bar knows how
+  { id: 'hunter_steak', name: 'สเต๊กนักล่า', needs: { hunted_flesh: 2, blood_wine: 1 }, makes: 'hunter_steak', barOnly: true },
+  { id: 'shade_tartare', name: 'ทาร์ทาร์เงา', needs: { hunted_flesh: 1, eye_fruit: 2 }, makes: 'shade_tartare', barOnly: true },
+  { id: 'seer_consomme', name: 'คอนซอมเมผู้หยั่งรู้', needs: { hunted_flesh: 1, eye_fruit: 1, wild_flour: 1 }, makes: 'seer_consomme', barOnly: true },
+  { id: 'bone_broth', name: 'ซุปกระดูกเคี่ยวข้ามคืน', needs: { hunted_flesh: 1, bone: 3 }, makes: 'bone_broth', barOnly: true },
 ];
 
 export const needsText = (r: Recipe) => Object.entries(r.needs).map(([id, n]) => itemLabel(id, n)).join(' + ');
@@ -240,6 +280,9 @@ export function cookRecipe(char: Character, recipeId: string): ActionResult {
   const r = RECIPES.find((x) => x.id === recipeId);
   if (!r) return fail('ไม่มีสูตรนี้');
   const god = isDev(char);
+  if (r.barOnly && char.role !== 'bar' && !god) {
+    return fail(`🍷 **${r.name}** เป็นสูตรลับของบาร์ — มีแต่ Bar Staff ที่ปรุงได้ ซื้อจากตลาด หรือฝากวัตถุดิบให้คนของบาร์ปรุงให้`);
+  }
   if (!god && Object.entries(r.needs).some(([id, n]) => itemCount(char, id) < n)) return fail(`วัตถุดิบไม่พอ — ต้องใช้ ${needsText(r)}`);
   if (!god) for (const [id, n] of Object.entries(r.needs)) removeItem(char, id, n);
 
@@ -474,4 +517,52 @@ export function upgradeGear(char: Character, slot: GearSlot): ActionResult {
   (char.gearLevels ??= {})[id] = lv + 1;
   saveCharacter(char);
   return done(resultEmbed(char, `⚒️ ${itemLabel(id)} +${lv + 1}`, ['ค้อนกระดูกกระทบโลหะ เสียงกรีดร้องเบา ๆ ดังออกมาจากตัวอาวุธ'], COLORS.bone));
+}
+
+// ---------- serve (Maid) ----------
+
+/** Maid tip for serving a dish; Patrons tip double. */
+export const SERVE_TIP = 6;
+
+/** Buff dishes the server holds (for pickers / autocomplete). */
+export const servableItems = (char: Character) => ownedItems(char, ['consumable']).filter((x) => !!x.def.buff);
+
+/**
+ * A Maid serves a buff dish to another player in Rouge Land: the buff is +1 stronger and lasts 1.5×.
+ * The Maid earns a tip + XP (Patron customers tip double). Caller loads both characters, no await in between.
+ */
+export function serveFood(maid: Character, guest: Character, itemId: string): ActionResult {
+  const god = isDev(maid);
+  if (maid.role !== 'maid' && !god) return fail('🔪 มีแต่ Maid เท่านั้นที่เสิร์ฟได้ — คนอื่นส่งของกันผ่าน 🏛️ ตลาด');
+  if (maid.userId === guest.userId) return fail('Maid ไม่เสิร์ฟตัวเอง — คำปฏิญาณอดกลั้น');
+  if (guest.fiend) return fail(`${guest.name} กลายเป็น Fiend ไปแล้ว`);
+  const away = homeError(maid);
+  if (away) return fail(away);
+  if (!god && (guest.traveling || guest.location !== 'rouge_land')) return fail(`${guest.name} ไม่ได้อยู่ใน Rouge Land — เสิร์ฟได้เฉพาะแขกที่นั่งอยู่ในเกาะ`);
+  const def = getItem(itemId);
+  if (!def?.buff) return fail('เสิร์ฟได้เฉพาะอาหารบัฟจากสูตรลับบาร์');
+  if (itemCount(maid, itemId) < 1) return fail(`คุณไม่มี ${itemLabel(itemId)}`);
+  // consume() takes the dish from whoever eats it, so hand it over first
+  removeItem(maid, itemId);
+  addItem(guest, itemId);
+  const ate = consume(guest, itemId, maid.name) ?? [];
+  const tip = SERVE_TIP * (guest.role === 'patron' ? 2 : 1);
+  maid.flesh += tip;
+  const xp = applyOutcome(maid, { text: '', xp: 10 });
+  saveCharacter(maid);
+  saveCharacter(guest);
+  return done(
+    resultEmbed(
+      guest,
+      `🔪 ${maid.name} เสิร์ฟ ${itemLabel(itemId)} ให้ ${guest.name}`,
+      [
+        '*เมดวางจานลงอย่างไร้เสียง ผ้าเช็ดปากพับเป็นรูปกลีบดอก "ทานให้อร่อยนะคะ"*',
+        '',
+        ...ate,
+        '',
+        `-# ${maid.name}: 🥩 +${tip} ทิป${guest.role === 'patron' ? ' (Patron ทิปสองเท่า)' : ''} · ${xp.lines.join(' ')}`,
+      ],
+      COLORS.crimson,
+    ),
+  );
 }

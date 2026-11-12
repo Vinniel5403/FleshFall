@@ -1,5 +1,6 @@
 import { isDev } from './dev.js';
 import { balance } from '../config.js';
+import { endTripSafe } from './expedition.js';
 import type { Character, IconDoor, Location, ZoneId } from './types.js';
 import { LOCATIONS } from './world.js';
 
@@ -254,5 +255,6 @@ export function resolveTravel(char: Character, now = Date.now()): boolean {
   if (!z) return false;
   char.zone = z.id;
   char.location = z.region;
+  if (z.region === 'rouge_land') endTripSafe(char); // made it home: this trip's loot is safe
   return true;
 }

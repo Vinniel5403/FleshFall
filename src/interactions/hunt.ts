@@ -5,6 +5,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, type ButtonInteraction, type RepliableInteraction } from 'discord.js';
 import { loadCharacter, saveCharacter } from '../game/character.js';
 import { attack, enterHuntDoor, flee, getMonster, leaveHunt, startHunt } from '../game/hunt.js';
+import { inField, streakOf, streakText, tripSize } from '../game/expedition.js';
 import { itemLabel } from '../game/items.js';
 import type { Character } from '../game/types.js';
 import { DOORS } from '../game/world.js';
@@ -35,6 +36,8 @@ export function huntEmbed(char: Character, lines: string[], ended?: string): Emb
     );
   }
   if (lines.length) parts.push(lines.join('\n'));
+  const trip = streakText(char);
+  if (trip) parts.push(`-# ${trip}`);
   if (h?.won || ended === 'won') {
     const loot = Object.entries(h?.loot ?? {}).map(([id, n]) => itemLabel(id, n));
     if (loot.length) parts.push(`🎒 ของที่ได้: ${loot.join(', ')}`);
@@ -48,7 +51,13 @@ export function huntEmbed(char: Character, lines: string[], ended?: string): Emb
 export function huntPayload(char: Character, lines: string[], ended?: string): Promise<ImagePayload> {
   const h = char.hunt;
   const color = ended === 'died' ? COLORS.blood : h?.won ? COLORS.bone : COLORS.rot;
-  return imagePayload('hunt', color, () => renderHuntCard(char, ended), () => [huntEmbed(char, lines, ended)], lines.join('\n'));
+  const trip = streakText(char);
+  const text = [
+    ...lines,
+    ...(trip ? ['', `-# ${trip}`] : []),
+    ...(h?.won && inField(char) ? ['-# ของที่ล่าได้จะเข้ากระเป๋าเมื่อกลับถึง Rouge Land — ตายก่อนถึงบ้าน = ไม่ได้ของรอบนี้'] : []),
+  ];
+  return imagePayload('hunt', color, () => renderHuntCard(char, ended), () => [huntEmbed(char, lines, ended)], text.join('\n'));
 }
 
 function btn(uid: string, action: string, label: string, style: ButtonStyle, emoji?: string) {
@@ -63,10 +72,12 @@ export function huntButtons(char: Character): ActionRowBuilder<ButtonBuilder>[] 
   if (!h || (h.won && !h.door)) {
     // hunt over (won without door / fled) → offer another
     if (char.fiend) return [];
+    const field = inField(char);
+    const bag = tripSize(char);
     return [
       new ActionRowBuilder<ButtonBuilder>().addComponents(
-        btn(uid, 'again', 'ล่าต่อ', ButtonStyle.Danger, '🎲'),
-        btn(uid, 'home', 'กลับ Rouge Land', ButtonStyle.Secondary, '🏠'),
+        btn(uid, 'again', field && streakOf(char) > 0 ? `ล่าต่อ (ลึก ${streakOf(char) + 1})` : 'ล่าต่อ', ButtonStyle.Danger, '🎲'),
+        btn(uid, 'home', field && bag ? `กลับ Rouge Land (รับของ ${bag} ชิ้น)` : 'กลับ Rouge Land', field && bag ? ButtonStyle.Success : ButtonStyle.Secondary, '🏠'),
       ),
     ];
   }
@@ -102,8 +113,8 @@ export async function openHunt(i: RepliableInteraction, zoneId: string): Promise
   const busy = idleError(char);
   if (busy) return i.reply({ content: busy, flags: MessageFlags.Ephemeral });
   const r = startHunt(char);
+  saveCharacter(char); // stamina / Miasma may have changed even on failure
   if (!r.ok) return i.reply({ content: r.error, flags: MessageFlags.Ephemeral });
-  saveCharacter(char);
   await i.deferReply({ flags: MessageFlags.Ephemeral }); // card render can exceed the 3s window
   return i.editReply({ ...(await huntPayload(char, r.hunt.log)), components: huntButtons(char) });
 }
@@ -124,8 +135,8 @@ export async function handleHuntButton(i: ButtonInteraction): Promise<unknown> {
     const busy = travelingText(char) ?? idleError(char);
     if (busy) return i.reply({ content: busy, flags: MessageFlags.Ephemeral });
     const r = startHunt(char);
-    if (!r.ok) return i.reply({ content: r.error, flags: MessageFlags.Ephemeral });
     saveCharacter(char);
+    if (!r.ok) return i.reply({ content: r.error, flags: MessageFlags.Ephemeral });
     await i.deferUpdate();
     return i.editReply({ ...(await huntPayload(char, r.hunt.log)), components: huntButtons(char) });
   }

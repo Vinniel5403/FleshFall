@@ -4,7 +4,8 @@ import { isDev } from './dev.js';
  * Lucky hunts reveal a dungeon door after victory.
  */
 import { balance } from '../config.js';
-import { addItem, applyOutcome, gearAtk, statMod, type AppliedOutcome } from './character.js';
+import { applyOutcome, gainItem, gearAtk, statMod, type AppliedOutcome } from './character.js';
+import { bumpStreak, lootMult, rareBonus, streakDmg, streakMiasma } from './expedition.js';
 import { chance, rand, startRun } from './engine.js';
 import { d20Success, type DiceRoll } from './dice.js';
 import { itemLabel } from './items.js';
@@ -119,12 +120,21 @@ export function startHunt(char: Character): HuntStart {
     return { ok: false, error: `หมดแรง ⚡ ${char.stamina}/${char.maxStamina} — พักก่อน (ฟื้น +1 ทุก 5 นาที)` };
   }
   if (!isDev(char)) char.stamina -= balance.huntStaminaCost;
+  const log = ['ความเคลื่อนไหวรอบตัว... มีบางอย่างพุ่งออกมา!'];
+  const miasma = streakMiasma(char);
+  if (miasma) {
+    // deeper into the trip, the air itself is rotting
+    const a = applyOutcome(char, { text: '', miasma });
+    const line = `🌫️ อยู่ข้างนอกนานเกินไป Miasma หนาขึ้นทุกที — ${a.lines.join(' ')}`;
+    if (a.died || a.brokeDown || a.becameFiend) return { ok: false, error: line };
+    log.unshift(`-# ${line}`);
+  }
   const monsters: MonsterState[] = Array.from({ length: 3 }, () => {
     const def = pool[rand(0, pool.length - 1)]!;
     const hp = scaledHp(def, char.level, zoneTier(zone));
     return { id: def.id, hp, maxHp: hp };
   });
-  const hunt: Hunt = { zone: zone.id, monsters, door: pickDoor(zone), log: ['ความเคลื่อนไหวรอบตัว... มีบางอย่างพุ่งออกมา!'], loot: {}, xp: 0 };
+  const hunt: Hunt = { zone: zone.id, monsters, door: pickDoor(zone), log, loot: {}, xp: 0 };
   char.hunt = hunt;
   return { ok: true, hunt };
 }
@@ -156,7 +166,7 @@ function monstersAttack(char: Character, h: Hunt): { lines: string[]; applied?: 
       lines.push(`-# ${nameOf(m)} พลาด`);
       continue;
     }
-    let dmg = rand(def.dmg[0], def.dmg[1]) + t.dmgAdd;
+    let dmg = rand(def.dmg[0], def.dmg[1]) + t.dmgAdd + streakDmg(char);
     if (crimson) dmg = Math.ceil(dmg * 1.3);
     const o: Outcome = { text: '', hp: -dmg };
     if (def.miasma) o.miasma = def.miasma;
@@ -172,10 +182,13 @@ function rollLoot(char: Character, h: Hunt, m: MonsterState): string[] {
   const def = getMonster(m.id)!;
   const t = huntTier(h);
   const got: string[] = [];
-  for (const d of def.drops) {
-    if (!chance(d.chance)) continue;
-    const n = Math.max(1, Math.round((d.qty ? rand(d.qty[0], d.qty[1]) : 1) * t.lootMul));
-    addItem(char, d.item, n);
+  const mult = t.lootMul * lootMult(char);
+  const drops = [...def.drops, { item: 'hunted_flesh', chance: char.role === 'hound' ? 0.45 : 0.08 }];
+  for (const d of drops) {
+    const p = d.chance < 0.3 ? d.chance + rareBonus(char) : d.chance;
+    if (!chance(p)) continue;
+    const n = Math.max(1, Math.round((d.qty ? rand(d.qty[0], d.qty[1]) : 1) * mult));
+    gainItem(char, d.item, n);
     h.loot[d.item] = (h.loot[d.item] ?? 0) + n;
     got.push(itemLabel(d.item, n));
   }
@@ -186,6 +199,7 @@ function rollLoot(char: Character, h: Hunt, m: MonsterState): string[] {
 function finishIfWon(char: Character, h: Hunt, lines: string[]): RoundResult['ended'] {
   if (alive(h).length > 0) return undefined;
   h.won = true;
+  bumpStreak(char);
   const a = applyOutcome(char, { text: '', xp: h.xp });
   lines.push('', `🏆 **กำจัดได้ทั้งหมด!**`, ...a.lines);
   if (h.door) lines.push(`\n${DOORS[h.door].emoji} **ท่ามกลางซากศพ มี${DOORS[h.door].name}ปรากฏขึ้น...**`);

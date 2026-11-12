@@ -59,6 +59,7 @@ import { requireActive, requireCharacter } from '../commands/guard.js';
 import { COLORS, profilePayload } from '../ui.js';
 import { exploreStart, exploreView } from '../commands/explore.js';
 import { openHunt } from './hunt.js';
+import { marketButton, marketSelect } from './market.js';
 
 export type PanelType = string;
 
@@ -118,6 +119,22 @@ const STATIC_PANELS: Record<string, PanelDef> = {
         { id: 'upgrade', label: 'อัปเกรด', emoji: '⚒️', style: ButtonStyle.Danger },
         { id: 'drink', label: 'เครื่องดื่ม', emoji: '🍷' },
         { id: 'cook', label: 'ปรุงอาหาร', emoji: '🍳' },
+      ],
+    ],
+  },
+  market: {
+    label: '🏛️ Market — ตลาดผู้เล่น',
+    color: COLORS.crimson,
+    title: '🏛️ ตลาดมืดหลังบาร์',
+    description:
+      'กระดานไม้เปื้อนเลือด ใครมีของก็แปะขาย ใครอยากได้ก็แปะรับซื้อ M.A.I.D.S ถือมัดจำไว้ให้\n' +
+      '-# 🐺 Hound ล่า 🫀 เนื้อล่าสด → 🍷 Bar ปรุงอาหารบัฟ → 🔪 Maid `/serve` เสิร์ฟให้แรงขึ้น → 🎩 Patron จ้าง (ทิป +20%)',
+    buttons: [
+      [
+        { id: 'mkt', label: 'ดูกระดาน', emoji: '📋', style: ButtonStyle.Danger },
+        { id: 'mktsell', label: 'ตั้งขาย', emoji: '🏷️', style: ButtonStyle.Success },
+        { id: 'mktbuy', label: 'ตั้งรับซื้อ', emoji: '📜', style: ButtonStyle.Success },
+        { id: 'mktmine', label: 'ออเดอร์ของฉัน', emoji: '🗂️' },
       ],
     ],
   },
@@ -218,7 +235,7 @@ function itemPicker(char: Character, kind: 'use' | 'equip' | 'sell', src: ShopSr
       emoji: x.def.emoji,
       description:
         kind === 'sell'
-          ? `ขายได้ ${sellPrice(char, x.id)} เนื้อสด/ชิ้น`
+          ? `ขายได้ ${sellPrice(char, x.id, src)} เนื้อสด/ชิ้น`
           : kind === 'equip' && (char.equipped.weapon === x.id || char.equipped.armor === x.id)
             ? 'สวมอยู่'
             : x.def.description,
@@ -238,7 +255,12 @@ function cookPicker() {
   return select(
     'cook',
     'เลือกสูตรอาหาร',
-    RECIPES.map((r) => ({ label: r.name, value: r.id, emoji: getItem(r.makes)!.emoji, description: Object.entries(r.needs).map(([id, n]) => `${getItem(id)!.name}×${n}`).join(' + ') })),
+    RECIPES.map((r) => ({
+      label: r.barOnly ? `${r.name} (สูตรลับบาร์)` : r.name,
+      value: r.id,
+      emoji: getItem(r.makes)!.emoji,
+      description: Object.entries(r.needs).map(([id, n]) => `${getItem(id)!.name}×${n}`).join(' + '),
+    })),
   );
 }
 
@@ -333,6 +355,8 @@ async function openPanelView(i: ButtonInteraction): Promise<unknown> {
   const char = await requireActive(i);
   if (!char) return;
 
+  if (action?.startsWith('mkt')) return marketButton(i, char, action);
+
   switch (action) {
     case 'hunt':
       return openHunt(i, arg!);
@@ -394,8 +418,13 @@ async function openPanelView(i: ButtonInteraction): Promise<unknown> {
           new EmbedBuilder()
             .setColor(COLORS.rot)
             .setTitle('🍳 ครัวหลังบาร์')
-            .setDescription(RECIPES.map((r) => `**${itemLabel(r.makes)}**\n-# ${needsText(r)}`).join('\n'))
-            .setFooter({ text: char.role === 'bar' ? 'Bar Staff ปรุงไม่มีวันพลาด' : 'คนนอกบาร์มีโอกาสพลาด 40% (Miasma ฟุ้ง)' }),
+            .setDescription(RECIPES.map((r) => `**${itemLabel(r.makes)}**${r.barOnly ? ' 🍷 *สูตรลับบาร์*' : ''}\n-# ${needsText(r)}`).join('\n'))
+            .setFooter({
+              text:
+                char.role === 'bar'
+                  ? 'Bar Staff ปรุงไม่มีวันพลาด · อาหารบัฟใช้ 🫀 เนื้อล่าสด (Hound ล่าได้เยอะ)'
+                  : 'คนนอกบาร์มีโอกาสพลาด 40% · สูตรลับบาร์ปรุงไม่ได้ — ซื้อจาก 🏛️ ตลาด หรือให้คนของบาร์ปรุง',
+            }),
         ],
         components: [cookPicker()],
         flags: ephemeral,
@@ -426,6 +455,7 @@ export async function handlePanelSelect(i: StringSelectMenuInteraction): Promise
   const value = i.values[0]!;
   const active = await requireActive(i);
   if (!active) return;
+  if (action?.startsWith('mkt')) return marketSelect(i, active, action);
 
   switch (action) {
     case 'travelc':
@@ -457,7 +487,7 @@ export async function handlePanelSelect(i: StringSelectMenuInteraction): Promise
       const e = new EmbedBuilder()
         .setColor(COLORS.blood)
         .setTitle(`⚖️ ขาย ${itemLabel(value, have)}`)
-        .setDescription(`ได้ **${sellPrice(active, value)}** 🥩 ต่อชิ้น`);
+        .setDescription(`ได้ **${sellPrice(active, value, src)}** 🥩 ต่อชิ้น${src === 'field' ? '\n-# พ่อค้าเงากดราคา 30% — ขายที่ Rouge Land ได้เต็มราคา' : ''}`);
       const qtys: (number | 'all')[] = have > 1 ? [1, ...(have > 5 ? [5] : []), 'all'] : [1];
       const picker = itemPicker(active, 'sell', src);
       return i.update({ content: '', embeds: [e], components: [qtyRow('sellq', value, qtys, src), ...(picker ? [picker] : [])] });

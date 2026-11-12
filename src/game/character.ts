@@ -1,10 +1,11 @@
 import { isDev } from './dev.js';
 import { balance } from '../config.js';
 import { db } from '../db/index.js';
+import { endTripSafe, inField, loseTrip, tripGain } from './expedition.js';
 import { ICONS, mods } from './icons.js';
 import { getItem, itemLabel } from './items.js';
 import { ROLES } from './roles.js';
-import { CHAR_VERSION, type Character, type IconId, type Outcome, type RoleId, type StatKey } from './types.js';
+import { CHAR_VERSION, type BuffDef, type Character, type IconId, type Outcome, type RoleId, type StatKey } from './types.js';
 import { isCrimsonMoon, LOCATIONS } from './world.js';
 import { resolveTravel } from './zones.js';
 
@@ -89,6 +90,12 @@ export function itemCount(char: Character, id: string): number {
   return char.inventory[id] ?? 0;
 }
 
+/** Loot/reward: pending until home while out on an expedition round, else straight into the inventory. */
+export function gainItem(char: Character, id: string, qty = 1): void {
+  if (inField(char)) tripGain(char, id, qty);
+  else addItem(char, id, qty);
+}
+
 export function addItem(char: Character, id: string, qty = 1): void {
   const n = itemCount(char, id) + qty;
   if (n <= 0) {
@@ -104,6 +111,26 @@ export function removeItem(char: Character, id: string, qty = 1): boolean {
   return true;
 }
 
+// ---------- meal buffs ----------
+
+/** Maid-served dishes: +1 to the bonus and 1.5× duration. */
+export const SERVED_BONUS = 1;
+export const SERVED_DURATION = 1.5;
+
+export function activeBuff(char: Character, now = Date.now()): { def: BuffDef; item: string; served?: string; until: number } | undefined {
+  const b = char.buff;
+  if (!b || b.until <= now) return undefined;
+  const def = getItem(b.item)?.buff;
+  return def ? { def, item: b.item, served: b.servedBy, until: b.until } : undefined;
+}
+
+function buffAmount(char: Character, kind: 'stat' | 'def', stat?: StatKey): number {
+  const b = activeBuff(char);
+  if (!b) return 0;
+  const hit = kind === 'def' ? !!b.def.def : b.def.stat === stat;
+  return hit ? b.def.amount + (b.served ? SERVED_BONUS : 0) : 0;
+}
+
 // ---------- stats ----------
 
 export function gearAtk(char: Character): number {
@@ -113,7 +140,7 @@ export function gearAtk(char: Character): number {
 
 export function gearDef(char: Character): number {
   const a = char.equipped.armor;
-  return (a ? (getItem(a)?.def ?? 0) + (char.gearLevels?.[a] ?? 0) : 0) + (mods(char.icon).dmgReduction ?? 0);
+  return (a ? (getItem(a)?.def ?? 0) + (char.gearLevels?.[a] ?? 0) : 0) + (mods(char.icon).dmgReduction ?? 0) + buffAmount(char, 'def');
 }
 
 export function statMod(char: Character, stat: StatKey): number {
@@ -121,6 +148,7 @@ export function statMod(char: Character, stat: StatKey): number {
   let v = char.stats[stat] + Math.floor(char.level / 3);
   if (stat === 'str') v += gearAtk(char);
   v += m.checkBonus?.[stat] ?? 0;
+  v += buffAmount(char, 'stat', stat);
   if (m.lowHpBonus && char.hp < char.maxHp * 0.3) v += m.lowHpBonus;
   if (char.role === 'hound' && stat === 'str' && char.location !== 'rouge_land') v += 1;
   if (char.sanity < 30) v -= 2; // hallucinations
@@ -147,6 +175,8 @@ export interface AppliedOutcome {
   brokeDown: boolean;
   becameFiend: boolean;
 }
+
+const STAT_LABEL: Record<StatKey, string> = { str: 'พละ', agi: 'ว่องไว', int: 'สัมผัส' };
 
 const MUTATIONS = [
   'ดวงตาดวงที่สามงอกบนหน้าผาก',
@@ -187,7 +217,7 @@ export function applyOutcome(char: Character, o: Outcome): AppliedOutcome {
   if (o.items) {
     for (const [id, qty] of Object.entries(o.items)) {
       if (!qty) continue;
-      if (qty > 0) addItem(char, id, qty);
+      if (qty > 0) gainItem(char, id, qty);
       else removeItem(char, id, Math.min(-qty, itemCount(char, id)));
       lines.push(`${qty > 0 ? '📦 +' : '🗑️ -'}${itemLabel(id, Math.abs(qty))}`);
     }
@@ -223,6 +253,7 @@ export function applyOutcome(char: Character, o: Outcome): AppliedOutcome {
   if (o.travel && o.travel !== char.location) {
     char.location = o.travel;
     lines.push(`🧭 ย้ายไป ${LOCATIONS[o.travel].emoji} ${LOCATIONS[o.travel].name}`);
+    if (o.travel === 'rouge_land') lines.push(...endTripSafe(char));
   }
 
   // --- consequences, most severe first ---
@@ -292,6 +323,7 @@ function die(char: Character, lines: string[]): void {
   char.deaths += 1;
   delete char.run;
   delete char.pendingEvent;
+  lines.push(...loseTrip(char));
   if (m.deathKeepsFlesh) {
     lines.push('🥚 **คุณตาย...** Sophia กลืนซากของคุณและให้กำเนิดใหม่ด้วยความรัก — แต่วิญญาณบางส่วนหายไป');
     changeHumanity(char, -5, lines);
@@ -326,6 +358,8 @@ function breakdown(char: Character, lines: string[]): void {
 function becomeFiend(char: Character, lines: string[]): void {
   char.fiend = true;
   char.humanity = 0;
+  delete char.trip;
+  delete char.buff;
   delete char.run;
   delete char.pendingEvent;
   lines.push(
@@ -345,7 +379,7 @@ export function setCooldown(char: Character, key: string, ms: number, now = Date
 }
 
 /** Eat/use a consumable. Returns result lines, or null if not usable. */
-export function consume(char: Character, id: string): string[] | null {
+export function consume(char: Character, id: string, servedBy?: string): string[] | null {
   const def = getItem(id);
   if (!def || def.type !== 'consumable' || !removeItem(char, id)) return null;
   const m = mods(char.icon);
@@ -364,6 +398,24 @@ export function consume(char: Character, id: string): string[] | null {
     o.stamina = (o.stamina ?? 0) + m.fleshFeast;
     lines.push('🍖 Beelzebub ยินดีกับมื้อนี้');
   }
+  if (def.buff) lines.push(applyBuff(char, id, servedBy));
   const applied = applyOutcome(char, o);
   return [...lines, ...applied.lines];
+}
+
+/** Start a meal buff (replaces any current one). Returns the line to show. */
+export function applyBuff(char: Character, itemId: string, servedBy?: string, now = Date.now()): string {
+  const def = getItem(itemId)?.buff;
+  if (!def) return '';
+  const minutes = Math.round(def.minutes * (servedBy ? SERVED_DURATION : 1));
+  char.buff = { item: itemId, until: now + minutes * 60_000, ...(servedBy ? { servedBy } : {}) };
+  return `🍽️ ${buffLabel(char)} นาน ${minutes} นาที${servedBy ? ` — เสิร์ฟโดย ${servedBy}` : ''}`;
+}
+
+/** "บัฟ พละ +3" for the active buff ('' if none). */
+export function buffLabel(char: Character): string {
+  const b = activeBuff(char);
+  if (!b) return '';
+  const n = b.def.amount + (b.served ? SERVED_BONUS : 0);
+  return `บัฟ ${b.def.def ? 'ลดดาเมจ' : STAT_LABEL[b.def.stat!]} +${n}`;
 }
