@@ -171,6 +171,8 @@ export const ZONES: Record<ZoneId, ZoneDef> = {
     emoji: '🏛️',
     region: 'cypress',
     desc: LOCATIONS.cypress.desc,
+    // own channel + 📍 role like a city, but not a travel destination: only the red door leads here
+    channel: true,
     monsters: [],
     travel: false,
   },

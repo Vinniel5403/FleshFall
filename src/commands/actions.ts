@@ -127,6 +127,10 @@ export function homeError(char: Character): string | undefined {
   if (char.traveling) {
     return char.traveling.to === 'rouge_land' ? '🧭 กำลังเดินทางกลับ Rouge Land — รอให้ถึงก่อน' : '🧭 คุณกำลังเดินทางอยู่ใน Old Realm — ร้านใน Rouge Land ใช้ไม่ได้';
   }
+  if (char.location === 'cypress') {
+    return `🟥 คุณอยู่บน **Cypress Isle** (เข้ามาทางประตูสีแดง) — ร้านใน Rouge Land ใช้ไม่ได้
+สำรวจบนเกาะเพื่อหาคนพายเรือ หรือกด 🏠 กลับ Rouge Land`;
+  }
   if (char.location !== 'rouge_land') {
     return `🗺️ คุณออกสำรวจอยู่ที่ **${currentZone(char).name}** — ร้านใน Rouge Land ใช้ไม่ได้
 ใช้ 🛒 ร้านประจำทวีปในห้องเมือง หรือกด 🏠 กลับ Rouge Land`;
@@ -137,6 +141,10 @@ export function homeError(char: Character): string | undefined {
 /** Continent shop: must be standing in an Old Realm city. */
 export function fieldError(char: Character): string | undefined {
   if (char.traveling) return '🧭 กำลังเดินทาง — ร้านอยู่ในเมือง รอให้ถึงก่อน';
+  if (char.location === 'cypress') {
+    return `🟥 คุณอยู่บน **Cypress Isle** (เข้ามาทางประตูสีแดง) — บนเกาะไม่มีร้าน
+กด ⚔️ สำรวจบนเกาะเพื่อหาคนพายเรือ / ประตูดำ หรือใช้ 🧭 เดินทางไปเมืองใน Old Realm`;
+  }
   if (!currentZone(char).continent) return '🛒 ร้านประจำทวีปอยู่ในเมืองของ Old Realm — กด 🗺️ ออกสำรวจ ที่ Butchery';
   return undefined;
 }

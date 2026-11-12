@@ -134,7 +134,7 @@ const ZONE_PANELS: Record<string, PanelDef> = Object.fromEntries(
         image: z.image,
         color: COLORS.rot,
         title: `${z.emoji} ${z.name}`,
-        description: `${z.desc.split('\n')[0]!}\n-# ${tierLabel(z)}`,
+        description: z.tier ? `${z.desc.split('\n')[0]!}\n-# ${tierLabel(z)}` : z.desc.split('\n')[0]!,
         buttons: [
           [
             ...(z.monsters.length ? [{ id: `hunt:${z.id}`, label: 'ออกล่า', emoji: '🎲', style: ButtonStyle.Danger }] : []),
@@ -143,8 +143,13 @@ const ZONE_PANELS: Record<string, PanelDef> = Object.fromEntries(
             { id: 'profile', label: 'โปรไฟล์', emoji: '📜' },
           ],
           [
-            { id: 'buy:field', label: 'ร้านค้า', emoji: '🛒' },
-            { id: 'sell:field', label: 'ขายของ', emoji: '⚖️' },
+            // no continent (Cypress Isle) = no shop
+            ...(z.continent
+              ? [
+                  { id: 'buy:field', label: 'ร้านค้า', emoji: '🛒' },
+                  { id: 'sell:field', label: 'ขายของ', emoji: '⚖️' },
+                ]
+              : []),
             { id: 'travel', label: 'เดินทาง', emoji: '🧭' },
             { id: 'home', label: 'กลับ Rouge Land', emoji: '🏠' },
           ],
