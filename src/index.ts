@@ -1,7 +1,7 @@
 import { Client, Events, GatewayIntentBits, MessageFlags, PermissionFlagsBits, type Interaction } from 'discord.js';
 import { commandMap } from './commands/index.js';
 import { config } from './config.js';
-import { setGod } from './game/god.js';
+import { setDev } from './game/dev.js';
 import { startZoneSync, syncMember } from './zoneRoles.js';
 import { db } from './db/index.js';
 import { startApi } from './web/server.js';
@@ -40,7 +40,7 @@ const GOD_ROLE = process.env.GOD_ROLE ?? 'Dev';
 function refreshGod(i: Interaction): void {
   if (!i.inCachedGuild()) return;
   const god = i.guild.roles.cache.find((r) => r.name === GOD_ROLE);
-  setGod(i.user.id, !!god && i.member.roles.cache.has(god.id));
+  setDev(i.user.id, !!god && i.member.roles.cache.has(god.id));
 }
 
 client.on(Events.InteractionCreate, async (i: Interaction) => {

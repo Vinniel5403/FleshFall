@@ -1,4 +1,4 @@
-import { isGod } from '../game/god.js';
+import { isDev } from '../game/dev.js';
 import { MessageFlags, type RepliableInteraction } from 'discord.js';
 import { loadCharacter } from '../game/character.js';
 import type { Character } from '../game/types.js';
@@ -28,7 +28,7 @@ export async function requireActive(i: RepliableInteraction): Promise<Character 
   const char = await requireCharacter(i);
   if (!char) return undefined;
   if (char.fiend) return deny(i, '👹 คุณกลายเป็น Fiend ไปแล้ว ไม่มีทางย้อนกลับ — ใช้ `/start` เพื่อเริ่มชีวิตใหม่');
-  if (char.role === 'bar' && !isGod(char) && inClosingShift(char.userId)) {
+  if (char.role === 'bar' && !isDev(char) && inClosingShift(char.userId)) {
     const h = String(closingShiftHour(char.userId)).padStart(2, '0');
     return deny(i, `😵 **Closing Shift** — ร่างของคุณหมดสติเพื่อรักษารูปทรง (${h}:00–${h}:59 น.) ลองใหม่หลังจากนี้`);
   }

@@ -8,7 +8,7 @@
  * Green (Sophia) shrines also grant a resurrection rite that can bring a Fiend friend back.
  */
 import { balance } from '../config.js';
-import { isGod } from './god.js';
+import { isDev } from './dev.js';
 import { ICON_BY_DOOR, ICONS } from './icons.js';
 import type { Character, IconDoor, IconId, StatKey } from './types.js';
 import { CONTINENTS, currentZone } from './zones.js';
@@ -32,7 +32,7 @@ export const BLESSING_PERK: Record<IconId, Perk> = {
 
 /** Roll on dungeon entry. God always gets an Icon dungeon (testing). */
 export function rollIconDungeon(char: Character, door: IconDoor): boolean {
-  if (isGod(char)) return true;
+  if (isDev(char)) return true;
   const cont = currentZone(char).continent;
   const home = cont && CONTINENTS[cont].door === door;
   return Math.random() < (home ? balance.iconDungeonHome : balance.iconDungeonAway);

@@ -1,4 +1,4 @@
-import { isGod } from './god.js';
+import { isDev } from './dev.js';
 import { balance } from '../config.js';
 import { db } from '../db/index.js';
 import { ICONS, mods } from './icons.js';
@@ -336,7 +336,7 @@ function becomeFiend(char: Character, lines: string[]): void {
 // ---------- cooldowns ----------
 
 export function cooldownLeft(char: Character, key: string, now = Date.now()): number {
-  if (isGod(char)) return 0;
+  if (isDev(char)) return 0;
   return Math.max(0, (char.cooldowns[key] ?? 0) - now);
 }
 

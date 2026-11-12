@@ -1,6 +1,6 @@
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { itemCount, loadCharacter, removeItem, saveCharacter } from '../game/character.js';
-import { isGod } from '../game/god.js';
+import { isDev } from '../game/dev.js';
 import { COLORS, resultEmbed } from '../ui.js';
 import { syncMember } from '../zoneRoles.js';
 import type { Command } from './types.js';
@@ -18,7 +18,7 @@ export const revive: Command = {
     if (!me) return i.reply({ content: 'คุณยังไม่มีตัวละคร — ใช้ `/start`', flags: ephemeral });
     if (me.fiend) return i.reply({ content: 'Fiend ประกอบพิธีไม่ได้', flags: ephemeral });
     if (target.id === i.user.id) return i.reply({ content: 'พิธีนี้ใช้กับตัวเองไม่ได้', flags: ephemeral });
-    const god = isGod(me);
+    const god = isDev(me);
     if (!god && itemCount(me, 'sophia_rite') < 1) {
       return i.reply({ content: '🥚 คุณไม่มีพิธีชุบชีวิต — ต้องเคลียร์ดันเจียน Icon สีเขียวแล้วไปถึงศาลของ Sophia', flags: ephemeral });
     }

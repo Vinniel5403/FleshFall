@@ -2,7 +2,7 @@ import { MessageFlags, SlashCommandBuilder, type ActionRowBuilder, type Attachme
 import { balance } from '../config.js';
 import { applyOutcome, saveCharacter } from '../game/character.js';
 import { getEvent, startEvent } from '../game/engine.js';
-import { isGod } from '../game/god.js';
+import { isDev } from '../game/dev.js';
 import type { Character, GameEventDef } from '../game/types.js';
 import { currentZone, getZone, mapCities, tierLabel, ZONES, zoneLabel } from '../game/zones.js';
 import { COLORS, dungeonButtons, dungeonPayload, eventButtons, eventPayload, resultEmbed } from '../ui.js';
@@ -46,7 +46,7 @@ export function exploreStart(char: Character, zoneId?: string): ExploreStep {
     return err(`คุณไม่ได้อยู่ที่ ${z?.emoji ?? ''} **${z?.name ?? zoneId}** — เดินทางมาก่อน`);
   }
 
-  const god = isGod(char);
+  const god = isDev(char);
   if (!god && char.stamina < balance.exploreStaminaCost) {
     return err(`หมดแรง ⚡ ${char.stamina}/${char.maxStamina} — พักก่อน (ฟื้น +1 ทุก 5 นาที)`);
   }

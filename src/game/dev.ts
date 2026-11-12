@@ -1,13 +1,13 @@
 /**
- * God mode: players holding the Discord "Dev" role skip limits
+ * Dev mode (God mode): players holding the Discord "Dev" role skip limits
  * (instant travel, free shop/upgrade/cook, no cooldowns, no stamina cost).
- * The Discord layer refreshes membership on every interaction; game logic just asks isGod().
+ * The Discord layer refreshes membership on every interaction; game logic just asks isDev().
  */
-const gods = new Set<string>();
+const devs = new Set<string>();
 
-export function setGod(userId: string, on: boolean): void {
-  if (on) gods.add(userId);
-  else gods.delete(userId);
+export function setDev(userId: string, on: boolean): void {
+  if (on) devs.add(userId);
+  else devs.delete(userId);
 }
 
-export const isGod = (c: { userId: string } | string): boolean => gods.has(typeof c === 'string' ? c : c.userId);
+export const isDev = (c: { userId: string } | string): boolean => devs.has(typeof c === 'string' ? c : c.userId);

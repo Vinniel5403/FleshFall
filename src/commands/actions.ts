@@ -1,4 +1,4 @@
-import { isGod } from '../game/god.js';
+import { isDev } from '../game/dev.js';
 /**
  * Shared player actions used by both slash commands and menu-panel buttons.
  * Each returns an ActionResult; callers decide reply vs update and visibility.
@@ -123,7 +123,7 @@ export const autoSrc = (c: Character): ShopSrc => (c.location === 'rouge_land' ?
 
 /** Rouge Land facilities (shop, bar, upgrades, cooking) need you to be home. */
 export function homeError(char: Character): string | undefined {
-  if (isGod(char)) return undefined;
+  if (isDev(char)) return undefined;
   if (char.traveling) {
     return char.traveling.to === 'rouge_land' ? '🧭 กำลังเดินทางกลับ Rouge Land — รอให้ถึงก่อน' : '🧭 คุณกำลังเดินทางอยู่ใน Old Realm — ร้านใน Rouge Land ใช้ไม่ได้';
   }
@@ -194,7 +194,7 @@ export function buyItem(char: Character, id: string, qty: number, src: ShopSrc =
   const err = shopError(char, src);
   if (err) return fail(err);
   if (!shopStock(char, src).includes(id)) return fail('ร้านนี้ไม่มีของชิ้นนี้');
-  const cost = isGod(char) ? 0 : buyPrice(char, id) * qty;
+  const cost = isDev(char) ? 0 : buyPrice(char, id) * qty;
   if (char.flesh < cost) return fail(`เนื้อสดไม่พอ ต้องการ ${cost} มี ${char.flesh}`);
   char.flesh -= cost;
   addItem(char, id, qty);
@@ -239,7 +239,7 @@ export function cookRecipe(char: Character, recipeId: string): ActionResult {
   if (err) return fail(err);
   const r = RECIPES.find((x) => x.id === recipeId);
   if (!r) return fail('ไม่มีสูตรนี้');
-  const god = isGod(char);
+  const god = isDev(char);
   if (!god && Object.entries(r.needs).some(([id, n]) => itemCount(char, id) < n)) return fail(`วัตถุดิบไม่พอ — ต้องใช้ ${needsText(r)}`);
   if (!god) for (const [id, n] of Object.entries(r.needs)) removeItem(char, id, n);
 
@@ -315,7 +315,7 @@ export function drinkAction(char: Character): ActionResult {
   if (away) return fail(away);
   const left = cooldownLeft(char, 'drink');
   if (left > 0) return fail(`บาร์เทนเดอร์ส่ายหน้า — ดื่มได้อีกใน ${fmtDuration(left)}`);
-  const free = char.role === 'bar' || isGod(char);
+  const free = char.role === 'bar' || isDev(char);
   if (!free && char.flesh < DRINK_COST) return fail(`เนื้อสดไม่พอ — แก้วละ ${DRINK_COST} 🥩`);
   if (!free) char.flesh -= DRINK_COST;
   const applied = applyOutcome(char, { text: '', sanity: 15, stamina: 2 });
@@ -464,7 +464,7 @@ export function upgradeGear(char: Character, slot: GearSlot): ActionResult {
   const lv = gearLevel(char, id);
   if (lv >= MAX_GEAR_LEVEL) return fail('เต็มขั้นแล้ว');
   const c = upgradeCost(slot, lv + 1);
-  const god = isGod(char);
+  const god = isDev(char);
   if (god) c.flesh = 0;
   if (char.flesh < c.flesh) return fail(`เนื้อสดไม่พอ ต้องการ ${c.flesh}`);
   const missing = god ? [] : Object.entries(c.items).filter(([it, n]) => itemCount(char, it) < n);

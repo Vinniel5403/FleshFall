@@ -1,4 +1,4 @@
-import { isGod } from './god.js';
+import { isDev } from './dev.js';
 import { balance } from '../config.js';
 import type { Character, IconDoor, Location, ZoneId } from './types.js';
 import { LOCATIONS } from './world.js';
@@ -222,7 +222,7 @@ export type TravelResult = { ok: true; arriveAt: number } | { ok: false; error: 
 
 export function startTravel(char: Character, to: ZoneId, now = Date.now()): TravelResult {
   const z = getZone(to);
-  const god = isGod(char);
+  const god = isDev(char);
   const home = to === 'rouge_land';
   if (!z || (!home && (!z.channel || !z.travel))) return { ok: false, error: 'ไปที่นั่นไม่ได้' };
   if (char.traveling) return { ok: false, error: 'คุณกำลังเดินทางอยู่แล้ว' };

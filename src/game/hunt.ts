@@ -1,4 +1,4 @@
-import { isGod } from './god.js';
+import { isDev } from './dev.js';
 /**
  * Zone hunting: spawn 3 monsters, fight turn by turn, collect raw meat / loot / XP.
  * Lucky hunts reveal a dungeon door after victory.
@@ -114,10 +114,10 @@ export function startHunt(char: Character): HuntStart {
   const zone = currentZone(char);
   const pool = zone.monsters.map(getMonster).filter((m): m is MonsterDef => !!m && (m.minLevel ?? 1) <= char.level + zoneTier(zone).lvlBonus);
   if (pool.length === 0) return { ok: false, error: `ไม่มีอะไรให้ล่าที่ ${zone.name}` };
-  if (!isGod(char) && char.stamina < balance.huntStaminaCost) {
+  if (!isDev(char) && char.stamina < balance.huntStaminaCost) {
     return { ok: false, error: `หมดแรง ⚡ ${char.stamina}/${char.maxStamina} — พักก่อน (ฟื้น +1 ทุก 5 นาที)` };
   }
-  if (!isGod(char)) char.stamina -= balance.huntStaminaCost;
+  if (!isDev(char)) char.stamina -= balance.huntStaminaCost;
   const monsters: MonsterState[] = Array.from({ length: 3 }, () => {
     const def = pool[rand(0, pool.length - 1)]!;
     const hp = scaledHp(def, char.level, zoneTier(zone));
