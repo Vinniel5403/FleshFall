@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { doorVar } from "@/lib/md";
 import type { ParsedSprite } from "@/lib/psd";
-import { TEMPLATE_GROUPS } from "@/lib/rig";
+import templateRig from "@/data/sprite-template.json";
+import { TEMPLATE_GROUPS, type Rig } from "@/lib/rig";
+
+/** Default sprite (split from the template PSD by `npm run web:template`) shown until a player uploads their own. */
+const TEMPLATE_RIG = templateRig as Rig;
+const TEMPLATE_PSD = "/templates/fleshfall-sprite-template.psd";
+const templateSrc = (id: string, ext: string) => `/sprites/template/${id}.${ext}`;
 import { SpriteStage } from "./SpriteStage";
 import type { AccountView, ImageSlot, ImageSlotDef, MeResponse } from "@/lib/types";
 
@@ -403,11 +409,14 @@ function SpriteSection(props: { character: AccountView; onChange: (c: AccountVie
           ) : saved && savedSrc ? (
             <SpriteStage rig={saved} src={savedSrc} label={`สไปรต์ ${props.character.name}`} debug={debug} />
           ) : (
-            <div className="sprite-empty">No Sprite</div>
+            <div className="sprite-template">
+              <SpriteStage rig={TEMPLATE_RIG} src={templateSrc} label="สไปรต์ตัวอย่างจากเทมเพลต" debug={debug} />
+              <span className="sprite-tag">TEMPLATE</span>
+            </div>
           )}
         </div>
         <div className="sprite-side">
-          {(draft || saved) && (
+          {(
             <label className="sprite-debug">
               <input type="checkbox" checked={debug} onChange={(e) => setDebug(e.target.checked)} /> แสดงจุดหมุน (debug)
             </label>
@@ -443,10 +452,16 @@ function SpriteSection(props: { character: AccountView; onChange: (c: AccountVie
             <>
               <p className="sub">ชื่อ group ที่ระบบรู้จัก (สะกดคล้าย ๆ ได้ · ซ้าย/ขวาเดาจากตำแหน่งได้):</p>
               <p className="sprite-groups">{TEMPLATE_GROUPS.join(" · ")}</p>
+              <p className="sub">
+                เริ่มจากเทมเพลตได้เลย — วาดทับในแต่ละ group แล้วอัปโหลดกลับมา (ลองจับหัว ตัว สะโพก หรือมือของตัวอย่างดูได้)
+              </p>
               <div className="sprite-actions">
                 <button type="button" className="cta" onClick={() => input.current?.click()} disabled={!!busy}>
                   {busy === "parse" ? "กำลังแยกชิ้นส่วน…" : saved ? "อัปโหลด PSD ใหม่" : "✦ อัปโหลด PSD"}
                 </button>
+                <a className="cta ghost sprite-dl" href={TEMPLATE_PSD} download="fleshfall-sprite-template.psd">
+                  ⬇ โหลดเทมเพลต PSD
+                </a>
                 {saved && (
                   <button type="button" className="forge-link" onClick={remove} disabled={!!busy}>
                     ลบสไปรต์
