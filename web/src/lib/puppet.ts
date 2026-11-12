@@ -54,7 +54,6 @@ const SWING_MAX: Partial<Record<string, number>> = {
   weapon: 0.5,
   head: 0.3,
 };
-const MAX_LIFT = 0.14; // drag limit as a fraction of rig size (the stage only has a little headroom)
 
 interface Limb { a: number; v: number }
 
@@ -180,16 +179,14 @@ export function step(p: Puppet, bones: Map<string, Bone>, dt: number, size: { w:
       const d = Math.hypot(dx, dy);
       if (d > L) nx = p.x + (dx / d) * (d - L);
     }
-    const lim = size.w * 0.3;
-    nx = Math.max(-lim, Math.min(lim, nx));
     p.vx += ((nx - p.x) / dt - p.vx) * 0.45;
     p.vy += ((ny - p.y) / dt - p.vy) * 0.45;
     p.x += (nx - p.x) * 0.5;
     p.y += (ny - p.y) * 0.5;
   } else if (p.grabbed) {
     // follow the pointer (clamped), velocity smoothed so pointer jitter doesn't explode the springs
-    const lim = (v: number, m: number) => Math.max(-m, Math.min(m, v));
-    const nx = lim(p.tx - p.gx, size.w * MAX_LIFT), ny = lim(p.ty - p.gy, size.h * MAX_LIFT);
+    // no drag limit here: the stage clamps the pointer to the visible frame
+    const nx = p.tx - p.gx, ny = p.ty - p.gy;
     p.vx += ((nx - p.x) / dt - p.vx) * 0.45;
     p.vy += ((ny - p.y) / dt - p.vy) * 0.45;
     p.x = nx;

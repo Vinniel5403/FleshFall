@@ -73,6 +73,8 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
   const puppet = useRef(newPuppet());
   /** canvas px → rig coords (set every frame) */
   const toRig = useRef<(cx: number, cy: number) => [number, number]>(() => [0, 0]);
+  /** visible frame in rig coords [left, top, right, bottom] — the only wall when dragging */
+  const frameBox = useRef<[number, number, number, number]>([-Infinity, -Infinity, Infinity, Infinity]);
   /** read every frame so moving the slider doesn't restart the animation */
   const height = useRef(heightCm);
   height.current = heightCm;
@@ -137,7 +139,11 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
     };
     const move = (e: PointerEvent) => {
       const [x, y] = local(e);
-      if (p.grabbed) [p.tx, p.ty] = [x, y];
+      if (p.grabbed) {
+        const [l, t, r, b] = frameBox.current;
+        p.tx = Math.max(l, Math.min(r, x));
+        p.ty = Math.max(t, Math.min(b, y));
+      }
       else cv.style.cursor = !still && hitPart(p, bones, x, y) ? "grab" : "";
     };
     const up = (e: PointerEvent) => {
@@ -181,6 +187,7 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
       const t = (now - start) / 1000;
       const view: M = [s, 0, 0, s, ox, oy];
       toRig.current = (cx, cy) => [(cx - ox) / s, (cy - oy) / s];
+      frameBox.current = [...toRig.current(0, 0), ...toRig.current(w, h)];
       if (!still && !settled(p)) step(p, bones, (now - last) / 1000, { w: rig.width, h: rig.height });
       last = now;
       const v = mul(view, bodyMatrix(p));
