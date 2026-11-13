@@ -121,3 +121,13 @@
   .forge-dossier { grid-template-columns: 1fr; }
   .forge-portrait { max-width: 260px; }
 }
+
+/* character notes (bio) */
+.forge-bio { display: grid; gap: 10px; }
+.forge-bio textarea { width: 100%; min-height: 160px; padding: 12px 14px; font: inherit; font-size: 16px; line-height: 1.6; resize: vertical; background: rgba(0,0,0,.35); color: var(--flesh); border: 1px solid rgba(230,184,162,.25); border-radius: 0; }
+.forge-bio textarea:focus { outline: none; border-color: var(--crimson); }
+.forge-bio-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.forge-bio-bar .sub { margin-right: auto; color: var(--muted); font-size: 13px; }
+.forge-bio-bar .ghost { color: var(--muted); font-size: 14px; text-decoration: none; border: 1px solid rgba(230,184,162,.3); padding: 7px 14px; }
+.forge-bio-bar .ghost:hover { color: var(--flesh); border-color: var(--crimson); }
+.forge-bio-bar .cta { border-radius: 0; padding: 7px 18px; font-size: 14px; }

@@ -118,7 +118,7 @@ export function equipItem(char: Character, id: string): ActionResult {
 // ---------- shop ----------
 
 /** Branch butchery stock (Rouge Land only). */
-export const STOCK = ['bandage', 'alchemy_salve', 'blood_wine', 'fetal_flesh', 'fresh_cut', 'wild_flour', 'lighter', 'leather_coat', 'bone_saw', 'rusted_armor', 'sigil'];
+export const STOCK = ['bandage', 'alchemy_salve', 'blood_wine', 'fetal_flesh', 'fresh_cut', 'wild_flour', 'lighter', 'leather_coat', 'bone_saw', 'rusted_armor', 'sigil', 'placenta'];
 
 export const buyPrice = (c: Character, id: string) => Math.ceil((getItem(id)?.value ?? 0) * (c.role === 'patron' ? 0.75 : 1));
 /** Field merchants lowball: selling out in the Old Realm pays 70%. Bring it home for the full price. */
@@ -138,7 +138,7 @@ export const CONTINENT_STOCK: Record<Continent, string[]> = {
   asia: ['bandage', 'spice_jerky', 'instant_noodle', 'alchemy_salve', 'carving_knife', 'sigil'],
   america: ['bandage', 'canned_beans', 'grilled_meat', 'leather_coat', 'old_shotgun', 'lighter'],
   south_america: ['bandage', 'mate_tea', 'fetal_flesh', 'bone_club', 'blood_apron'],
-  africa: ['myrrh_balm', 'alchemy_salve', 'wild_flour', 'bone_saw', 'sigil'],
+  africa: ['myrrh_balm', 'alchemy_salve', 'wild_flour', 'bone_saw', 'sigil', 'placenta'],
   australia: ['eucalyptus_oil', 'alchemy_salve', 'fresh_cut', 'rusted_armor'],
   antarctica: ['whale_blubber', 'fresh_cut', 'alchemy_salve', 'rusted_armor', 'old_shotgun'],
 };

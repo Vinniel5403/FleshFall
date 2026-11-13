@@ -96,9 +96,19 @@ export function profileEmbed(char: Character): EmbedBuilder {
   return e;
 }
 
+/** Player notes on the profile, quoted + truncated (full text lives on the web profile). */
+function bioText(char: Character): string | null {
+  const bio = char.bio?.trim();
+  if (!bio) return null;
+  const MAX = 700;
+  const cut = bio.length > MAX ? `${bio.slice(0, MAX).trimEnd()}…` : bio;
+  const quoted = cut.split('\n').map((l) => `> ${l}`).join('\n');
+  return `**📝 บันทึกตัวละคร**\n${quoted}${bio.length > MAX ? '\n-# อ่านต่อบนเว็บ' : ''}`;
+}
+
 /**
  * Profile as a rendered card image. The embed carries only what the image can't:
- * live travel countdown, Crimson Moon, blessings, mutations, Closing Shift.
+ * live travel countdown, Crimson Moon, blessings, mutations, Closing Shift, notes.
  * Falls back to the text embed if rendering fails.
  */
 export function profilePayload(char: Character): Promise<ImagePayload> {
@@ -112,6 +122,7 @@ export function profilePayload(char: Character): Promise<ImagePayload> {
     blessingsText(char) ? `**✨ พรเทพ**\n${blessingsText(char)}` : null,
     char.mutations.length ? `**🧬 การกลายพันธุ์**\n${char.mutations.map((m) => `• ${m}`).join('\n')}` : null,
     char.role === 'bar' ? `-# ⏰ Closing Shift ${String(closingShiftHour(char.userId)).padStart(2, '0')}:00 น.` : null,
+    bioText(char),
   ].filter(Boolean);
   return imagePayload('profile', char.fiend ? COLORS.fiend : COLORS.blood, () => renderProfileCard(char), () => [profileEmbed(char)], lines.join('\n'));
 }

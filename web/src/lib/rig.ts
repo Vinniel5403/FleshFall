@@ -69,7 +69,22 @@ export function sideFromName(name: string): Side | null {
 
 export const slug = (s: string) => tokens(s).join("_").slice(0, 28) || "part";
 
-/** Assign a part id to each PSD group. Side = word in the name, else which half of the canvas it sits in. */
+/** "leg1", "Leg 3", "leg_4", "leg-2" → 1-based leg number (multi-legged rigs), else null. */
+export function legNumber(name: string): number | null {
+  const m = /^legs?(\d{1,2})$/.exec(tokens(name).join(""));
+  const n = m ? Number(m[1]) : 0;
+  return n >= 1 ? n : null;
+}
+
+/** Numbered leg n → side (odd = left, even = right) + pair index (1, 1, 2, 2, 3, …). */
+export const legSlot = (n: number): { side: Side; pair: number } => ({ side: n % 2 ? "l" : "r", pair: Math.ceil(n / 2) });
+/** Part id for a leg pair: pair 1 keeps the classic `leg_l` / `leg_r`, then `leg_l2`, `leg_r2`, … */
+export const legId = (side: Side, pair: number) => (pair <= 1 ? `leg_${side}` : `leg_${side}${pair}`);
+
+/**
+ * Assign a part id to each PSD group. Side = word in the name, else which half of the canvas it sits in.
+ * Numbered legs (leg1, leg2, …) are all legs: odd = left, even = right, one pair id per two numbers.
+ */
 export function classify(groups: { name: string; x: number; w: number }[], canvasW: number): string[] {
   const used = new Set<string>();
   const ids: string[] = [];
@@ -77,8 +92,14 @@ export function classify(groups: { name: string; x: number; w: number }[], canva
     const t = tokens(g.name);
     const squashed = t.join("");
     const kind = KINDS.find(([, re]) => re.test(squashed))?.[0];
+    const legN = legNumber(g.name);
     let id: string;
-    if (!kind) id = `extra_${slug(g.name)}`;
+    if (legN) {
+      const { side } = legSlot(legN);
+      let pair = legSlot(legN).pair;
+      while (used.has(legId(side, pair))) pair++; // e.g. a "Left Leg" already took leg_l
+      id = legId(side, pair);
+    } else if (!kind) id = `extra_${slug(g.name)}`;
     else if (PAIRED.has(kind)) {
       let side: Side = t.includes("left") || t.includes("l") ? "l" : t.includes("right") || t.includes("r") ? "r" : g.x + g.w / 2 < canvasW / 2 ? "l" : "r";
       if (used.has(`${kind}_${side}`)) side = side === "l" ? "r" : "l";
@@ -92,11 +113,12 @@ export function classify(groups: { name: string; x: number; w: number }[], canva
   return ids;
 }
 
-export function kindOf(id: string): { kind: PartKind | null; side: Side | null } {
-  const m = /^([a-z_]+?)(?:_(l|r))?$/.exec(id);
+/** Part id → kind + side (+ pair index for paired parts: `leg_l2` = 2nd left leg; default 1). */
+export function kindOf(id: string): { kind: PartKind | null; side: Side | null; pair: number } {
+  const m = /^([a-z_]+?)(?:_(l|r)(\d{0,2}))?$/.exec(id);
   const k = (m?.[1] ?? "") as PartKind;
-  if (id.startsWith("extra_") || !KINDS.some(([kk]) => kk === k)) return { kind: null, side: null };
-  return { kind: k, side: (m?.[2] as Side) ?? null };
+  if (id.startsWith("extra_") || !KINDS.some(([kk]) => kk === k)) return { kind: null, side: null, pair: 1 };
+  return { kind: k, side: (m?.[2] as Side) ?? null, pair: Number(m?.[3]) || 1 };
 }
 
 // ---------- skeleton ----------
@@ -136,7 +158,14 @@ export interface Bone {
   parent: string | null;
   /** the rig has a closed-eyes head ("Head Blink") → blink swaps frames instead of squashing eyes */
   blinkFrame: boolean;
+  /** paired parts: 1 = first pair (`leg_l`), 2 = `leg_l2`, … */
+  pair: number;
+  /** legs of a multi-legged rig (more than 2 legs) step in a walk cycle instead of standing still */
+  gait: boolean;
 }
+
+/** Walk-cycle phase of a leg: left vs right in opposite phase, each further pair a little later (like a creature's legs). */
+export const legPhase = (b: Bone) => (b.side === "r" ? Math.PI : 0) + (b.pair - 1) * 0.9;
 
 /** Hand = bottom of the arm; the weapon hangs from whichever hand is closest. */
 export const hand = (a: RigPart) => (a.bot ? { x: a.bot[0], y: a.bot[1] } : { x: a.x + a.w * 0.5, y: a.y + a.h * 0.93 });
@@ -149,8 +178,9 @@ export function buildSkeleton(rig: Rig): Map<string, Bone> {
   const byKind = new Map<string, RigPart>(rig.parts.map((p) => [p.id, p]));
   const bones = new Map<string, Bone>();
   const blinkFrame = byKind.has("head_blink");
+  const gait = rig.parts.filter((p) => kindOf(p.id).kind === "leg").length > 2;
   for (const part of rig.parts) {
-    const { kind, side } = kindOf(part.id);
+    const { kind, side, pair } = kindOf(part.id);
     const [fx, fy] = pivotFrac(kind, side);
     let px = part.x + part.w * fx;
     let py = part.y + part.h * fy;
@@ -166,7 +196,7 @@ export function buildSkeleton(rig: Rig): Map<string, Bone> {
     // missing parent → fall back up the chain (iris → head → torso → root)
     for (const up of ["head", "torso"]) if (parent && !byKind.has(parent)) parent = up;
     if (parent && !byKind.has(parent)) parent = null;
-    bones.set(part.id, { part, kind, side, px, py, parent: parent === part.id ? null : parent, blinkFrame });
+    bones.set(part.id, { part, kind, side, px, py, parent: parent === part.id ? null : parent, blinkFrame, pair, gait: gait && kind === "leg" });
   }
   return bones;
 }
@@ -190,6 +220,8 @@ export function idlePose(b: Bone, t: number): Pose {
     case "skirt": return { r: 0, sx: 1 + 0.012 * S(2 * t + 0.4), sy: 1 };
     case "back_acc": return { r: mirror * 0.07 * S(2.6 * t), sx: 1, sy: 1 };
     case "weapon": return { r: 0.03 * S(2 * t + 1), sx: 1, sy: 1 };
+    // multi-legged rigs: a slow step in place around the hip (hips stay put, feet shuffle); two-legged rigs stand still
+    case "leg": return b.gait ? { r: 0.06 * S(2.4 * t + legPhase(b)), sx: 1, sy: 1 } : REST;
     case "eyes": {
       if (b.blinkFrame) return REST; // blink = frame swap (see visibleAt)
       const ph = t % BLINK_EVERY;

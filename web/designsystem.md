@@ -34,7 +34,7 @@
 
 | Font | ตัวแปร | ใช้กับ |
 |---|---|---|
-| **UnifrakturMaguntia** | `--font-logo` | **โลโก้ “Fleshfall” เท่านั้น** (blackletter สีแดง ตัวเล็กตามโลโก้จริง ไม่ใช้ตัวใหญ่ทั้งคำ) |
+| **Cloister Black** (local, `app/fonts/CloisterBlack.woff2`) | `--font-logo` | **โลโก้ “Fleshfall” เท่านั้น** (blackletter สีแดง ตัวเล็กตามโลโก้จริง ไม่ใช้ตัวใหญ่ทั้งคำ) |
 | **Cinzel** (600/800) | `--font-cinzel` | หัวข้อ EN (`SectionHead`, ชื่อบทบาท, แบนเนอร์), ตัวเลข/label เล็ก, ชื่อแนวตั้งแถบเทพ |
 | **Kanit** (300–800) | `--font-kanit` | ภาษาไทยทั้งหมด, เนื้อความ |
 

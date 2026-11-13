@@ -45,6 +45,10 @@ async function handleAccount(req: IncomingMessage, res: ServerResponse, p: strin
   if (req.method !== 'POST') return json(res, 405, { error: 'method not allowed' });
   const b = await readJson(req, 65_536).catch(() => null);
   if (!b) return json(res, 400, { error: 'bad json' });
+  if (p === '/api/account/media/legacy') {
+    const r = account.listLegacyMedia();
+    return json(res, r.code, r.body);
+  }
   const uid = b.userId;
   if (!isUserId(uid)) return json(res, 400, { error: 'bad user' });
   let r: { code: number; body: unknown };
@@ -53,11 +57,13 @@ async function handleAccount(req: IncomingMessage, res: ServerResponse, p: strin
     case '/api/account/create': r = await account.createAccount(o.gate, uid, b); break;
     case '/api/account/join': r = await account.joinGuild(o.gate, uid, b); break;
     case '/api/account/rename': r = account.renameAccount(uid, b); break;
+    case '/api/account/bio': r = account.setBio(uid, b); break;
     case '/api/account/image/add': r = account.addImage(uid, b); break;
     case '/api/account/image/remove': r = account.removeImage(uid, b); break;
     case '/api/account/sprite/set': r = account.setSprite(uid, b); break;
     case '/api/account/sprite/clear': r = account.clearSprite(uid); break;
     case '/api/account/sprite/height': r = account.setSpriteHeight(uid, b); break;
+    case '/api/account/media/rename': r = account.applyMediaRename(uid, b); break;
     default: r = { code: 404, body: { error: 'not found' } };
   }
   return json(res, r.code, r.body);
@@ -80,6 +86,12 @@ export function startApi(port: number, opts: ApiOptions) {
             case '/api/items': return json(res, 200, api.items());
             case '/api/bestiary': return json(res, 200, api.bestiary());
             case '/api/leaderboard': return json(res, 200, api.leaderboard(players));
+            case '/api/characters': return json(res, 200, api.searchCharacters(players, url.searchParams.get('q') ?? ''));
+          }
+          const prof = /^\/api\/characters\/([0-9a-f]{16})$/.exec(p);
+          if (prof) {
+            const c = api.characterProfile(players, prof[1]!);
+            return c ? json(res, 200, c) : json(res, 404, { error: 'not found' });
           }
         }
         return json(res, 404, { error: 'not found' });

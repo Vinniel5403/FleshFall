@@ -1,6 +1,7 @@
+import { fallOr } from '../interactions/fallRow.js';
 import { MessageFlags, SlashCommandBuilder, type ActionRowBuilder, type AttachmentBuilder, type ButtonBuilder, type EmbedBuilder } from 'discord.js';
 import { balance } from '../config.js';
-import { applyOutcome, saveCharacter } from '../game/character.js';
+import { applyOutcome, saveCharacter, stopped } from '../game/character.js';
 import { getEvent, startEvent } from '../game/engine.js';
 import { isDev } from '../game/dev.js';
 import type { Character, GameEventDef } from '../game/types.js';
@@ -56,7 +57,7 @@ export function exploreStart(char: Character, zoneId?: string): ExploreStep {
     // body mass slowly drains in the Old Realm
     const a = applyOutcome(char, { text: '', hp: -1 });
     pre.push(...a.lines.map((l) => `-# ${l} (มวลกายค่อย ๆ หายไปใน Old Realm)`));
-    if (a.died || a.becameFiend) {
+    if (stopped(a)) {
       saveCharacter(char);
       return { kind: 'dead', lines: a.lines };
     }
@@ -72,7 +73,7 @@ export async function exploreView(char: Character, s: ExploreStep): Promise<Expl
     case 'error':
       return { content: s.content, embeds: [], files: [], components: [] };
     case 'dead':
-      return { embeds: [resultEmbed(char, 'ร่างของคุณสลายไป...', s.lines, COLORS.blood)], files: [], components: [] };
+      return { embeds: [resultEmbed(char, char.dying ? 'ร่างของคุณแหลกเหลว...' : 'ร่างของคุณสลายไป...', s.lines, COLORS.blood)], files: [], components: fallOr(char, []) };
     case 'dungeon': {
       const row = dungeonButtons(char);
       return { ...(await dungeonPayload(char)), components: row ? [row] : [] };

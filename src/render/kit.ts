@@ -22,7 +22,7 @@ export function ensureFonts(): void {
   if (fontsReady) return;
   for (const f of ['Kanit-Regular', 'Kanit-Medium', 'Kanit-SemiBold', 'Kanit-Bold']) GlobalFonts.registerFromPath(`${FONT_DIR}${f}.ttf`, 'Kanit');
   GlobalFonts.registerFromPath(`${FONT_DIR}Cinzel.ttf`, 'Cinzel');
-  GlobalFonts.registerFromPath(`${FONT_DIR}UnifrakturMaguntia.ttf`, 'Unifraktur');
+  GlobalFonts.registerFromPath(`${FONT_DIR}CloisterBlack.ttf`, 'Cloister');
   GlobalFonts.registerFromPath(`${FONT_DIR}TwemojiMozilla.ttf`, 'Twemoji');
   fontsReady = true;
 }
@@ -406,7 +406,7 @@ export function statusStrip(
 /** Blackletter logo, right-aligned. */
 export function logo(ctx: Ctx, rightX: number, y: number, size = 30): void {
   ctx.textAlign = 'right';
-  ctx.font = `400 ${size}px Unifraktur`;
+  ctx.font = `400 ${size}px Cloister`;
   ctx.fillStyle = C.crimson;
   ctx.fillText('Fleshfall', rightX, y);
   ctx.textAlign = 'left';

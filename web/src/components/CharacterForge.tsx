@@ -11,7 +11,7 @@ const TEMPLATE_RIG = templateRig as Rig;
 const TEMPLATE_PSD = "/templates/fleshfall-sprite-template.psd";
 const templateSrc = (id: string, ext: string) => `/sprites/template/${id}.${ext}`;
 import { SpriteStage } from "./SpriteStage";
-import type { AccountView, ImageSlot, ImageSlotDef, MeResponse } from "@/lib/types";
+import { BIO_MAX, type AccountView, type ImageSlot, type ImageSlotDef, type MeResponse } from "@/lib/types";
 
 export interface ForgeRole { id: string; name: string; emoji: string; short: string }
 export interface ForgeIcon { id: string; name: string; emoji: string; concept: string; door: string; doorName: string }
@@ -390,7 +390,72 @@ function Dossier(props: {
       </section>
 
       <SpriteSection character={c} onChange={setChar} onError={props.onError} />
+
+      <BioSection character={c} onChange={setChar} onError={props.onError} />
     </div>
+  );
+}
+
+/** Public notes / backstory, shown on /players/<slug> and under /profile in Discord. */
+function BioSection(props: { character: AccountView; onChange: (c: AccountView) => void; onError: (e: string | null) => void }) {
+  const saved = props.character.bio ?? "";
+  const [text, setText] = useState(saved);
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const dirty = text.trim() !== saved;
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setDone(false);
+    props.onError(null);
+    try {
+      const r = await api<{ character: AccountView }>("/api/me/bio", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ bio: text }),
+      });
+      props.onChange(r.character);
+      setText(r.character.bio ?? "");
+      setDone(true);
+    } catch (err) {
+      props.onError((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="step">
+      <header>
+        <span className="step-no">07</span>
+        <div>
+          <h3>บันทึกตัวละคร</h3>
+          <p className="sub">ประวัติ นิสัย ข้อมูลเพิ่มเติม หรือโน้ตอะไรก็ได้ — ทุกคนเห็นได้ในหน้าโปรไฟล์และคำสั่ง /profile ใน Discord</p>
+        </div>
+      </header>
+      <form className="forge-bio" onSubmit={save}>
+        <textarea
+          value={text}
+          onChange={(e) => (setText(e.target.value), setDone(false))}
+          maxLength={BIO_MAX}
+          rows={8}
+          placeholder="เช่น อดีตพ่อครัวจากปารีส ตกลงรอยแยกมิติระหว่างกะดึก…"
+          aria-label="บันทึกตัวละคร"
+        />
+        <div className="forge-bio-bar">
+          <span className="sub">{text.length}/{BIO_MAX}</span>
+          {props.character.slug && (
+            <a className="ghost" href={`/players/${props.character.slug}`} target="_blank" rel="noreferrer">
+              ดูโปรไฟล์สาธารณะ ↗
+            </a>
+          )}
+          <button type="submit" className="cta" disabled={busy || !dirty}>
+            {busy ? "กำลังบันทึก…" : done && !dirty ? "บันทึกแล้ว ✓" : "บันทึก"}
+          </button>
+        </div>
+      </form>
+    </section>
   );
 }
 

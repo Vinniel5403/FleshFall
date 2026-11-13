@@ -7,7 +7,7 @@ import { getItem, itemLabel } from './items.js';
 import { ROLES } from './roles.js';
 import { CHAR_VERSION, type BuffDef, type Character, type IconId, type Outcome, type RoleId, type StatKey } from './types.js';
 import { isCrimsonMoon, LOCATIONS } from './world.js';
-import { resolveTravel } from './zones.js';
+import { currentZone, resolveTravel, startTravel } from './zones.js';
 
 /** Build a fresh character without saving it (web demo, sims). */
 export function newCharacter(userId: string, name: string, role: RoleId, icon: IconId): Character {
@@ -67,6 +67,7 @@ export function loadCharacter(userId: string): Character | undefined {
   }
   regen(char);
   resolveTravel(char);
+  resolveFall(char);
   return char;
 }
 
@@ -172,9 +173,16 @@ export interface AppliedOutcome {
   lines: string[];
   leveledUp: boolean;
   died: boolean;
+  /** HP hit 0 in an easy/normal city: knocked out, waiting for /wake (hunt/run ended). */
+  downed?: boolean;
+  /** HP hit 0 in a hard/epic city: placenta-or-give-up choice pending (hunt/run kept). */
+  dying?: boolean;
   brokeDown: boolean;
   becameFiend: boolean;
 }
+
+/** The step stopped the character (death, knocked out, dying choice, breakdown, Fiend) — stop the current flow. */
+export const stopped = (a: AppliedOutcome) => a.died || !!a.downed || !!a.dying || a.brokeDown || a.becameFiend;
 
 const STAT_LABEL: Record<StatKey, string> = { str: 'พละ', agi: 'ว่องไว', int: 'สัมผัส' };
 
@@ -263,8 +271,17 @@ export function applyOutcome(char: Character, o: Outcome): AppliedOutcome {
     return res;
   }
   if (char.hp <= 0) {
-    die(char, lines);
-    res.died = true;
+    const mode = fallMode(char);
+    if (mode === 'downed') {
+      knockOut(char, lines);
+      res.downed = true;
+    } else if (mode === 'dying') {
+      startDying(char, lines);
+      res.dying = true;
+    } else {
+      die(char, lines);
+      res.died = true;
+    }
   } else if (char.sanity <= 0) {
     breakdown(char, lines);
     res.brokeDown = true;
@@ -318,11 +335,112 @@ function levelUp(char: Character, lines: string[]): void {
   }
 }
 
+// ---------- falling in the field: downed (easy/normal) · dying (hard/epic) ----------
+
+/** What HP 0 means here: Old Realm cities fall by tier, anywhere else is plain death. */
+export function fallMode(char: Character): 'downed' | 'dying' | 'dead' {
+  if (char.location !== 'old_realm' || char.traveling) return 'dead';
+  const tier = currentZone(char).tier;
+  return tier === 'hard' || tier === 'epic' ? 'dying' : 'downed';
+}
+
+/** Can't do anything until revived / resolved. */
+export const isFallen = (char: Character) => !!(char.downed || char.dying);
+
+function knockOut(char: Character, lines: string[], now = Date.now()): void {
+  char.hp = 0;
+  delete char.hunt;
+  delete char.run;
+  delete char.pendingEvent;
+  char.downed = { at: now, until: now + balance.downedMs, zone: currentZone(char).id };
+  lines.push(
+    `😵 **คุณล้มลงหมดสติ** กลางเมือง ${currentZone(char).name} — การล่า/ดันเจียนจบลง`,
+    `-# ให้เพื่อนที่อยู่เมืองเดียวกันใช้ \`/wake\` ปลุก (ได้กลับบ้านพร้อมของรอบนี้) · ไม่มีใครมา = ฟื้นเองแล้วถูกลากกลับบ้าน <t:${Math.ceil(char.downed.until / 1000)}:R> (ของรอบนี้หาย)`,
+  );
+}
+
+function startDying(char: Character, lines: string[], now = Date.now()): void {
+  char.hp = 0;
+  char.dying = { at: now, zone: currentZone(char).id };
+  const n = itemCount(char, 'placenta');
+  lines.push(
+    `🩸 **ร่างของคุณแหลกเหลว...** เมืองระดับนี้ไม่มีใครมาปลุกคุณได้`,
+    n > 0
+      ? `-# 🥚 ใช้รกคืนชีพ (มี ${n}) เพื่อฟื้นขึ้นมาสู้ต่อ — หรือยอมตาย (EXP ในเลเวลนี้หายหมด + ของรอบนี้หาย) · ตัดสินใจภายใน <t:${Math.ceil((now + balance.dyingMs) / 1000)}:R>`
+      : `-# ไม่มี 🥚 รกคืนชีพในกระเป๋า — ยอมตาย = EXP ในเลเวลนี้หายหมด + ของรอบนี้หาย`,
+  );
+}
+
+/** 🥚 Placenta revive while dying: back up at half HP, hunt/dungeon continues. */
+export function placentaRevive(char: Character): { ok: boolean; lines: string[] } {
+  if (!char.dying) return { ok: false, lines: ['คุณไม่ได้กำลังจะตาย'] };
+  if (!isDev(char) && itemCount(char, 'placenta') < 1) return { ok: false, lines: ['ไม่มี 🥚 รกคืนชีพในกระเป๋า (ของรอรับใช้ไม่ได้)'] };
+  if (!isDev(char)) removeItem(char, 'placenta');
+  delete char.dying;
+  char.hp = Math.ceil(char.maxHp / 2);
+  const lines = [`🥚 **รกคืนชีพห่อหุ้มร่างของคุณ** เนื้อใหม่งอกขึ้นมาแทนที่ — ลุกขึ้นสู้ต่อ (🩸 ${char.hp}/${char.maxHp})`];
+  changeHumanity(char, -3, lines);
+  return { ok: true, lines };
+}
+
+/** Give up while dying (or the choice timed out): real death + XP within the level is lost. */
+export function giveUpDying(char: Character): string[] {
+  if (!char.dying) return [];
+  delete char.dying;
+  delete char.hunt;
+  const lines: string[] = [];
+  die(char, lines);
+  if (char.xp > 0) lines.push(`📉 EXP ในเลเวลนี้หายหมด (−${char.xp})`);
+  char.xp = 0;
+  return lines;
+}
+
+export type WakeResult = { ok: false; error: string } | { ok: true; lines: string[] };
+
+/** A friend standing in the same city wakes a downed character, who then heads home with the haul. */
+export function wakeUp(target: Character, by: Character, now = Date.now()): WakeResult {
+  if (!target.downed) return { ok: false, error: `${target.name} ไม่ได้หมดสติอยู่` };
+  if (target.userId === by.userId) return { ok: false, error: 'ปลุกตัวเองไม่ได้ — รอเพื่อน หรือรอให้ฟื้นเอง' };
+  if (by.fiend || isFallen(by)) return { ok: false, error: 'คุณเองก็ยังลุกไม่ไหว' };
+  if (!isDev(by) && (by.traveling || by.location !== 'old_realm' || currentZone(by).id !== target.downed.zone)) {
+    return { ok: false, error: `ต้องอยู่เมืองเดียวกับ ${target.name} ถึงจะปลุกได้` };
+  }
+  delete target.downed;
+  target.hp = Math.max(1, Math.ceil(target.maxHp * 0.3));
+  const lines = [`🤝 **${by.name}** เขย่าร่างของ **${target.name}** จนได้สติ (🩸 ${target.hp}/${target.maxHp})`];
+  const helper: string[] = [];
+  changeHumanity(by, 2, helper);
+  if (helper.length) lines.push(`-# ${by.name}: ${helper.join(' ')}`);
+  if (target.reachedRougeLand) {
+    const t = startTravel(target, 'rouge_land', now);
+    lines.push(t.ok ? `🏠 ${target.name} พยุงตัวกลับ Rouge Land พร้อมของรอบนี้` : `-# ${t.error}`);
+  }
+  return { ok: true, lines };
+}
+
+/** Lazy timeouts (called on every load): downed → wake up alone at home; dying → death. */
+export function resolveFall(char: Character, now = Date.now()): void {
+  if (char.downed && now >= char.downed.until) {
+    delete char.downed;
+    char.hp = Math.max(1, Math.ceil(char.maxHp * 0.3));
+    const lost = loseTrip(char);
+    char.location = char.reachedRougeLand ? 'rouge_land' : 'old_realm';
+    delete char.traveling;
+    if (char.reachedRougeLand) delete char.zone;
+    char.banked = { text: ['😵 ไม่มีใครมาปลุก... คุณฟื้นขึ้นมาเองและถูกลากกลับบ้าน', ...lost].join(' · '), at: now };
+  }
+  if (char.dying && now - char.dying.at >= balance.dyingMs) {
+    char.banked = { text: ['☠️ คุณลังเลนานเกินไป... ร่างดับสูญ', ...giveUpDying(char)].join(' · '), at: now };
+  }
+}
+
 function die(char: Character, lines: string[]): void {
   const m = mods(char.icon);
   char.deaths += 1;
   delete char.run;
   delete char.pendingEvent;
+  delete char.downed;
+  delete char.dying;
   lines.push(...loseTrip(char));
   if (m.deathKeepsFlesh) {
     lines.push('🥚 **คุณตาย...** Sophia กลืนซากของคุณและให้กำเนิดใหม่ด้วยความรัก — แต่วิญญาณบางส่วนหายไป');

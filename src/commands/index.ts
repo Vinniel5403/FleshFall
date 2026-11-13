@@ -5,6 +5,7 @@ import { arrive } from './arrive.js';
 import { duel } from './duel.js';
 import { market, serve } from './market.js';
 import { revive } from './revive.js';
+import { wake } from '../interactions/fall.js';
 import { panel } from './panel.js';
 import { icons, moon, profile, roles, world } from './profile.js';
 import { start } from './start.js';
@@ -31,6 +32,7 @@ export const commands: Command[] = [
   panel,
   arrive,
   revive,
+  wake,
   duel,
   market,
   serve,

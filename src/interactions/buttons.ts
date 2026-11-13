@@ -4,6 +4,7 @@ import { advance, exitDungeon, resolveChoice, retreat, type ExitChoice } from '.
 import type { Character } from '../game/types.js';
 import { playDice } from './dice.js';
 import { COLORS, dungeonButtons, eventButtons, eventPayload, resultEmbed } from '../ui.js';
+import { fallOr } from './fallRow.js';
 
 /** Ephemeral if the clicked message was ephemeral (e.g. dungeon entered from a panel hunt). */
 const sameVisibility = (i: ButtonInteraction) => (i.message.flags.has(MessageFlags.Ephemeral) ? MessageFlags.Ephemeral : undefined);
@@ -40,7 +41,7 @@ export async function handleEventButton(i: ButtonInteraction): Promise<unknown> 
   const body = [`*${event.description}*`, '', `➡️ **${choice.emoji ?? ''} ${choice.label}**`, outcome.text, ...notes, '', ...applied.lines];
   const color = applied.becameFiend ? COLORS.fiend : applied.died ? COLORS.blood : COLORS.rot;
   const nav = dungeonButtons(char);
-  const final = { embeds: [resultEmbed(char, event.title, body, color)], files: [], components: nav ? [nav] : [] };
+  const final = { embeds: [resultEmbed(char, event.title, body, color)], files: [], components: fallOr(char, nav ? [nav] : []) };
   if (!result.dice.length) return i.update(final);
   await i.deferUpdate();
   await playDice(i, result.dice, color);
@@ -60,7 +61,7 @@ export async function handleDungeonButton(i: ButtonInteraction): Promise<unknown
     saveCharacter(char);
     await i.update({ components: [] });
     if (!step.event) {
-      return i.followUp({ flags: sameVisibility(i), embeds: [resultEmbed(char, 'ร่างของคุณทนไม่ไหว', step.lines, COLORS.blood)] });
+      return i.followUp({ flags: sameVisibility(i), embeds: [resultEmbed(char, 'ร่างของคุณทนไม่ไหว', step.lines, COLORS.blood)], components: fallOr(char, []) });
     }
     const v = await eventPayload(char, step.event, step.lines.length ? [`-# ${step.lines.join(' · ')}`, ''] : []);
     return i.followUp({ flags: sameVisibility(i), ...v, components: [eventButtons(char, step.event)] });

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Cinzel, Kanit, UnifrakturMaguntia } from "next/font/google";
+import { Cinzel, Kanit } from "next/font/google";
+import localFont from "next/font/local";
 import { Header } from "@/components/Header";
 import { DESCRIPTION, SITE, SITE_NAME, SITE_TITLE } from "@/lib/site";
 import "./globals.css";
@@ -12,7 +13,8 @@ import "./hud.css";
 import "./dossier.css";
 
 const cinzel = Cinzel({ variable: "--font-cinzel", subsets: ["latin"], weight: ["600", "800"] });
-const logo = UnifrakturMaguntia({ variable: "--font-logo", subsets: ["latin"], weight: "400" });
+// Cloister Black Light (Dieter Steffmann, freeware via dafont) — logo / calligraphy
+const logo = localFont({ src: "./fonts/CloisterBlack.woff2", variable: "--font-logo", weight: "400", display: "swap" });
 const kanit = Kanit({ variable: "--font-kanit", subsets: ["thai", "latin"], weight: ["300", "400", "500", "600", "700", "800"] });
 
 

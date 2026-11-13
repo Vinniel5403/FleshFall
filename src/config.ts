@@ -24,9 +24,13 @@ export const balance = {
   /** Chance a hunt reveals a dungeon door after victory. */
   huntDoorChance: 0.2,
   /** Chance a dungeon is an Icon dungeon (shrine at the end): continent's main color / elsewhere. */
-  iconDungeonHome: 0.05,
-  iconDungeonAway: 0.01,
+  iconDungeonHome: 0.015,
+  iconDungeonAway: 0.003,
   deathGoldLossPct: 0.25,
+  /** Knocked out in an easy/normal city: wait this long for a friend's /wake, then wake up alone back home (trip lost). Env DOWNED_MINUTES. */
+  downedMs: Number(process.env.DOWNED_MINUTES ?? 120) * 60_000,
+  /** Fell in a hard/epic city: placenta-or-give-up choice auto-resolves to death after this. */
+  dyingMs: 30 * 60_000,
   /** Outsiders (reachedRougeLand=false) may walk into Rouge Land on their own from this level; before that only red door → Cypress → ferryman. */
   rougeLandUnlockLevel: 10,
   xpForLevel: (level: number) => 50 + (level - 1) * 35,

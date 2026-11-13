@@ -114,6 +114,10 @@ export interface AccountView {
   };
   /** next time a rename is allowed (ms epoch) */
   renameAt?: number;
+  /** player notes / backstory (public), max BIO_MAX */
+  bio?: string;
+  /** opaque public profile id → /players/<slug> (never the Discord id) */
+  slug?: string;
   images: { slot: ImageSlot; key: string; at: number; url?: string }[];
   /** paper-doll sprite from PSD; part file = `${url}/${id}.${ext}` */
   sprite: (import("./rig").Rig & { base: string; at: number; url?: string }) | null;
@@ -126,4 +130,42 @@ export interface MeResponse {
   inGuild: boolean;
   guildUrl: string | null;
   error?: string;
+}
+
+/** Max length of a character's notes (keep in sync with src/game/account.ts BIO_MAX). */
+export const BIO_MAX = 1500;
+
+/** GET /api/characters?q= row (bot src/web/api.ts searchCharacters). `portrait` = image key. */
+export interface PlayerHit {
+  slug: string;
+  name: string;
+  role: string;
+  icon: string;
+  level: number;
+  fiend: boolean;
+  portrait: string | null;
+  /** added by the website route handler */
+  portraitUrl?: string | null;
+}
+
+type Named = { id: string; name: string; emoji: string };
+
+/** GET /api/characters/<slug> (bot src/web/api.ts characterProfile). Everything is public by design, except Discord ids. */
+export interface PlayerProfile {
+  slug: string;
+  name: string;
+  role: string;
+  icon: string;
+  level: number;
+  fiend: boolean;
+  createdAt: number;
+  bio: string;
+  status: NonNullable<AccountView["status"]>;
+  equipped: { weapon: (Named & { level: number }) | null; armor: (Named & { level: number }) | null };
+  inventory: (Named & { qty: number })[];
+  blessings: { icon: string; name: string; tier: number }[];
+  mutations: string[];
+  record: { deaths: number; breakdowns: number; eventsCompleted: number; dungeonsCleared: number };
+  images: AccountView["images"];
+  sprite: AccountView["sprite"];
 }

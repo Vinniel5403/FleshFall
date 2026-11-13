@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { bot } from "@/lib/server/bot";
 import { BOT_DOWN, jsonError, NEED_LOGIN, withUrls } from "@/lib/server/me";
+import { mediaId } from "@/lib/server/media";
 import { deleteObjects, putObject, sniffImage } from "@/lib/server/r2";
 import { getSession, sameOrigin } from "@/lib/server/session";
 
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
     files.push({ part, buf, type: kind.type });
   }
 
-  const base = `sprites/${s.uid}/${randomBytes(9).toString("hex")}`;
+  const base = `sprites/${mediaId(s.uid)}/${randomBytes(9).toString("hex")}`;
   const keys = files.map((f) => `${base}/${f.part.id}.${f.part.ext}`);
   try {
     await Promise.all(files.map((f, i) => putObject(keys[i], f.buf, f.type)));

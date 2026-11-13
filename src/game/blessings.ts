@@ -2,7 +2,7 @@
  * Icon dungeons + blessing tiers.
  *
  * Every dungeon rolls once on entry whether it is an "Icon dungeon" (the door's Icon
- * is present): 5% when the door is the current continent's main color, 1% elsewhere.
+ * is present): rare — balance.iconDungeonHome when the door is the current continent's main color, iconDungeonAway elsewhere.
  * Only Icon dungeons end at that Icon's shrine. Each shrine visit raises the blessing
  * of THAT Icon by one tier (two for its own followers), up to MAX_BLESSING.
  * Green (Sophia) shrines also grant a resurrection rite that can bring a Fiend friend back.
@@ -58,7 +58,8 @@ export function receiveBlessing(char: Character, door: IconDoor): string[] {
   }
   if (icon.id === 'sophia') {
     char.inventory.sophia_rite = (char.inventory.sophia_rite ?? 0) + 1;
-    lines.push('🥚 **Sophia ประทานพิธีชุบชีวิต** — ใช้ `/revive` เพื่อนำเพื่อนที่กลายเป็น Fiend กลับมาได้ 1 คน');
+    char.inventory.placenta = (char.inventory.placenta ?? 0) + 1;
+    lines.push('🥚 **Sophia ประทานพิธีชุบชีวิต** — ใช้ `/revive` เพื่อนำเพื่อนที่กลายเป็น Fiend กลับมาได้ 1 คน · และ 🥚 รกคืนชีพ 1 ชิ้น');
   }
   return lines;
 }

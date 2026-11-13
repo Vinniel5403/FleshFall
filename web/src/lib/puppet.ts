@@ -5,7 +5,7 @@
  * plus a kick from the body's acceleration; release = flip upright, fall, bounce + squash.
  * Units: rig pixels / seconds. Pure — SpriteStage feeds it pointer positions each frame.
  */
-import { hand, idlePose, mul, type Bone, type M, type Pose } from "./rig";
+import { hand, idlePose, legPhase, mul, type Bone, type M, type Pose } from "./rig";
 
 /** How much each part swings (sign: + for parts hanging below their pivot, − for parts standing above it). */
 const DANGLE: Partial<Record<string, number>> = {
@@ -74,12 +74,17 @@ export interface Puppet {
   /** 0 = standing, 1 = fully tipped over into the carry pose */
   carry: number;
   limbs: Map<string, Limb>;
+  /** seconds simulated (drives the legs' air-walk while carried) */
+  clock: number;
 }
 
 export const newPuppet = (): Puppet => ({
   x: 0, y: 0, vx: 0, vy: 0, ang: 0, angV: 0, grabbed: false,
-  gx: 0, gy: 0, tx: 0, ty: 0, ax: 0, squash: 0, squint: 0, carry: 0, mode: "hips", limbs: new Map(),
+  gx: 0, gy: 0, tx: 0, ty: 0, ax: 0, squash: 0, squint: 0, carry: 0, mode: "hips", limbs: new Map(), clock: 0,
 });
+
+/** Multi-legged rigs paddle their legs in the air while held (rad, around the hanging angle). */
+const AIR_WALK = 0.3, AIR_WALK_SPEED = 9;
 
 /** Whole-body transform: offset, rotated about the grab point. */
 export function bodyMatrix(p: Puppet): M {
@@ -157,6 +162,7 @@ export function release(p: Puppet): void {
 
 export function step(p: Puppet, bones: Map<string, Bone>, dt: number, size: { w: number; h: number }): void {
   dt = Math.min(dt, 1 / 30);
+  p.clock += dt;
   const pvx = p.vx;
   const armId = p.grabbed ? heldArm(p) : null;
   const armBone = armId ? bones.get(armId) : undefined;
@@ -255,9 +261,12 @@ export function step(p: Puppet, bones: Map<string, Bone>, dt: number, size: { w:
     const g = b.kind ? GRAVITY[b.kind] ?? 0 : 0;
     if (!w && !g) continue;
     const parentWorld = b.parent ? world(b.parent) : p.ang;
-    const target = p.ang * (1 - g) - parentWorld; // local angle that makes world = ang·(1−g)
+    let target = p.ang * (1 - g) - parentWorld; // local angle that makes world = ang·(1−g)
+    // walking legs: left/right swing in opposite phase when shaken, and paddle in the air while held
+    const gaitSign = b.gait ? Math.cos(legPhase(b)) >= 0 ? 1 : -1 : 1;
+    if (b.gait && p.grabbed) target += AIR_WALK * p.carry * Math.sin(AIR_WALK_SPEED * p.clock + legPhase(b));
     const l = p.limbs.get(b.part.id) ?? { a: 0, v: 0 };
-    l.v += (-LIMB_K * (l.a - target) - LIMB_C * l.v + (w ?? 0) * LIMB_GAIN * drive) * dt;
+    l.v += (-LIMB_K * (l.a - target) - LIMB_C * l.v + (w ?? 0) * LIMB_GAIN * drive * gaitSign) * dt;
     l.a += l.v * dt;
     // hard stop around the hanging angle: kill the velocity instead of letting it wrap around
     const lim = (b.kind && SWING_MAX[b.kind]) || 0.4;

@@ -82,6 +82,8 @@ const list: ItemDef[] = [
   { id: 'bone', name: 'กระดูก', emoji: '🦴', type: 'material', value: 3, description: 'ไม่ใช่ของคุณ... หวังว่านะ' },
   { id: 'sophia_rite', name: 'พิธีชุบชีวิตของ Sophia', emoji: '🥚', type: 'material', value: 0,
     description: 'ไข่เนื้อสีชมพูที่ยังเต้นตุบ จากศาลของ Sophia — ใช้ /revive นำเพื่อนที่กลายเป็น Fiend กลับมา' },
+  { id: 'placenta', name: 'รกคืนชีพ', emoji: '🥚', type: 'material', value: 120,
+    description: 'รกที่ยังอุ่นและเต้นตุบ ใช้ได้ตอนล้มตายในเมืองระดับ Hard/Epic — ฟื้นขึ้นมาสู้ต่อทันที (ต้องอยู่ในกระเป๋า ไม่ใช่ของรอรับ)' },
   { id: 'sigil', name: 'ตราสัญลักษณ์ Icon', emoji: '🔯', type: 'material', value: 50, description: 'ใช้ในพิธีติดต่อ Icon' },
 ];
 

@@ -1,0 +1,47 @@
+/* /players search + /players/[slug] profile. Builds on forge.css (dossier plate, status list, sprite view). */
+
+.players-search { display: grid; gap: 6px; max-width: 520px; margin: 0 0 24px; }
+.players-search span { color: var(--flesh); font-size: 14px; }
+.players-search input { padding: 10px 14px; font: inherit; font-size: 17px; background: rgba(0, 0, 0, .35); color: var(--bone); border: 1px solid rgba(230, 184, 162, .3); border-radius: 0; }
+.players-search input:focus { outline: none; border-color: var(--crimson); }
+
+.players-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.player-card { display: flex; gap: 14px; align-items: center; padding: 10px; text-decoration: none; color: var(--bone); background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--door); transition: border-color .2s, background .2s; }
+.player-card:hover { border-color: var(--crimson); background: #220e0e; }
+.player-card.fiend { filter: saturate(.6); }
+.player-thumb { flex: none; width: 64px; height: 64px; overflow: hidden; background: #050303; border: 1px solid rgba(230, 184, 162, .2); display: grid; place-items: center; }
+.player-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.player-thumb i { font: 600 26px var(--font-cinzel), serif; font-style: normal; color: var(--muted); }
+.player-meta { display: grid; gap: 2px; min-width: 0; }
+.player-meta b { font-weight: 600; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player-meta small { color: var(--muted); font-size: 13px; }
+
+.player-back { margin: 0 0 18px; }
+.player-back a { color: var(--muted); text-decoration: none; font-size: 14px; }
+.player-back a:hover { color: var(--flesh); }
+.player-profile { display: grid; gap: 22px; }
+.player-profile .forge-portrait { position: relative; }
+.player-fiend { margin-left: 12px; padding: 2px 8px; font: 600 12px var(--font-cinzel), serif; letter-spacing: .15em; color: var(--bone); background: var(--blood); vertical-align: middle; }
+.player-h { margin: 0 0 10px; font-size: clamp(16px, 1.5vw, 21px); font-weight: 500; color: var(--flesh); }
+.player-h:not(:first-child) { margin-top: 20px; }
+.player-bio { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; color: var(--bone); }
+
+.player-art { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; align-items: start; }
+.player-art figure { margin: 0; display: grid; gap: 6px; }
+.player-art img { width: 100%; max-height: 560px; object-fit: contain; background: #050303; border: 1px solid rgba(230, 184, 162, .25); }
+.player-art figcaption { color: var(--muted); font-size: 13px; text-align: center; }
+
+.player-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.player-gallery img { width: 100%; aspect-ratio: 1; object-fit: cover; border: 1px solid rgba(230, 184, 162, .2); }
+.player-gallery a:hover img { border-color: var(--crimson); }
+
+.player-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.player-list, .player-inv { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; color: var(--bone); font-size: 15px; }
+.player-inv { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px 14px; }
+.player-inv b { color: var(--muted); font-weight: 400; font-size: 13px; }
+
+@media (max-width: 760px) {
+  .player-cols { grid-template-columns: 1fr; }
+  .player-profile .forge-dossier { grid-template-columns: 1fr; }
+  .player-profile .forge-portrait { max-width: 260px; }
+}

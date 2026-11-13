@@ -83,7 +83,7 @@ export interface SpritePart {
 
 /** Paper-doll sprite built from the player's PSD (parsed in the browser). Pivots/parents come from part ids (web/src/lib/rig.ts). */
 export interface CharSprite {
-  /** R2 prefix, e.g. sprites/<uid>/<rand> */
+  /** R2 prefix, e.g. sprites/<mediaId>/<rand> (legacy saves: sprites/<uid>/<rand>) */
   base: string;
   width: number;
   height: number;
@@ -178,6 +178,12 @@ export interface Character {
   buff?: MealBuff;
   /** Last safe return home with trip loot (shown on inventory for a while). */
   banked?: { text: string; at: number };
+  /** Player-written notes / backstory, public on the profile (web + Discord). Max BIO_MAX chars. */
+  bio?: string;
+  /** Knocked out in an easy/normal city: can't act until a friend revives or `until` passes (→ home, trip lost). */
+  downed?: { at: number; until: number; zone: ZoneId };
+  /** Fell in a hard/epic city: choose 🥚 placenta revive (keep fighting) or give up (real death). */
+  dying?: { at: number; zone: ZoneId };
   fiend: boolean;
   lastRegenAt: number;
   createdAt: number;

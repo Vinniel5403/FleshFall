@@ -1,4 +1,4 @@
-import { applyOutcome, changeHumanity, itemCount, removeItem, statMod, type AppliedOutcome } from './character.js';
+import { applyOutcome, changeHumanity, itemCount, removeItem, statMod, stopped, type AppliedOutcome } from './character.js';
 import { EVENTS, EVENTS_BY_ID } from './events/index.js';
 import { rollIconDungeon, receiveBlessing } from './blessings.js';
 import { d20Success, type DiceRoll } from './dice.js';
@@ -108,10 +108,12 @@ export function resolveChoice(char: Character, eventId: string, choiceId: string
   if (ctx.rerolls() > 0 && !char.fiend) changeHumanity(char, -2 * ctx.rerolls(), applied.lines);
   char.eventsCompleted += 1;
 
-  const alive = !applied.died && !applied.brokeDown && !applied.becameFiend;
+  const fell = applied.died || !!applied.downed || applied.brokeDown || applied.becameFiend;
+  const alive = !fell && !applied.dying;
   if (alive && outcome.enterDungeon && char.location === 'old_realm') {
     startRun(char, outcome.enterDungeon);
-  } else if (alive && char.run && event.door) {
+  } else if (!fell && char.run && event.door) {
+    // dying keeps the run: after a placenta revive the room counts as cleared
     char.run.stage = event.boss ? 'exit' : 'between';
   }
   return { event, choice, outcome, applied, notes, dice };
@@ -141,7 +143,7 @@ export function advance(char: Character): DungeonStep {
   else o.hp = -3;
   if (run.door === 'white') o.hp = (o.hp ?? 0) - 3; // no food, no water
   const applied = applyOutcome(char, o);
-  if (applied.died || applied.brokeDown || applied.becameFiend) return { ok: true, lines: applied.lines, applied };
+  if (stopped(applied)) return { ok: true, lines: applied.lines, applied };
   run.depth += 1;
   const event = startEvent(char);
   return { ok: true, lines: applied.lines, event, applied };

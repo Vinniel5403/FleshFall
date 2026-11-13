@@ -3,7 +3,8 @@
  * The website verifies the Discord login; the bot owns the character store and the guild.
  * Every handler keeps load → mutate → save synchronous (no await in between).
  */
-import { accountView, attachImage, cleanHeight, cleanName, cleanSprite, detachImage, isSlot, spriteKeys } from '../game/account.js';
+import { accountView, attachImage, BIO_MAX, cleanBio, cleanHeight, cleanName, cleanSprite, detachImage, isSlot, legacyMedia, mediaId, renameMedia, spriteKeys } from '../game/account.js';
+import { db } from '../db/index.js';
 import { createCharacter, loadCharacter, saveCharacter } from '../game/character.js';
 import { ICONS } from '../game/icons.js';
 import { ROLES } from '../game/roles.js';
@@ -69,6 +70,41 @@ export function renameAccount(userId: string, b: Record<string, unknown>): Reply
   if (next > now) return fail(429, `เปลี่ยนชื่อได้อีกครั้งใน ${Math.ceil((next - now) / 60_000)} นาที`);
   char.name = name;
   char.cooldowns.rename = now + RENAME_COOLDOWN_MS;
+  saveCharacter(char);
+  return ok({ character: accountView(char) });
+}
+
+// ---------- one-off media migration (web/scripts/migrate-media.ts) ----------
+
+/** Every character still storing uploads under a Discord-id path, with its new media folder. */
+export function listLegacyMedia(): Reply {
+  const users = db
+    .allCharacters()
+    .map((c) => ({ userId: c.userId, mediaId: mediaId(c.userId), ...legacyMedia(c) }))
+    .filter((u) => u.images.length || u.sprite);
+  return ok({ users });
+}
+
+/** After the objects were copied: point the character at the new keys. */
+export function applyMediaRename(userId: string, b: Record<string, unknown>): Reply {
+  const char = loadCharacter(userId);
+  if (!char) return fail(404, 'no character');
+  const map = b.map && typeof b.map === 'object' ? (b.map as Record<string, string>) : null;
+  if (!map) return fail(400, 'bad map');
+  const err = renameMedia(char, map);
+  if (err) return fail(400, err);
+  saveCharacter(char);
+  return ok({ character: accountView(char) });
+}
+
+/** Set the character's public notes / backstory ('' clears it). */
+export function setBio(userId: string, b: Record<string, unknown>): Reply {
+  const bio = cleanBio(b.bio);
+  if (bio === null) return fail(400, `โน้ตยาวได้ไม่เกิน ${BIO_MAX} ตัวอักษร`);
+  const char = loadCharacter(userId);
+  if (!char) return fail(404, 'ยังไม่มีตัวละคร');
+  if (bio) char.bio = bio;
+  else delete char.bio;
   saveCharacter(char);
   return ok({ character: accountView(char) });
 }

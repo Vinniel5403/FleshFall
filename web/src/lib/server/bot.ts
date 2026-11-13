@@ -13,7 +13,7 @@ export interface AccountReply {
   error?: string;
 }
 
-export async function bot(path: "get" | "create" | "join" | "rename" | "image/add" | "image/remove" | "sprite/set" | "sprite/clear" | "sprite/height", body: Record<string, unknown>) {
+export async function bot(path: "get" | "create" | "join" | "rename" | "bio" | "image/add" | "image/remove" | "sprite/set" | "sprite/clear" | "sprite/height", body: Record<string, unknown>) {
   const base = process.env.BOT_API_URL;
   const secret = process.env.BOT_API_SECRET;
   if (!base || !secret) throw new Error("BOT_API_URL / BOT_API_SECRET missing");
@@ -26,4 +26,14 @@ export async function bot(path: "get" | "create" | "join" | "rename" | "image/ad
   });
   const data = (await res.json().catch(() => ({ error: "bad response" }))) as AccountReply;
   return { status: res.status, data };
+}
+
+/** Public read-only bot API (no secret): character search + public profiles. null = not found. */
+export async function botPublic<T>(path: string): Promise<T | null> {
+  const base = process.env.BOT_API_URL;
+  if (!base) throw new Error("BOT_API_URL missing");
+  const res = await fetch(`${base.replace(/\/$/, "")}/api/${path}`, { cache: "no-store", signal: AbortSignal.timeout(10_000) });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`bot ${res.status}`);
+  return (await res.json()) as T;
 }

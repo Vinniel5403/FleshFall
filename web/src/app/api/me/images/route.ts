@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { bot } from "@/lib/server/bot";
 import { BOT_DOWN, jsonError, NEED_LOGIN, withUrls } from "@/lib/server/me";
+import { mediaId } from "@/lib/server/media";
 import { deleteObjects, putObject, sniffImage } from "@/lib/server/r2";
 import { getSession, sameOrigin } from "@/lib/server/session";
 
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
   const kind = sniffImage(new Uint8Array(buf, 0, Math.min(16, buf.byteLength)));
   if (!kind) return jsonError(415, "รองรับเฉพาะ webp / png / jpg");
 
-  const key = `chars/${s.uid}/${slot}-${randomBytes(9).toString("hex")}.${kind.ext}`;
+  const key = `chars/${mediaId(s.uid)}/${slot}-${randomBytes(9).toString("hex")}.${kind.ext}`;
   try {
     await putObject(key, buf, kind.type);
   } catch (e) {
@@ -51,7 +52,8 @@ export async function DELETE(req: Request) {
   const s = await getSession();
   if (!s) return jsonError(401, NEED_LOGIN);
   const { key } = (await req.json().catch(() => ({}))) as { key?: unknown };
-  if (typeof key !== "string" || !key.startsWith(`chars/${s.uid}/`)) return jsonError(400, "ข้อมูลไม่ถูกต้อง");
+  // the bot only removes keys that are on this character (and reports `removed`), so R2 deletes stay scoped
+  if (typeof key !== "string" || !/^chars\/[0-9a-z]+\/[a-z]+-[a-z0-9]+\.(webp|png|jpg)$/.test(key)) return jsonError(400, "ข้อมูลไม่ถูกต้อง");
   try {
     const r = await bot("image/remove", { userId: s.uid, key });
     if (r.status !== 200) return jsonError(r.status, r.data.error ?? "ลบไม่สำเร็จ");

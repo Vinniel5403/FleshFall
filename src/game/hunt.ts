@@ -4,7 +4,7 @@ import { isDev } from './dev.js';
  * Lucky hunts reveal a dungeon door after victory.
  */
 import { balance } from '../config.js';
-import { applyOutcome, gainItem, gearAtk, statMod, type AppliedOutcome } from './character.js';
+import { applyOutcome, gainItem, gearAtk, statMod, stopped, type AppliedOutcome } from './character.js';
 import { bumpStreak, lootMult, rareBonus, streakDmg, streakMiasma } from './expedition.js';
 import { chance, rand, startRun } from './engine.js';
 import { d20Success, type DiceRoll } from './dice.js';
@@ -126,7 +126,7 @@ export function startHunt(char: Character): HuntStart {
     // deeper into the trip, the air itself is rotting
     const a = applyOutcome(char, { text: '', miasma });
     const line = `🌫️ อยู่ข้างนอกนานเกินไป Miasma หนาขึ้นทุกที — ${a.lines.join(' ')}`;
-    if (a.died || a.brokeDown || a.becameFiend) return { ok: false, error: line };
+    if (stopped(a)) return { ok: false, error: line };
     log.unshift(`-# ${line}`);
   }
   const monsters: MonsterState[] = Array.from({ length: 3 }, () => {
@@ -142,8 +142,8 @@ export function startHunt(char: Character): HuntStart {
 export interface RoundResult {
   lines: string[];
   applied?: AppliedOutcome;
-  /** Hunt ended: won / died / fled. */
-  ended?: 'won' | 'died' | 'fled';
+  /** Hunt ended: won / died (or downed/broke/Fiend) — or paused: dying = placenta-or-give-up choice, hunt kept. */
+  ended?: 'won' | 'died' | 'dying';
   /** The player's d20 this round (for the dice animation). */
   dice?: DiceRoll;
 }
@@ -173,7 +173,7 @@ function monstersAttack(char: Character, h: Hunt): { lines: string[]; applied?: 
     if (def.sanity) o.sanity = -def.sanity;
     const a = applyOutcome(char, o);
     lines.push(`${nameOf(m)} โจมตี! ${a.lines.join(' ')}`);
-    if (a.died || a.brokeDown || a.becameFiend) return { lines, applied: a };
+    if (stopped(a)) return { lines, applied: a };
   }
   return { lines };
 }
@@ -207,7 +207,9 @@ function finishIfWon(char: Character, h: Hunt, lines: string[]): RoundResult['en
 }
 
 function endIfFallen(char: Character, a: AppliedOutcome | undefined): RoundResult['ended'] {
-  if (!a || !(a.died || a.brokeDown || a.becameFiend)) return undefined;
+  if (!a) return undefined;
+  if (a.dying && !a.becameFiend) return 'dying'; // hunt stays: placenta revive resumes the fight
+  if (!(a.died || a.downed || a.brokeDown || a.becameFiend)) return undefined;
   delete char.hunt;
   return 'died';
 }
@@ -216,6 +218,7 @@ function endIfFallen(char: Character, a: AppliedOutcome | undefined): RoundResul
 export function attack(char: Character, idx: number): RoundResult {
   const h = char.hunt;
   const target = h?.monsters[idx];
+  if (char.dying) return { lines: ['🩸 คุณกำลังจะตาย — เลือก 🥚 ใช้รกคืนชีพ หรือ ☠️ ยอมตาย ก่อน'], ended: 'dying' };
   if (!h || h.won || !target || target.hp <= 0) return { lines: ['เป้าหมายไม่อยู่แล้ว'] };
   const def = getMonster(target.id)!;
   const ac = def.ac + huntTier(h).acAdd;
@@ -245,24 +248,7 @@ export function attack(char: Character, idx: number): RoundResult {
   return { lines, applied: back.applied, ended: endIfFallen(char, back.applied), dice };
 }
 
-/** Try to run. Agility check; failure gives the monsters a free round. */
-export function flee(char: Character): RoundResult {
-  const h = char.hunt;
-  if (!h || h.won) return { lines: [] };
-  const dc = 8 + alive(h).length * 2;
-  const roll = rand(1, 20);
-  const mod = statMod(char, 'agi');
-  const ok = d20Success(roll, mod, dc);
-  const dice: DiceRoll = { label: 'หนี (ว่องไว)', mod, target: dc, rolls: [roll], success: ok, win: 'หนีรอด!', lose: 'หนีไม่พ้น' };
-  if (ok) {
-    delete char.hunt;
-    return { lines: [`🏃 \`🎲 ว่องไว ${roll + mod}/${dc} ✅\` คุณหนีรอดมาได้`], ended: 'fled', dice };
-  }
-  const lines = [`🏃 \`🎲 ว่องไว ${roll + mod}/${dc} ❌\` หนีไม่พ้น!`];
-  const back = monstersAttack(char, h);
-  lines.push(...back.lines);
-  return { lines, applied: back.applied, ended: endIfFallen(char, back.applied), dice };
-}
+// No fleeing: a hunt ends when every monster is dead — or you are.
 
 /** After a lucky victory: step through the door into a dungeon run. */
 export function enterHuntDoor(char: Character): boolean {

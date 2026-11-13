@@ -1,10 +1,11 @@
 /**
- * Hunt UI. customId: hn:<userId>:<atk|flee|door|leave|again>[:<idx>]
+ * Hunt UI. customId: hn:<userId>:<atk|door|leave|again|home>[:<idx>] — no fleeing: kill them all or fall.
  * Hunts usually live on ephemeral messages, so everything is i.update.
  */
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, type ButtonInteraction, type RepliableInteraction } from 'discord.js';
 import { loadCharacter, saveCharacter } from '../game/character.js';
-import { attack, enterHuntDoor, flee, getMonster, leaveHunt, startHunt } from '../game/hunt.js';
+import { attack, enterHuntDoor, getMonster, leaveHunt, startHunt } from '../game/hunt.js';
+import { fallRow } from './fallRow.js';
 import { inField, streakOf, streakText, tripSize } from '../game/expedition.js';
 import { itemLabel } from '../game/items.js';
 import type { Character } from '../game/types.js';
@@ -69,6 +70,8 @@ function btn(uid: string, action: string, label: string, style: ButtonStyle, emo
 export function huntButtons(char: Character): ActionRowBuilder<ButtonBuilder>[] {
   const h = char.hunt;
   const uid = char.userId;
+  if (char.dying) return [fallRow(char)];
+  if (char.downed) return [];
   if (!h || (h.won && !h.door)) {
     // hunt over (won without door / fled) → offer another
     if (char.fiend) return [];
@@ -93,7 +96,7 @@ export function huntButtons(char: Character): ActionRowBuilder<ButtonBuilder>[] 
     .map((m, idx) => ({ m, idx }))
     .filter(({ m }) => m.hp > 0)
     .map(({ m, idx }) => btn(uid, `atk:${idx}`, `${idx + 1}. ${getMonster(m.id)?.name ?? m.id}`.slice(0, 80), ButtonStyle.Danger, '⚔️'));
-  return [new ActionRowBuilder<ButtonBuilder>().addComponents(...attacks, btn(uid, 'flee', 'หนี', ButtonStyle.Secondary, '🏃'))];
+  return [new ActionRowBuilder<ButtonBuilder>().addComponents(...attacks)];
 }
 
 /** Start (or resume) a hunt from a zone panel. Replies ephemerally. */
@@ -157,11 +160,12 @@ export async function handleHuntButton(i: ButtonInteraction): Promise<unknown> {
     return i.editReply({ ...(await huntPayload(char, ['🚶 คุณหันหลังให้ประตู มันค่อย ๆ จางหายไปในหมอก'])), components: huntButtons(char) });
   }
 
-  const r = action === 'flee' ? flee(char) : attack(char, Number(arg));
+  if (action !== 'atk') return i.update({ components: huntButtons(char) }); // old 🏃 flee buttons
+  const r = attack(char, Number(arg));
   saveCharacter(char);
   const lines = [...r.lines];
   if (r.ended === 'died') lines.push('', '-# การล่าจบลง');
-  // after death/fiend the hunt is gone; show the final state without fight buttons
+  // after death/downed/Fiend the hunt is gone; dying keeps it and shows 🥚/☠️ (huntButtons handles both)
   const components = r.ended === 'died' ? [] : huntButtons(char);
   await i.deferUpdate();
   const final = huntPayload(char, lines, r.ended); // renders while the die rolls

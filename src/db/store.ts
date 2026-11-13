@@ -7,7 +7,19 @@ interface DbShape {
   characters: Record<string, Character>;
   /** Player market orders (sell listings + buy requests), escrowed. */
   market?: Record<string, MarketOrder>;
+  /** RP proxy: webhook message id → who wrote it (for ❌ delete / ✏️ edit). Capped, oldest dropped. */
+  proxied?: Record<string, ProxiedMessage>;
 }
+
+export interface ProxiedMessage {
+  authorId: string;
+  /** Channel that owns the webhook (thread parent when posted in a thread). */
+  channelId: string;
+  threadId?: string;
+  at: number;
+}
+
+const PROXIED_MAX = 5000;
 
 /**
  * Tiny JSON-file store. Reads/writes are synchronous in memory, so a
@@ -59,6 +71,26 @@ export class Store {
 
   deleteOrder(id: string): void {
     if (this.data.market) delete this.data.market[id];
+    this.scheduleFlush();
+  }
+
+  getProxied(messageId: string): ProxiedMessage | undefined {
+    return this.data.proxied?.[messageId];
+  }
+
+  saveProxied(messageId: string, p: ProxiedMessage): void {
+    const all = (this.data.proxied ??= {});
+    all[messageId] = p;
+    const ids = Object.keys(all);
+    if (ids.length > PROXIED_MAX) {
+      // insertion order ≈ age; drop the oldest overflow
+      for (const id of ids.slice(0, ids.length - PROXIED_MAX)) delete all[id];
+    }
+    this.scheduleFlush();
+  }
+
+  deleteProxied(messageId: string): void {
+    if (this.data.proxied) delete this.data.proxied[messageId];
     this.scheduleFlush();
   }
 

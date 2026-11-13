@@ -1,4 +1,4 @@
-import { Client, Events, GatewayIntentBits, MessageFlags, PermissionFlagsBits, type Interaction } from 'discord.js';
+import { Client, Events, GatewayIntentBits, MessageFlags, Partials, PermissionFlagsBits, type Interaction } from 'discord.js';
 import { commandMap } from './commands/index.js';
 import { config } from './config.js';
 import { setDev } from './game/dev.js';
@@ -9,6 +9,7 @@ import type { GuildGate } from './web/account.js';
 import { loadCharacter } from './game/character.js';
 import { handleDungeonButton, handleEventButton } from './interactions/buttons.js';
 import { handleHuntButton } from './interactions/hunt.js';
+import { handleFallButton } from './interactions/fall.js';
 import { handleDuelButton } from './interactions/duel.js';
 import { handlePanelButton, handlePanelSelect } from './interactions/panels.js';
 import { handleMarketModal } from './interactions/market.js';
@@ -23,8 +24,13 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     ...(REQUIRE_CHARACTER ? [GatewayIntentBits.GuildMembers] : []),
     // RP proxy reads message text: Message Content is privileged (enable it in the Developer Portal)
-    ...(proxyEnabled ? [GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] : []),
+    // + reactions (❌ delete / ✏️ edit) and DMs (the edit reply) on proxied messages
+    ...(proxyEnabled
+      ? [GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.DirectMessages]
+      : []),
   ],
+  // reactions on uncached (old / pre-restart) messages and DM channels arrive as partials
+  partials: proxyEnabled ? [Partials.Message, Partials.Reaction, Partials.Channel, Partials.User] : [],
 });
 
 // Characters are created on the website, which adds the player to the guild (OAuth guilds.join).
@@ -64,6 +70,7 @@ client.on(Events.InteractionCreate, async (i: Interaction) => {
       else if (i.customId.startsWith('dg:')) await handleDungeonButton(i);
       else if (i.customId.startsWith('pn:')) await handlePanelButton(i);
       else if (i.customId.startsWith('hn:')) await handleHuntButton(i);
+      else if (i.customId.startsWith('fl:')) await handleFallButton(i);
       else if (i.customId.startsWith('du:')) await handleDuelButton(i);
     } else if (i.isStringSelectMenu()) {
       if (i.customId.startsWith('pns:')) await handlePanelSelect(i);

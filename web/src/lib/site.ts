@@ -23,6 +23,13 @@ export const PAGES: { path: string; title: string; desc: string; priority: numbe
     freq: "weekly",
   },
   {
+    path: "/players",
+    title: "แฟ้มประวัติผู้เล่น",
+    desc: "ค้นหาตัวละครของผู้เล่น Fleshfall ดูภาพ ชีทตัวละคร สไปรต์ ค่าพลัง และบันทึกประวัติของแต่ละคน",
+    priority: 0.7,
+    freq: "daily",
+  },
+  {
     path: "/create",
     title: "สร้างตัวละคร",
     desc: "สร้างตัวละคร Fleshfall ด้วยบัญชี Discord เลือกบทบาท อัปโหลดภาพและสไปรต์ แล้วเข้าเซิร์ฟเวอร์เล่นได้ทันที",
