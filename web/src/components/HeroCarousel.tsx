@@ -45,6 +45,8 @@ export function HeroCarousel({ slides }: { slides: Slide[] }) {
               alt=""
               fill
               sizes="100vw"
+              // originals are pre-sized webp (≤2560px); skip the optimizer so Ken Burns zoom doesn't upscale a q75 re-encode
+              unoptimized
               preload={n === 0}
               style={{ objectPosition: sl.pos, transformOrigin: sl.pos }}
               className={`kv-img ${on || prev ? MOTIONS[n % MOTIONS.length] : ""}`}
