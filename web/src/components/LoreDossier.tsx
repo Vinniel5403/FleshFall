@@ -39,7 +39,7 @@ export function LoreDossier() {
 
       <Reveal from="right" delay={0.15} className="dz-art" aria-hidden="true">
         <Brackets label="M.A.I.D.S · FILE 07 · BLANC" />
-        <Image src={ART.blanc.src} alt="" fill sizes="(max-width: 900px) 90vw, 40vw" style={{ objectFit: "contain", objectPosition: "50% 100%" }} />
+        <Image src={ART.blanc.src} alt="" fill sizes="(max-width: 900px) 90vw, 40vw" unoptimized style={{ objectFit: "contain", objectPosition: "50% 100%" }} />
       </Reveal>
     </section>
   );

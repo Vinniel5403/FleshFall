@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/site";
 import { PageBanner } from "@/components/PageBanner";
 import { WorldMap } from "@/components/WorldMap";
 
-export const metadata: Metadata = { title: "แผนที่ Old Realm" };
+export const metadata: Metadata = pageMeta("/world");
 
 export default function WorldPage() {
   return (

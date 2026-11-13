@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/site";
 import { PageBanner } from "@/components/PageBanner";
 import { Codex } from "@/components/Codex";
 
-export const metadata: Metadata = { title: "คัมภีร์" };
+export const metadata: Metadata = pageMeta("/codex");
 
 export default function CodexPage() {
   return (

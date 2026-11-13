@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/site";
 import Image from "next/image";
 import { PageBanner } from "@/components/PageBanner";
 import { ART } from "@/lib/art";
@@ -8,7 +9,7 @@ import { Backdrop, Brackets } from "@/components/Dossier";
 import { CharacterForge } from "@/components/CharacterForge";
 import "../forge.css";
 
-export const metadata: Metadata = { title: "สร้างตัวละคร" };
+export const metadata: Metadata = pageMeta("/create");
 
 const DESIGN = [
   {

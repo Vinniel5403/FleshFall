@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { HeroCarousel } from "@/components/HeroCarousel";
@@ -32,6 +33,8 @@ const LANDS = [
   },
 ];
 
+export const metadata: Metadata = { alternates: { canonical: "/" } };
+
 export default function Home() {
   return (
     <>
@@ -64,7 +67,7 @@ export default function Home() {
       <section className="story">
         <Reveal from="left" className="story-art">
           <Brackets label="ARCHIVE · 19XX · SUBSPACE" />
-          <Image src={ART.gramophone.src} alt={ART.gramophone.alt} fill sizes="(max-width: 900px) 100vw, 55vw" style={{ objectPosition: ART.gramophone.pos }} />
+          <Image src={ART.gramophone.src} alt={ART.gramophone.alt} unoptimized fill sizes="(max-width: 900px) 100vw, 55vw" style={{ objectPosition: ART.gramophone.pos }} />
         </Reveal>
         <Reveal from="right" delay={0.1} className="story-copy">
           <SectionHead en="BACKSTORY" th="ดินแดนที่ไร้พระเจ้า" />
