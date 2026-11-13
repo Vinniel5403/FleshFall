@@ -83,6 +83,15 @@ export const ROLE_ART: Record<RoleId, string> = {
   survivor: 'asset/lady-doll.webp',
 };
 
+/** Default square avatar per role — used when the player hasn't uploaded any image (survivor has none → ROLE_ART). */
+export const ROLE_AVATAR: Partial<Record<RoleId, string>> = {
+  maid: 'avatar/role-maid.webp',
+  hound: 'avatar/role-hound.webp',
+  bar: 'avatar/role-bar.webp',
+  patron: 'avatar/role-patron.webp',
+  outsider: 'avatar/role-outsider.webp',
+};
+
 export const ICON_ART: Record<IconId, string> = {
   beelzebub: 'icons/beelzebub-0.webp',
   hastur: 'icons/hastur.webp',

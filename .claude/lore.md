@@ -25,7 +25,7 @@ Community art/RP ARG, tag `#FleshFall_ARG #FF_ARG #เมดเนื้อ`, 20
 ## Roles
 1. **Maid / Butcher** — cold, elegant, gender-neutral uniforms.
 2. **Hound** — flesh hunters for maids, traded humanity for power, mutations, bone weapons. Maid↔Hound friction; maid caring for hound = taboo.
-3. **Bar Staff / Bar Owner** — Bar = only sanctuary zone where humans + flesh remnants share a table. Owner in "Unstable State", cooks rotten flesh to mitigate curses, **Closing Shift** (daily involuntary blackout).
+3. **Bar Staff / Bar Staff** — Bar = only sanctuary zone where humans + flesh remnants share a table. Owner in "Unstable State", cooks rotten flesh to mitigate curses, **Closing Shift** (daily involuntary blackout).
 4. **Patron / Flesh Remnant** — intelligent ex-humans, wealthy clients, crave fresh flesh, collect real-world vintage items.
 5. **Outsider (Lost Soul)** — from modern world via rifts/Miasma/rituals. Carry phone/lighter/photo. Dilemma: eat flesh (lose humanity) or starve.
 6. **Rouge Land Survivor** — escaped ex-remnant, mutated, guides rookie hunters.

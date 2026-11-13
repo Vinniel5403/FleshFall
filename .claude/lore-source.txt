@@ -1427,7 +1427,7 @@ Note: To the maids, the Hounds are low-class, unrefined hunters, holding a deep 
   
 3.1 The Bar Staff  - The Bar stands as the sole Sanctuary Zone where humans and Flesh Remnants (former humans transformed into sentient masses of flesh) can sit at the same table without conflict. 
   
-3.2 The Bar Owner A mysterious figure existing in an "Unstable State" who must receive fresh flesh from Hounds to prepare special meals to maintain their own physical form (suppress madness) by consuming for their own survival.
+3.2 The Bar Staff A mysterious figure existing in an "Unstable State" who must receive fresh flesh from Hounds to prepare special meals to maintain their own physical form (suppress madness) by consuming for their own survival.
 They are the remnant weaver who cooks rotten flesh to render it edible while mitigating the side effects of icon curses, substituting the fresh flesh counterpart.  
 * Unstable State Gimmick — "Closing Shift": A temporary state of unconsciousness occurring at almost                          fixed times each day, acting as an involuntary "closing shift"                                      during which they cannot serve patrons. The duration and                                           exact timing vary per individual, believed to be a physical                                                   side effect of constantly struggling to maintain their own form.  *
 
@@ -1451,7 +1451,7 @@ This role is ideal for creators looking to draw characters struggling to survive
 The Outsider:
 Origin: People from the normal world (our modern real world) who slip into the warped subspace through dimensional rifts, get swept in by the Miasma, or are dragged into the subspace after performing rituals dedicated to primordial deities (The icons) for power or survival in the real world—only to be pulled in because their bodies could not contain the power, or because they were used as "sacrifices" to open a dimensional gateway. 
                * Those who fall through a dimensional rift are terrified and confused, seeing living humans from the real world overlapping as faint trace shadows, desperately seeking an exit (which does not exist) or trying to reach Rouge Land. Ritual mediums (sacrificial) will confuse reality with hallucinations of the icons, constantly seeing shadowy outlines of the entities they worshipped stalking them from the dark. By the time they manage to reach Rouge Land, most have lost nearly all their humanity—and upon arrival, they often end up as mere resources (fresh flesh) for the islanders. Their journey is directly tied to the icons. 
-               * Personal Belongings - They often carry items from the "real world" (e.g., a phone with no signal, a lighter, a family photograph). These items are highly prized as rare "vintage collectibles" by patrons, bar owners or certain maids. 
+               * Personal Belongings - They often carry items from the "real world" (e.g., a phone with no signal, a lighter, a family photograph). These items are highly prized as rare "vintage collectibles" by patrons, Bar Staffs or certain maids. 
                * Survival Dilemma - They must choose whether to consume fresh flesh to gain power (and begin losing their humanity) or starve to death trying to preserve their original identity. 
                * Factions: They can form survivor groups or organizations to endure and stay alive in this hellscape.
 The Rouge Land Survivor:

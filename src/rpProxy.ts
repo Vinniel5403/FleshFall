@@ -15,7 +15,7 @@ import { config } from './config.js';
 import { imageUrl, pickImage } from './game/account.js';
 import { loadCharacter } from './game/character.js';
 import type { Character } from './game/types.js';
-import { ROLE_ART } from './render/kit.js';
+import { ROLE_ART, ROLE_AVATAR } from './render/kit.js';
 
 export const proxyEnabled = process.env.PROXY === '1';
 /** Channel or category names where messages stay as the player (matched case-insensitively). */
@@ -49,7 +49,7 @@ function avatarFor(char: Character): string | undefined {
   const img = pickImage(char, ['portrait', 'art', 'gallery']);
   const own = img && imageUrl(img.key);
   if (own) return own;
-  return WEB_URL ? `${WEB_URL.replace(/\/$/, '')}/${ROLE_ART[char.role]}` : undefined;
+  return WEB_URL ? `${WEB_URL.replace(/\/$/, '')}/${ROLE_AVATAR[char.role] ?? ROLE_ART[char.role]}` : undefined;
 }
 
 const isOoc = (t: string) => t.startsWith('\\') || t.startsWith('//') || /^\(\(.*\)\)$/s.test(t.trim());

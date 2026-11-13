@@ -27,6 +27,7 @@ import {
   noEmoji,
   png,
   ROLE_ART,
+  ROLE_AVATAR,
   spaced,
   taper,
   type Ctx,
@@ -83,7 +84,9 @@ export async function renderProfileCard(char: Character): Promise<Buffer> {
   const own = pickImage(char, ['art', 'portrait', 'gallery']);
   const ownUrl = own && imageUrl(own.key);
   const [custom, iconImg] = await Promise.all([ownUrl ? remoteArt(ownUrl) : null, art(ICON_ART[char.icon])]);
-  const portrait = custom ?? (await art(ROLE_ART[char.role]));
+  // no upload → the role's default square avatar (survivor has none → stock cut-out art)
+  const avatar = custom ? null : ROLE_AVATAR[char.role] ? await art(ROLE_AVATAR[char.role]!) : null;
+  const portrait = custom ?? avatar ?? (await art(ROLE_ART[char.role]));
   const { cv, ctx } = canvas(CARD_W, CARD_H);
   const accent = char.fiend ? C.blood : C.crimson;
 
@@ -136,6 +139,14 @@ export async function renderProfileCard(char: Character): Promise<Buffer> {
       // uploaded art usually has its own background: fill the frame, keep the face (top) in view
       ctx.shadowBlur = 0;
       cover(ctx, custom, PX + 1, PY + 1, PW - 2, PH - 2, 0.5, own?.slot === 'portrait' ? 0.5 : 0.15);
+    } else if (avatar) {
+      // square avatar on a flat background: fill with its corner color, lift the square above the role
+      // plate and stretch its bottom row down so the shoulders run to the edge
+      ctx.shadowBlur = 0;
+      const S = PW - 2, ay = PY + PH - 150 - S;
+      ctx.drawImage(avatar, 0, 0, 4, 4, PX + 1, PY + 1, S, PH - 2);
+      ctx.drawImage(avatar, 0, avatar.height - 3, avatar.width, 3, PX + 1, ay + S - 1, S, PY + PH - ay - S);
+      ctx.drawImage(avatar, PX + 1, ay, S, S);
     } else ctx.drawImage(portrait, PX + (PW - w) / 2, PY + PH - dh, w, dh);
     if (char.fiend) {
       // blood-red multiply tint: the remnant is gone, only the Fiend remains

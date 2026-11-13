@@ -23,6 +23,9 @@ interface Props {
 }
 
 const MAX_BYTES = 4 * 1024 * 1024;
+/** Roles with a default avatar in web/public/avatar (shown until the player uploads a portrait). */
+const DEFAULT_AVATAR_ROLES = new Set(["maid", "hound", "bar", "patron", "outsider"]);
+
 /** Longest edge per slot after browser-side resize. */
 const MAX_DIM: Record<ImageSlot, number> = { portrait: 1024, art: 2560, sheet: 2560, gallery: 2048 };
 
@@ -303,7 +306,14 @@ function Dossier(props: {
     <div className="create">
       <section className="step forge-dossier" style={{ "--door": doorVar(icon?.door ?? "red") } as React.CSSProperties}>
         <div className="forge-portrait">
-          {portrait?.url ? <img src={portrait.url} alt={`ภาพโปรไฟล์ ${c.name}`} /> : <span>No Record</span>}
+          {portrait?.url ? (
+            <img src={portrait.url} alt={`ภาพโปรไฟล์ ${c.name}`} />
+          ) : DEFAULT_AVATAR_ROLES.has(c.role) ? (
+            // no upload yet → the role's default avatar (same files the bot uses, src/render/kit.ts ROLE_AVATAR)
+            <img src={`/avatar/role-${c.role}.webp`} alt={`ภาพเริ่มต้นของ ${role?.name ?? c.role}`} />
+          ) : (
+            <span>No Record</span>
+          )}
         </div>
         <div className="forge-id">
           <p className="forge-file">M.A.I.D.S · PERSONNEL FILE</p>

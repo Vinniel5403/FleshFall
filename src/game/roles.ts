@@ -61,7 +61,7 @@ export const ROLES: Record<RoleId, RoleDef> = {
   },
   bar: {
     id: 'bar',
-    name: 'Bar Staff / Bar Owner',
+    name: 'Bar Staff / Bar Staff',
     emoji: '🍷',
     short: 'ผู้ถักทอเศษเนื้อ ปรุงเนื้อเน่าให้กินได้ บรรเทาคำสาป',
     perks: [
