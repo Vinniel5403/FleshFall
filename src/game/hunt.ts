@@ -7,7 +7,7 @@ import { balance } from '../config.js';
 import { applyOutcome, gainItem, gearAtk, statMod, stopped, type AppliedOutcome } from './character.js';
 import { bumpStreak, lootMult, rareBonus, streakDmg, streakMiasma } from './expedition.js';
 import { chance, rand, startRun } from './engine.js';
-import { d20Success, type DiceRoll } from './dice.js';
+import { d20Success, levelDC, type DiceRoll } from './dice.js';
 import { itemLabel } from './items.js';
 import type { Character, Hunt, IconDoor, MonsterState, Outcome } from './types.js';
 import { DOORS, DUNGEON_RULES, isCrimsonMoon } from './world.js';
@@ -101,6 +101,12 @@ const scaledHp = (def: MonsterDef, level: number, t: TierDef) => Math.round((def
 /** Difficulty of the zone this hunt happens in. */
 const huntTier = (h: Hunt): TierDef => zoneTier(getZone(h.zone));
 
+/** Monster level for the to-hit formula: its own minLevel + the city's recommended level − 1. */
+export const monsterLevel = (def: MonsterDef, t: TierDef) => (def.minLevel ?? 1) + t.rec - 1;
+
+/** Hunter's dodge: half the AGI bonus (0–5) added to what monsters must roll. */
+const evade = (char: Character) => Math.min(5, Math.round(Math.max(0, statMod(char, 'agi')) / 2));
+
 function pickDoor(zone: ZoneDef): IconDoor | undefined {
   const w = zone.doorWeights;
   if (!w || !chance(balance.huntDoorChance)) return undefined;
@@ -157,13 +163,14 @@ const nameOf = (m: MonsterState) => {
 /** Each living monster takes a swing. Returns lines; stops early if the hunter falls. */
 function monstersAttack(char: Character, h: Hunt): { lines: string[]; applied?: AppliedOutcome } {
   const lines: string[] = [];
-  const dodge = Math.min(0.25, Math.max(0, statMod(char, 'agi')) * 0.03);
   const crimson = isCrimsonMoon() && char.location !== 'rouge_land';
   const t = huntTier(h);
   for (const m of alive(h)) {
     const def = getMonster(m.id)!;
-    if (!chance(def.hit + t.hitAdd - dodge)) {
-      lines.push(`-# ${nameOf(m)} พลาด`);
+    const dc = levelDC(monsterLevel(def, t), char.level) + evade(char);
+    const roll = rand(1, 20);
+    if (!d20Success(roll, 0, dc)) {
+      lines.push(`-# ${nameOf(m)} พลาด \`🎲 ${roll}/${dc}\``);
       continue;
     }
     let dmg = rand(def.dmg[0], def.dmg[1]) + t.dmgAdd + streakDmg(char);
@@ -221,7 +228,7 @@ export function attack(char: Character, idx: number): RoundResult {
   if (char.dying) return { lines: ['🩸 คุณกำลังจะตาย — เลือก 🥚 ใช้รกคืนชีพ หรือ ☠️ ยอมตาย ก่อน'], ended: 'dying' };
   if (!h || h.won || !target || target.hp <= 0) return { lines: ['เป้าหมายไม่อยู่แล้ว'] };
   const def = getMonster(target.id)!;
-  const ac = def.ac + huntTier(h).acAdd;
+  const ac = levelDC(char.level, monsterLevel(def, huntTier(h))); // level formula replaces monster AC
   const lines: string[] = [];
 
   const roll = rand(1, 20);

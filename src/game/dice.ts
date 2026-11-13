@@ -13,5 +13,16 @@ export interface DiceRoll {
   lose?: string;
 }
 
+/**
+ * Combat to-hit by level (hunts both ways + /duel): hit when d20 + mod > 10 + log1.2(defender lv / attacker lv).
+ * Returned as the integer the total must reach (smallest whole number above the threshold): equal levels → 11,
+ * attacker 2× the defender's level → 7, half → 15. Use with d20Success (nat 20 / nat 1 still decide).
+ */
+export function levelDC(attackerLv: number, defenderLv: number): number {
+  const a = Math.max(1, attackerLv);
+  const b = Math.max(1, defenderLv);
+  return Math.floor(10 + Math.log(b / a) / Math.log(1.2) + 1e-9) + 1;
+}
+
 /** Standard d20 rule: nat 20 always hits, nat 1 always misses. */
 export const d20Success = (roll: number, mod: number, target: number) => roll === 20 || (roll !== 1 && roll + mod >= target);

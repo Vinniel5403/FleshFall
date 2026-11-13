@@ -4,7 +4,7 @@
  * duel starts. Pure logic; the Discord side lives in interactions/duel.ts.
  */
 import { gearDef, statMod } from './character.js';
-import { d20Success, type DiceRoll } from './dice.js';
+import { d20Success, levelDC, type DiceRoll } from './dice.js';
 import { rand } from './engine.js';
 import type { Character } from './types.js';
 
@@ -20,8 +20,9 @@ export interface Fighter {
   maxHp: number;
   /** d20 bonus to hit (half STR mod). */
   toHit: number;
-  /** what the attacker must reach: 10 + half AGI mod (+4 while guarding). */
-  ac: number;
+  level: number;
+  /** added to what the attacker must reach (half AGI mod; +4 more while guarding). */
+  evade: number;
   /** flat damage bonus (third of STR mod). */
   dmg: number;
   /** damage soaked per hit (armor). */
@@ -77,7 +78,8 @@ export function makeFighter(char: Character): Fighter {
     hp,
     maxHp: hp,
     toHit: Math.round(str / 2),
-    ac: 10 + Math.round(statMod(char, 'agi') / 2),
+    level: char.level,
+    evade: Math.round(statMod(char, 'agi') / 2),
     dmg: Math.max(0, Math.round(str / 3)),
     soak: Math.floor(gearDef(char) / 2),
     guarding: false,
@@ -108,7 +110,7 @@ export function duelAct(d: Duel, action: DuelAction): DuelStep {
   } else {
     const smash = action === 'smash';
     const toHit = me.toHit - (smash ? 4 : 0);
-    const ac = foe.ac + (foe.guarding ? 4 : 0);
+    const ac = levelDC(me.level, foe.level) + foe.evade + (foe.guarding ? 4 : 0);
     const roll = rand(1, 20);
     const hit = d20Success(roll, toHit, ac);
     dice = {
