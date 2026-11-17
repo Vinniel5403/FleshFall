@@ -22,7 +22,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const built = new Date();
   const art: Record<string, string[]> = {
     "/": [...images("background"), ...images("asset")],
-    "/codex": images("icons"),
   };
   return PAGES.map((p) => ({
     url: p.path === "/" ? SITE : `${SITE}${p.path}`,

@@ -1,0 +1,24 @@
+{
+ "templates": [
+  {
+   "id": "concrete",
+   "name": "ห้องคอนกรีต",
+   "w": 2560,
+   "h": 835,
+   "heightCm": 357,
+   "floorTop": 0.948,
+   "floorBottom": 0.99
+  }
+ ],
+ "items": [
+  {
+   "id": "concrete-shelf",
+   "name": "ชั้นวางเหล็ก",
+   "room": "concrete",
+   "x": 0.17096,
+   "y": 0.47585,
+   "w": 0.18894,
+   "h": 0.0662
+  }
+ ]
+}

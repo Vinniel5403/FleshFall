@@ -2,3 +2,6 @@ node_modules
 dist
 .env
 data/*.json
+
+# room source art (huge PNGs) — npm run web:rooms turns them into web/public/rooms
+assets/rooms-src/*.png

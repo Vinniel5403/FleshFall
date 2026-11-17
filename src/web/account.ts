@@ -3,7 +3,7 @@
  * The website verifies the Discord login; the bot owns the character store and the guild.
  * Every handler keeps load → mutate → save synchronous (no await in between).
  */
-import { accountView, attachImage, BIO_MAX, cleanBio, cleanHeight, cleanName, cleanSprite, detachImage, isSlot, legacyMedia, mediaId, renameMedia, spriteKeys } from '../game/account.js';
+import { accountView, attachImage, BIO_MAX, cleanBio, cleanHeight, cleanRoom, cleanName, cleanSprite, detachImage, isSlot, legacyMedia, mediaId, renameMedia, spriteKeys } from '../game/account.js';
 import { db } from '../db/index.js';
 import { createCharacter, loadCharacter, saveCharacter } from '../game/character.js';
 import { ICONS } from '../game/icons.js';
@@ -105,6 +105,18 @@ export function setBio(userId: string, b: Record<string, unknown>): Reply {
   if (!char) return fail(404, 'ยังไม่มีตัวละคร');
   if (bio) char.bio = bio;
   else delete char.bio;
+  saveCharacter(char);
+  return ok({ character: accountView(char) });
+}
+
+/** Save the private room layout (template + furniture); `room: null` resets it. */
+export function setRoom(userId: string, b: Record<string, unknown>): Reply {
+  const room = b.room === null ? null : cleanRoom(b.room);
+  if (b.room !== null && !room) return fail(400, 'ข้อมูลห้องไม่ถูกต้อง');
+  const char = loadCharacter(userId);
+  if (!char) return fail(404, 'ยังไม่มีตัวละคร');
+  if (room) char.room = room;
+  else delete char.room;
   saveCharacter(char);
   return ok({ character: accountView(char) });
 }

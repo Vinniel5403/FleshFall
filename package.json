@@ -13,8 +13,10 @@
     "api": "tsx watch src/web/standalone.ts",
     "web:dev": "npm run dev -w web",
     "web:build": "npm run build -w web",
+    "web:env": "npm run env:pull -w web",
     "web:data": "tsx src/web/export-data.ts",
-    "web:template": "tsx web/scripts/export-template.mts"
+    "web:template": "tsx web/scripts/export-template.mts",
+    "web:rooms": "tsx web/scripts/build-rooms.mts"
   },
   "engines": {
     "node": ">=20"

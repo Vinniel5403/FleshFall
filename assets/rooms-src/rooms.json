@@ -1,0 +1,9 @@
+{
+  "_doc": "Room art config for `npm run web:rooms`. <Template>.png = background, <Template>-<item>.png = furniture drawn on the same canvas (its position on that canvas = default placement). Coordinates are fractions of the room size. heightCm = real height of the whole image (door ≈ 210 cm) so sprites stand at their real heights.",
+  "templates": {
+    "Concrete": { "name": "ห้องคอนกรีต", "heightCm": 357, "floorTop": 0.948, "floorBottom": 0.99 }
+  },
+  "items": {
+    "Concrete-shelf": { "name": "ชั้นวางเหล็ก" }
+  }
+}

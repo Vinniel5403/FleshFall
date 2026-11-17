@@ -4,7 +4,7 @@ import { isDev } from './dev.js';
  * Lucky hunts reveal a dungeon door after victory.
  */
 import { balance } from '../config.js';
-import { applyOutcome, gainItem, gearAtk, statMod, stopped, type AppliedOutcome } from './character.js';
+import { applyOutcome, gainItem, gearAtk, mergeDmg, statMod, stopped, type AppliedOutcome } from './character.js';
 import { bumpStreak, lootMult, rareBonus, streakDmg, streakMiasma } from './expedition.js';
 import { chance, rand, startRun } from './engine.js';
 import { d20Success, levelDC, type DiceRoll } from './dice.js';
@@ -236,7 +236,7 @@ export function attack(char: Character, idx: number): RoundResult {
   const hit = d20Success(roll, mod, ac);
   const dice: DiceRoll = { label: `โจมตี ${def.name}`, mod, target: ac, rolls: [roll], success: hit, win: roll === 20 ? 'คริติคอล!' : 'โดน!', lose: 'พลาด' };
   if (hit) {
-    let dmg = rand(1, 6) + Math.floor(char.level / 4) + gearAtk(char) + Math.floor(char.stats.str / 2);
+    let dmg = rand(1, 6) + Math.floor(char.level / 4) + gearAtk(char) + mergeDmg(char) + Math.floor(char.stats.str / 2);
     if (roll === 20) dmg *= 2;
     target.hp = Math.max(0, target.hp - dmg);
     lines.push(`⚔️ \`🎲 ${roll + mod}/${ac}\` ${roll === 20 ? '**คริติคอล!** ' : ''}ฟาด ${nameOf(target)} **-${dmg}**`);

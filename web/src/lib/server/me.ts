@@ -27,6 +27,8 @@ export const jsonError = (status: number, error: string) => Response.json({ erro
 export const BOT_DOWN = "เซิร์ฟเวอร์เกมไม่ตอบสนอง ลองใหม่อีกครั้ง";
 export const NEED_LOGIN = "กรุณาเข้าสู่ระบบด้วย Discord";
 
-/** OAuth redirect URI (must be registered in the Discord developer portal). */
+/** OAuth redirect URI (must be registered in the Discord developer portal).
+ *  `next dev` ignores the pinned prod URI so a pulled prod env still logs in on localhost. */
 export const redirectUri = (req: Request) =>
-  process.env.DISCORD_REDIRECT_URI ?? `${new URL(req.url).origin}/api/auth/callback`;
+  (process.env.NODE_ENV === "production" && process.env.DISCORD_REDIRECT_URI) ||
+  `${new URL(req.url).origin}/api/auth/callback`;

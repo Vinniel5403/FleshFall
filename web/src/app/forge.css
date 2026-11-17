@@ -104,9 +104,9 @@
 .sprite-dl { border-radius: 0; }
 .sprite-height { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 14px; }
 .sprite-height label { color: var(--muted); font-size: 14px; }
-.sprite-height label b { color: var(--flesh); font-weight: 500; }
+.sprite-height label b { display: inline-block; min-width: 4.2em; color: var(--flesh); font-weight: 500; font-variant-numeric: tabular-nums; }
 .sprite-height input[type="range"] { flex: 1; min-width: 160px; accent-color: var(--crimson); }
-.sprite-height .cta { border-radius: 0; padding: 6px 14px; font-size: 14px; }
+.sprite-height .cta { border-radius: 0; padding: 6px 14px; font-size: 14px; min-width: 9.5em; text-align: center; }
 .sprite-groups { margin: 4px 0 16px; color: var(--flesh); font-size: 14px; line-height: 1.8; }
 .sprite-map { list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px 16px; font-size: 14px; }
 .sprite-map li { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--line); padding: 3px 0; }
@@ -121,6 +121,35 @@
   .forge-dossier { grid-template-columns: 1fr; }
   .forge-portrait { max-width: 260px; }
 }
+
+/* private room (RoomStage / RoomEditor) */
+.room-view, .room-edit .room-stage { border: 1px solid rgba(230, 184, 162, .3); background: #050303; }
+.room-stage { position: relative; width: 100%; min-height: 300px; max-height: 72vh; overflow: hidden; }
+.room-stage canvas { display: block; position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; user-select: none; outline: none; }
+.room-stage canvas:focus-visible { box-shadow: inset 0 0 0 2px var(--crimson); }
+.room-hint {
+  position: absolute; right: 10px; bottom: 8px; padding: 2px 8px; background: rgba(5, 3, 3, .55); color: var(--muted);
+  font-size: 12px; pointer-events: none;
+}
+@media (max-width: 560px) { .room-hint { display: none; } }
+.room-edit { display: grid; gap: 14px; }
+.room-tools { display: grid; gap: 12px; }
+.room-tpl { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; }
+.room-tpl select { background: rgba(0,0,0,.35); color: var(--flesh); border: 1px solid rgba(230,184,162,.25); padding: 6px 10px; font: inherit; }
+.room-palette { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.room-palette button {
+  flex: 0 0 auto; display: grid; justify-items: center; gap: 6px; width: 132px; padding: 10px 8px; border-radius: 0;
+  background: rgba(0,0,0,.35); border: 1px solid rgba(230,184,162,.25); color: var(--flesh); font-size: 13px;
+}
+.room-palette button:hover { border-color: var(--crimson); }
+.room-palette img { width: 100%; height: 48px; object-fit: contain; }
+.room-actions, .room-save { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.room-actions .sub { margin-right: auto; color: var(--muted); font-size: 13px; }
+.room-actions button, .room-save button, .room-save a { border-radius: 0; padding: 6px 14px; font-size: 14px; }
+.room-actions .danger { color: #ff8a9a; border-color: rgba(224, 30, 55, .5); }
+.room-save { justify-content: flex-end; }
+.room-save a { color: var(--muted); text-decoration: none; border: 1px solid rgba(230,184,162,.3); margin-right: auto; }
+.room-save a:hover { color: var(--flesh); border-color: var(--crimson); }
 
 /* character notes (bio) */
 .forge-bio { display: grid; gap: 10px; }

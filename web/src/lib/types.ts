@@ -121,6 +121,8 @@ export interface AccountView {
   images: { slot: ImageSlot; key: string; at: number; url?: string }[];
   /** paper-doll sprite from PSD; part file = `${url}/${id}.${ext}` */
   sprite: (import("./rig").Rig & { base: string; at: number; url?: string }) | null;
+  /** private room layout (bot CharRoom); catalog in src/data/rooms.json */
+  room: import("./room").RoomLayout | null;
 }
 
 /** GET /api/me response (website route handler). */
@@ -168,4 +170,5 @@ export interface PlayerProfile {
   record: { deaths: number; breakdowns: number; eventsCompleted: number; dungeonsCleared: number };
   images: AccountView["images"];
   sprite: AccountView["sprite"];
+  room: AccountView["room"];
 }

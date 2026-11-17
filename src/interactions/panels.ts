@@ -33,6 +33,8 @@ import {
   drinkAction,
   upgradePayload,
   upgradeGear,
+  mergeGear,
+  mergeInfo,
   type GearSlot,
   equipItem,
   inventoryPayload,
@@ -316,6 +318,7 @@ function upgradeRow(char: Character) {
   return new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder().setCustomId('pn:upg:weapon').setLabel('อัปอาวุธ').setEmoji('🗡️').setStyle(ButtonStyle.Danger).setDisabled(!char.equipped.weapon),
     new ButtonBuilder().setCustomId('pn:upg:armor').setLabel('อัปเกราะ').setEmoji('🛡️').setStyle(ButtonStyle.Danger).setDisabled(!char.equipped.armor),
+    new ButtonBuilder().setCustomId('pn:upg:merge').setLabel('รวมอาวุธ').setEmoji('🔗').setStyle(ButtonStyle.Secondary).setDisabled(!mergeInfo(char).take),
   );
 }
 
@@ -375,7 +378,7 @@ async function openPanelView(i: ButtonInteraction): Promise<unknown> {
       await i.deferReply({ flags: ephemeral });
       return i.editReply({ ...(await upgradePayload(char)), components: [upgradeRow(char)] });
     case 'upg': {
-      const r = upgradeGear(char, arg as GearSlot);
+      const r = arg === 'merge' ? mergeGear(char) : upgradeGear(char, arg as GearSlot);
       await i.deferUpdate();
       const v = await upgradePayload(char);
       return i.editReply({ content: r.ok ? '' : `⚠️ ${r.content}`, embeds: [...v.embeds, ...(r.embeds ?? [])], files: v.files, components: [upgradeRow(char)] });

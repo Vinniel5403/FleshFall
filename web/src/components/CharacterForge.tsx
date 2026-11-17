@@ -11,6 +11,7 @@ const TEMPLATE_RIG = templateRig as Rig;
 const TEMPLATE_PSD = "/templates/fleshfall-sprite-template.psd";
 const templateSrc = (id: string, ext: string) => `/sprites/template/${id}.${ext}`;
 import { SpriteStage } from "./SpriteStage";
+import { RoomEditor } from "./RoomEditor";
 import { BIO_MAX, type AccountView, type ImageSlot, type ImageSlotDef, type MeResponse } from "@/lib/types";
 
 export interface ForgeRole { id: string; name: string; emoji: string; short: string }
@@ -392,6 +393,8 @@ function Dossier(props: {
       <SpriteSection character={c} onChange={setChar} onError={props.onError} />
 
       <BioSection character={c} onChange={setChar} onError={props.onError} />
+
+      <RoomEditor character={c} onChange={setChar} onError={props.onError} />
     </div>
   );
 }
@@ -589,9 +592,10 @@ function SpriteSection(props: { character: AccountView; onChange: (c: AccountVie
               value={heightCm}
               onChange={(e) => setHeightEdit(Number(e.target.value))}
             />
-            {heightDirty && (
-              <button type="button" className="cta" onClick={saveHeight} disabled={!!busy}>
-                {busy === "save" ? "กำลังบันทึก…" : "บันทึกส่วนสูง"}
+            {/* always rendered (disabled when unchanged): a button popping in/out resized the slider mid-drag */}
+            {!draft && saved && (
+              <button type="button" className="cta" onClick={saveHeight} disabled={!!busy || !heightDirty}>
+                {busy === "save" ? "กำลังบันทึก…" : heightDirty ? "บันทึกส่วนสูง" : "บันทึกแล้ว ✓"}
               </button>
             )}
           </div>

@@ -139,6 +139,13 @@ export function gearAtk(char: Character): number {
   return w ? (getItem(w)?.atk ?? 0) + (char.gearLevels?.[w] ?? 0) : 0;
 }
 
+/** Max weapon copies fused into one weapon (log2(16) = +4 damage). */
+export const MAX_MERGE_COPIES = 16;
+export const mergeCopies = (char: Character, id: string | undefined) => (id ? (char.gearMerged?.[id] ?? 1) : 1);
+/** Fusing x copies of a weapon: +floor(log2(x)) damage per hit (not to-hit). */
+export const mergeBonus = (copies: number) => Math.floor(Math.log2(Math.max(1, copies)));
+export const mergeDmg = (char: Character) => mergeBonus(mergeCopies(char, char.equipped.weapon));
+
 export function gearDef(char: Character): number {
   const a = char.equipped.armor;
   return (a ? (getItem(a)?.def ?? 0) + (char.gearLevels?.[a] ?? 0) : 0) + (mods(char.icon).dmgReduction ?? 0) + buffAmount(char, 'def');

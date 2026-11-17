@@ -58,6 +58,7 @@ async function handleAccount(req: IncomingMessage, res: ServerResponse, p: strin
     case '/api/account/join': r = await account.joinGuild(o.gate, uid, b); break;
     case '/api/account/rename': r = account.renameAccount(uid, b); break;
     case '/api/account/bio': r = account.setBio(uid, b); break;
+    case '/api/account/room': r = account.setRoom(uid, b); break;
     case '/api/account/image/add': r = account.addImage(uid, b); break;
     case '/api/account/image/remove': r = account.removeImage(uid, b); break;
     case '/api/account/sprite/set': r = account.setSprite(uid, b); break;

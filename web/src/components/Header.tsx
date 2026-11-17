@@ -6,8 +6,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const NAV_ITEMS = [
-  { href: "/world", label: "แผนที่" },
-  { href: "/codex", label: "คัมภีร์" },
   { href: "/players", label: "ผู้เล่น" },
 ];
 const CTA = { href: "/create", label: "✦ สร้างตัวละคร" };

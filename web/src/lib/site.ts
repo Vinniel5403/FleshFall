@@ -9,20 +9,6 @@ export const DESCRIPTION =
 export const PAGES: { path: string; title: string; desc: string; priority: number; freq: "daily" | "weekly" | "monthly" }[] = [
   { path: "/", title: SITE_TITLE, desc: DESCRIPTION, priority: 1, freq: "weekly" },
   {
-    path: "/world",
-    title: "แผนที่ Old Realm",
-    desc: "แผนที่ Old Realm มิติซ้อนทับโลกจริง 7 ทวีป 50 เมือง ระดับ Easy ถึง Epic แต่ละทวีปมี Icon ปกครองและประตูดันเจียนสีประจำ",
-    priority: 0.8,
-    freq: "weekly",
-  },
-  {
-    path: "/codex",
-    title: "คัมภีร์",
-    desc: "คัมภีร์ Fleshfall: 7 Icon (Beelzebub, Hastur, Loki, Belphegor, Sophia, Thanatos, Wendigo), บทบาท M.A.I.D.S, สัตว์ประหลาด และไอเทมทั้งหมด",
-    priority: 0.8,
-    freq: "weekly",
-  },
-  {
     path: "/players",
     title: "แฟ้มประวัติผู้เล่น",
     desc: "ค้นหาตัวละครของผู้เล่น Fleshfall ดูภาพ ชีทตัวละคร สไปรต์ ค่าพลัง และบันทึกประวัติของแต่ละคน",

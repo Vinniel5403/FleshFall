@@ -133,6 +133,7 @@ export function characterProfile(src: PlayerSource, slug: string) {
     record: { deaths: c.deaths, breakdowns: c.breakdowns, eventsCompleted: c.eventsCompleted, dungeonsCleared: c.dungeonsCleared },
     images: publicMedia(c).images.map(({ slot, key, at }) => ({ slot, key, at })),
     sprite: publicMedia(c).sprite,
+    room: c.room ?? null,
   };
 }
 export type CharacterProfile = NonNullable<ReturnType<typeof characterProfile>>;

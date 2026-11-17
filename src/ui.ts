@@ -4,7 +4,7 @@ import { noEmoji } from './render/kit.js';
 import { renderProfileCard } from './render/profileCard.js';
 import { DOOR_EN, renderSceneCard } from './render/sceneCards.js';
 import { imagePayload, type ImagePayload } from './render/view.js';
-import { activeBuff, buffLabel, gearAtk, gearDef, humanityTier, seesHints, statMod } from './game/character.js';
+import { activeBuff, buffLabel, gearAtk, gearDef, humanityTier, mergeDmg, seesHints, statMod } from './game/character.js';
 import { streakText } from './game/expedition.js';
 import { exitOptions, visibleChoices } from './game/engine.js';
 import { ICON_BY_DOOR, ICONS } from './game/icons.js';
@@ -79,7 +79,7 @@ export function profileEmbed(char: Character): EmbedBuilder {
       {
         name: 'อุปกรณ์',
         value: [
-          `อาวุธ: ${char.equipped.weapon ? itemLabel(char.equipped.weapon) + (char.gearLevels?.[char.equipped.weapon] ? ` +${char.gearLevels[char.equipped.weapon]}` : '') : '—'} (พละ +${gearAtk(char)})`,
+          `อาวุธ: ${char.equipped.weapon ? itemLabel(char.equipped.weapon) + (char.gearLevels?.[char.equipped.weapon] ? ` +${char.gearLevels[char.equipped.weapon]}` : '') : '—'} (พละ +${gearAtk(char)}${mergeDmg(char) ? ` · 🔗 ดาเมจ +${mergeDmg(char)}` : ''})`,
           `เกราะ: ${char.equipped.armor ? itemLabel(char.equipped.armor) + (char.gearLevels?.[char.equipped.armor] ? ` +${char.gearLevels[char.equipped.armor]}` : '') : '—'} (ลดดาเมจ ${gearDef(char)})`,
         ].join('\n'),
       },

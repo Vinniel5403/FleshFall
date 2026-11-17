@@ -93,6 +93,25 @@ export interface CharSprite {
   at: number;
 }
 
+/** One piece of furniture in the private room. x/y = top-left as fractions of the room size. */
+export interface RoomItem {
+  /** catalog id (web/src/data/rooms.json) — unknown ids are skipped when drawing */
+  id: string;
+  x: number;
+  y: number;
+  /** mirrored horizontally */
+  flip?: boolean;
+  /** drawn in front of the character */
+  front?: boolean;
+}
+
+/** Private room on the website: a template background + furniture (draw order = array order). */
+export interface CharRoom {
+  template: string;
+  items: RoomItem[];
+  at: number;
+}
+
 export const CHAR_VERSION = 2;
 
 /** Player market order. sell = items escrowed, buy = flesh escrowed (qty × price). */
@@ -166,12 +185,16 @@ export interface Character {
   roleZone?: string;
   /** Upgrade level per equipment item id (+1 ATK/DEF each). */
   gearLevels?: Record<string, number>;
+  /** Weapon copies fused into each weapon id at the forge (default 1). Damage bonus = floor(log2(copies)). */
+  gearMerged?: Record<string, number>;
   /** Blessing tier per Icon (0–5), earned at Icon shrines. */
   blessings?: Partial<Record<IconId, number>>;
   /** Character art uploaded on the website (portrait, full art, sheet, gallery). */
   images?: CharImage[];
   /** Animated paper-doll sprite from the player's PSD. */
   sprite?: CharSprite;
+  /** Private room (website): template + placed furniture. */
+  room?: CharRoom;
   /** Expedition round: pending haul + hunt streak (handed over when you get home). */
   trip?: Trip;
   /** Active meal buff (Bar-only recipes). */

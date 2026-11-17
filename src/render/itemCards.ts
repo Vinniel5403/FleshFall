@@ -195,8 +195,19 @@ export interface UpgradeSlotData {
   cost?: { flesh: number; items: Record<string, number> };
 }
 
-export async function renderUpgradeCard(char: Character, slots: UpgradeSlotData[]): Promise<Buffer> {
-  const H = 640;
+/** Weapon fusing state for the forge strip (see mergeInfo in actions.ts). */
+export interface MergeData {
+  id?: string;
+  copies: number;
+  spare: number;
+  take: number;
+  bonus: number;
+  next: number;
+  max: number;
+}
+
+export async function renderUpgradeCard(char: Character, slots: UpgradeSlotData[], merge?: MergeData): Promise<Buffer> {
+  const H = merge ? 700 : 640;
   const { cv, ctx } = canvas(W, H);
   background(ctx, W, H, { x: W / 2, y: 80, r: 560 });
   let y = sectionHead(ctx, 'THE FORGE', 'ช่างหลังบาร์', W / 2, 72);
@@ -208,7 +219,7 @@ export async function renderUpgradeCard(char: Character, slots: UpgradeSlotData[
   y += 44;
 
   const pw = (W - PAD * 2 - 28) / 2;
-  const ph = H - y - 100;
+  const ph = H - y - (merge ? 160 : 100);
   slots.forEach((s, i) => {
     const x = PAD + i * (pw + 28);
     box(ctx, x, y, pw, ph, { line: rgba(C.crimson, 0.35) });
@@ -266,6 +277,20 @@ export async function renderUpgradeCard(char: Character, slots: UpgradeSlotData[
       cy += 36;
     }
   });
+  if (merge) {
+    const it = merge.id ? getItem(merge.id) : undefined;
+    const text = !merge.id
+      ? '🔗 รวมอาวุธ  ·  ไม่ได้สวมอาวุธ'
+      : `🔗 รวม ${it?.name ?? merge.id} ×${merge.copies}  ·  ดาเมจ +${merge.bonus}` +
+        (merge.copies >= merge.max
+          ? '  ·  เต็มแล้ว'
+          : `  ·  อะไหล่ ${merge.spare} ชิ้น${merge.take ? ` → ×${merge.copies + merge.take} (ดาเมจ +${merge.next})` : ''}`) +
+        '  ·  ดาเมจ = log₂(จำนวน)';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = merge.take ? C.flesh : C.muted;
+    fitText(ctx, text, W / 2, H - 112, W - PAD * 2, 19, 500);
+    ctx.textAlign = 'left';
+  }
   footer(ctx, H, `🥩 คุณมี ${char.flesh}  ·  อัปได้สูงสุด +${slots[0]?.max ?? 5}`);
   return png(cv);
 }

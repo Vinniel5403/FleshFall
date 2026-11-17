@@ -5,7 +5,7 @@ import { isDev } from '../game/dev.js';
  */
 import { EmbedBuilder, MessageFlags, type InteractionReplyOptions, type InteractionUpdateOptions } from 'discord.js';
 import { balance } from '../config.js';
-import { activeBuff, addItem, applyOutcome, buffLabel, consume, cooldownLeft, itemCount, removeItem, saveCharacter, setCooldown } from '../game/character.js';
+import { activeBuff, addItem, applyOutcome, buffLabel, consume, cooldownLeft, itemCount, MAX_MERGE_COPIES, mergeBonus, mergeCopies, removeItem, saveCharacter, setCooldown } from '../game/character.js';
 import { inField, streakText, tripLines } from '../game/expedition.js';
 import { chance } from '../game/engine.js';
 import { mods } from '../game/icons.js';
@@ -486,8 +486,53 @@ export function upgradeEmbed(char: Character): EmbedBuilder {
     .setColor(COLORS.bone)
     .setTitle('⚒️ ช่างหลังบาร์')
     .setDescription('ช่างตาเดียวหยิบอาวุธของคุณขึ้นมาส่อง *"กระดูกกับเขี้ยว... เอามา แล้วข้าจะทำให้มันหิวกว่าเดิม"*')
-    .addFields(field('weapon'), field('armor'))
+    .addFields(field('weapon'), field('armor'), { name: '🔗 รวมอาวุธ', value: mergeLine(char) })
     .setFooter({ text: `คุณมี 🥩 ${char.flesh} · อัปได้สูงสุด +${MAX_GEAR_LEVEL}` });
+}
+
+// ---------- merge (forge) ----------
+
+/** Fusing state of the equipped weapon: copies fused so far, spare copies in the bag, what fusing them all gives. */
+export function mergeInfo(char: Character) {
+  const id = char.equipped.weapon;
+  const copies = mergeCopies(char, id);
+  const spare = id ? Math.max(0, itemCount(char, id) - 1) : 0;
+  const take = Math.min(spare, MAX_MERGE_COPIES - copies);
+  return { id, copies, spare, take, bonus: mergeBonus(copies), next: mergeBonus(copies + take), max: MAX_MERGE_COPIES };
+}
+
+function mergeLine(char: Character): string {
+  const m = mergeInfo(char);
+  if (!m.id) return '*ไม่ได้สวมอาวุธ*';
+  const head = `${itemLabel(m.id)} รวมแล้ว ×${m.copies} → ดาเมจ +${m.bonus}`;
+  if (m.copies >= m.max) return `${head} — เต็มแล้ว (×${m.max})`;
+  return `${head}
+-# อะไหล่ในกระเป๋า ${m.spare} ชิ้น${m.take ? ` · รวมทั้งหมด → ×${m.copies + m.take} (ดาเมจ +${m.next})` : ''} · ดาเมจ = log₂(จำนวนที่รวม)`;
+}
+
+/** Fuse every spare copy of the equipped weapon into it (Rouge Land forge). Bonus damage = floor(log2(copies)). */
+export function mergeGear(char: Character): ActionResult {
+  const away = homeError(char);
+  if (away) return fail(away);
+  const m = mergeInfo(char);
+  if (!m.id) return fail('ไม่ได้สวมอาวุธ');
+  if (m.copies >= m.max) return fail(`รวมเต็มแล้ว (×${m.max})`);
+  if (!m.take) return fail(`ไม่มี ${itemLabel(m.id)} ชิ้นสำรองในกระเป๋า — ต้องมีอีกอย่างน้อย 1 ชิ้นนอกจากที่สวมอยู่`);
+  removeItem(char, m.id, m.take);
+  (char.gearMerged ??= {})[m.id] = m.copies + m.take;
+  saveCharacter(char);
+  const up = m.next > m.bonus;
+  return done(
+    resultEmbed(
+      char,
+      `🔗 ${itemLabel(m.id)} ×${m.copies + m.take}`,
+      [
+        `หลอม ${itemLabel(m.id, m.take)} เข้ากับอาวุธที่สวมอยู่ — เหล็กเก่ากลืนเหล็กใหม่เหมือนสัตว์กินพวกเดียวกัน`,
+        up ? `⚔️ ดาเมจ +${m.bonus} → **+${m.next}**` : `⚔️ ดาเมจยัง +${m.next} — รวมถึง ×${2 ** (m.next + 1)} จึงขึ้นขั้นถัดไป`,
+      ],
+      COLORS.bone,
+    ),
+  );
 }
 
 export function upgradePayload(char: Character): Promise<ImagePayload> {
@@ -496,7 +541,7 @@ export function upgradePayload(char: Character): Promise<ImagePayload> {
     const lv = gearLevel(char, id);
     return { slot, id, lv, max: MAX_GEAR_LEVEL, cost: id && lv < MAX_GEAR_LEVEL ? upgradeCost(slot, lv + 1) : undefined };
   });
-  return imagePayload('forge', COLORS.bone, () => renderUpgradeCard(char, slots), () => [upgradeEmbed(char)]);
+  return imagePayload('forge', COLORS.bone, () => renderUpgradeCard(char, slots, mergeInfo(char)), () => [upgradeEmbed(char)]);
 }
 
 export function upgradeGear(char: Character, slot: GearSlot): ActionResult {

@@ -73,7 +73,7 @@ export function HeroCarousel({ slides }: { slides: Slide[] }) {
           <Link className="cta" href="/create">
             ✦ สร้างตัวละคร
           </Link>
-          <Link className="cta ghost" href="/world">
+          <Link className="cta ghost" href="/#icons">
             สำรวจโลก
           </Link>
         </div>

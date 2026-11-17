@@ -160,7 +160,14 @@ export function release(p: Puppet): void {
   p.squint = 0.5;
 }
 
-export function step(p: Puppet, bones: Map<string, Bone>, dt: number, size: { w: number; h: number }): void {
+export interface StepOptions {
+  /** spring back to x = 0 after release (sprite preview). false = stay where dropped (room), sliding to a stop */
+  home?: boolean;
+  /** walls for the body offset p.x (rig px): bounce off them */
+  bounds?: [number, number];
+}
+
+export function step(p: Puppet, bones: Map<string, Bone>, dt: number, _size: { w: number; h: number }, opts: StepOptions = {}): void {
   dt = Math.min(dt, 1 / 30);
   p.clock += dt;
   const pvx = p.vx;
@@ -199,7 +206,9 @@ export function step(p: Puppet, bones: Map<string, Bone>, dt: number, size: { w:
     p.y = Math.min(ny, 0); // can't push it into the floor
   } else {
     // fall back down, spring home sideways, bounce on the floor
-    p.vx += (-22 * p.x - 8 * p.vx) * dt;
+    if (opts.home === false) {
+      if (p.y >= 0) p.vx *= Math.exp(-dt * 7); // floor friction; thrown = keeps flying sideways
+    } else p.vx += (-22 * p.x - 8 * p.vx) * dt;
     p.vy += G * dt;
     p.x += p.vx * dt;
     p.y += p.vy * dt;
@@ -208,6 +217,11 @@ export function step(p: Puppet, bones: Map<string, Bone>, dt: number, size: { w:
       p.y = 0;
       p.vy = p.vy > 600 ? -p.vy * 0.32 : 0;
     }
+  }
+  if (opts.bounds && !p.grabbed) {
+    const [l, r] = opts.bounds;
+    if (p.x < l) (p.x = l), (p.vx = Math.abs(p.vx) * 0.3);
+    else if (p.x > r) (p.x = r), (p.vx = -Math.abs(p.vx) * 0.3);
   }
   p.ax = Math.max(-60000, Math.min(60000, (p.vx - pvx) / dt));
 
@@ -221,8 +235,12 @@ export function step(p: Puppet, bones: Map<string, Bone>, dt: number, size: { w:
   const simple = p.grabbed && (p.mode === "head" || p.mode === "torso"); // held by head/torso: stays upright and follows the pointer
   const angAcc = !p.grabbed || simple
     ? -40 * (p.ang - rest) - 9 * p.angV
+    : armBone && !lifted
+    ? -40 * (p.ang - rest) - 9 * p.angV // pulled by the hand with feet on the floor: stays upright, no swing
     : armBone
-    ? -26 * Math.sin(p.ang - rest) - 4 * p.angV - (p.ax / PEND_L) * Math.cos(p.ang - rest) * 0.8 // dangling from a hand: swingy
+    // dangling from a hand: pendulum under the shoulder. + ang swings the feet LEFT (canvas y-down), so a hand
+    // accelerating right must give + angular accel → the body trails behind the hand, same side as the limbs' lag
+    ? -26 * Math.sin(p.ang - rest) - 4 * p.angV + (p.ax / PEND_L) * Math.cos(p.ang - rest) * 0.8
     : -55 * Math.sin(p.ang - rest) - 10 * p.angV - (p.ax / PEND_L) * Math.cos(p.ang - rest) * 0.6; // quick tip-over, small wobble
   p.angV += angAcc * dt;
   p.ang = Math.max(-2.6, Math.min(2.6, p.ang + p.angV * dt));

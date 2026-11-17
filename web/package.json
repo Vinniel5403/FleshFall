@@ -6,7 +6,8 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "env:pull": "npx vercel@latest env pull .env.local --environment=production --yes"
   },
   "dependencies": {
     "ag-psd": "^28.2.1",

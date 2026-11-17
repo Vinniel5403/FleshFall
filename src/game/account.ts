@@ -3,7 +3,7 @@
  * Pure + Discord-free. Image bytes live in object storage (R2); the character only stores keys.
  */
 import { createHmac, randomBytes } from 'node:crypto';
-import type { CharImage, CharSprite, Character, ImageSlot, SpritePart } from './types.js';
+import type { CharImage, CharRoom, CharSprite, Character, RoomItem, ImageSlot, SpritePart } from './types.js';
 import { currentZone, getZone, zoneLabel } from './zones.js';
 import { balance } from '../config.js';
 
@@ -109,6 +109,26 @@ export function cleanBio(raw: unknown): string | null {
     .replace(/\n{3,}/g, '\n\n')
     .trim();
   return bio.length > BIO_MAX ? null : bio;
+}
+
+export const ROOM_MAX_ITEMS = 60;
+const ROOM_ID = /^[a-z0-9-]{1,40}$/;
+
+/** Validate a room layout from the website (shape only — the catalog lives in the web bundle). null = invalid. */
+export function cleanRoom(raw: unknown): CharRoom | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, unknown>;
+  if (typeof r.template !== 'string' || !ROOM_ID.test(r.template) || !Array.isArray(r.items) || r.items.length > ROOM_MAX_ITEMS) return null;
+  const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= -1 && v <= 2 ? Math.round(v * 1e5) / 1e5 : null);
+  const items: RoomItem[] = [];
+  for (const it of r.items) {
+    if (!it || typeof it !== 'object') return null;
+    const o = it as Record<string, unknown>;
+    const x = num(o.x), y = num(o.y);
+    if (typeof o.id !== 'string' || !ROOM_ID.test(o.id) || x === null || y === null) return null;
+    items.push({ id: o.id, x, y, ...(o.flip === true && { flip: true }), ...(o.front === true && { front: true }) });
+  }
+  return { template: r.template, items, at: Date.now() };
 }
 
 /**
@@ -232,6 +252,7 @@ export function accountView(char: Character) {
     slug: profileSlug(char.userId),
     images: (char.images ?? []).map(({ slot, key, at }: CharImage) => ({ slot, key, at })),
     sprite: char.sprite ?? null,
+    room: char.room ?? null,
   };
 }
 export type AccountView = ReturnType<typeof accountView>;
