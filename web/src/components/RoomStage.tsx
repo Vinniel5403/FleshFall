@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { bodyMatrix, grab, hitPart, newPuppet, onTopParts, puppetPose, release, squinting, step } from "@/lib/puppet";
+import { apply, bodyMatrix, grab, hitPart, invert, newPuppet, onTopParts, puppetPose, release, squinting, step } from "@/lib/puppet";
 import { buildSkeleton, drawRig, HEIGHT_DEFAULT, mul, type M, type Rig } from "@/lib/rig";
 import { furniture, furnitureSrc, FURNITURE, roomBg, template, type PlacedItem, type RoomLayout } from "@/lib/room";
+import { flipMatrix, newWander, stepWander, walkBob, walkPose } from "@/lib/wander";
 
 export interface RoomEditHooks {
   selected: number | null;
@@ -95,7 +96,8 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const floorY = (tpl.floorTop + tpl.floorBottom) / 2;
     const p = newPuppet();
-    const pose = puppetPose(p);
+    const w = newWander(); // view mode: the doll strolls around on its own
+    const pose = walkPose(puppetPose(p), w);
     let item: { i: number; dx: number; dy: number } | null = null;
     let raf = 0;
     const start = performance.now();
@@ -124,6 +126,14 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
       return toRig(Math.max(l, Math.min(r, cx)), Math.max(0, Math.min(geo.H, cy)));
     };
 
+    /** pointer (rig coords) → the matching point on the unflipped doll, so a mirrored doll is grabbed by the part under the cursor */
+    const unflip = (x: number, y: number): [number, number] => {
+      if (w.face >= 0) return [x, y];
+      const body = bodyMatrix(p);
+      const [lx, ly] = apply(invert(body), x, y);
+      return apply(body, 2 * extent.cx - lx, ly);
+    };
+
     /** topmost furniture under room point (x, y); front layer first, last drawn wins */
     const hitItem = (x: number, y: number, front: boolean) => {
       const items = live.current.layout.items;
@@ -149,7 +159,7 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
       // draw order, top first: front furniture → doll → back furniture
       let handled = ed ? pickItem(hitItem(rx, ry, true)) : false;
       if (!handled && !still) {
-        const [x, y] = toRig(cx, cy);
+        const [x, y] = unflip(...toRig(cx, cy));
         const part = hitPart(p, bones, x, y);
         if (part) {
           grab(p, x, y, part, bones);
@@ -175,7 +185,7 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
         ed.onMove(item.i, Math.max(-0.2, Math.min(1.1, rx - item.dx)), Math.max(-0.2, Math.min(1.05, ry - item.dy)));
         return;
       }
-      const [x, y] = toRig(cx, cy);
+      const [x, y] = unflip(...toRig(cx, cy));
       const over = (!still && hitPart(p, bones, x, y)) || (ed && (hitItem(rx, ry, true) ?? hitItem(rx, ry, false)) !== null);
       cv.style.cursor = over ? "grab" : "";
     };
@@ -221,6 +231,7 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
       const t = (now - start) / 1000;
 
       if (!still) step(p, bones, dt, { w: rig.width, h: rig.height }, { home: false, bounds });
+      if (!still && !live.current.edit) stepWander(w, p, dt, { bounds, height: extent.h });
 
       // --- camera: follows the doll; frozen while it's held (else the room slides under the pointer), edge-pans instead ---
       const roomW = tpl.w * (H / tpl.h);
@@ -263,8 +274,8 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
       ctx.ellipse(sx, floorY * H, shadowW, shadowW * 0.16, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
-      const view: M = [k, 0, 0, k, geo.ox, oy];
-      drawRig(ctx, rig, bones, sprite, t, mul(view, bodyMatrix(p)), !still, { pose, eyesShut: squinting(p), onTop: onTopParts(p, bones) });
+      const view: M = [k, 0, 0, k, geo.ox, oy + walkBob(w, extent.h) * k];
+      drawRig(ctx, rig, bones, sprite, t, mul(mul(view, bodyMatrix(p)), flipMatrix(w, extent.cx)), !still, { pose, eyesShut: squinting(p), onTop: onTopParts(p, bones) });
 
       lay.items.forEach((it, i) => it.front && drawItem(it, ed?.selected === i));
       raf = requestAnimationFrame(frame);
