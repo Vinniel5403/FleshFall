@@ -1,18 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { announceAuth, api, jsonInit } from "@/lib/client";
 import { doorVar } from "@/lib/md";
-import type { ParsedSprite } from "@/lib/psd";
-import templateRig from "@/data/sprite-template.json";
-import { HEIGHT_DEFAULT, HEIGHT_MAX, HEIGHT_MIN, TEMPLATE_GROUPS, type Rig } from "@/lib/rig";
-
-/** Default sprite (split from the template PSD by `npm run web:template`) shown until a player uploads their own. */
-const TEMPLATE_RIG = templateRig as Rig;
-const TEMPLATE_PSD = "/templates/fleshfall-sprite-template.psd";
-const templateSrc = (id: string, ext: string) => `/sprites/template/${id}.${ext}`;
-import { SpriteStage } from "./SpriteStage";
-import { RoomEditor } from "./RoomEditor";
-import { BIO_MAX, type AccountView, type ImageSlot, type ImageSlotDef, type MeResponse } from "@/lib/types";
+import type { MeResponse } from "@/lib/types";
 
 export interface ForgeRole { id: string; name: string; emoji: string; short: string }
 export interface ForgeIcon { id: string; name: string; emoji: string; concept: string; door: string; doorName: string }
@@ -20,49 +12,27 @@ export interface ForgeIcon { id: string; name: string; emoji: string; concept: s
 interface Props {
   roles: ForgeRole[];
   icons: ForgeIcon[];
-  slots: ImageSlotDef[];
 }
 
-const MAX_BYTES = 4 * 1024 * 1024;
-/** Roles with a default avatar in web/public/avatar (shown until the player uploads a portrait). */
-const DEFAULT_AVATAR_ROLES = new Set(["maid", "hound", "bar", "patron", "outsider"]);
-
-/** Longest edge per slot after browser-side resize. */
-const MAX_DIM: Record<ImageSlot, number> = { portrait: 1024, art: 2560, sheet: 2560, gallery: 2048 };
-
-/** Resize + re-encode in the browser (webp, jpeg fallback) so uploads stay small and clean. */
-async function shrink(file: File, maxDim: number): Promise<Blob> {
-  const bmp = await createImageBitmap(file);
-  let dim = maxDim;
-  for (let attempt = 0; attempt < 4; attempt++) {
-    const scale = Math.min(1, dim / Math.max(bmp.width, bmp.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(bmp.width * scale));
-    canvas.height = Math.max(1, Math.round(bmp.height * scale));
-    canvas.getContext("2d")!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
-    const enc = (type: string, q: number) => new Promise<Blob | null>((r) => canvas.toBlob(r, type, q));
-    let blob = await enc("image/webp", 0.88);
-    if (!blob || blob.type !== "image/webp") blob = await enc("image/jpeg", 0.88); // Safari without webp encode
-    if (blob && blob.size <= MAX_BYTES) return blob;
-    dim = Math.round(dim * 0.75);
-  }
-  throw new Error("ภาพใหญ่เกินไป");
-}
-
-async function api<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, init);
-  const data = (await res.json().catch(() => ({}))) as T & { error?: string };
-  if (!res.ok) throw new Error(data.error ?? "เกิดข้อผิดพลาด");
-  return data;
-}
-
-export function CharacterForge({ roles, icons, slots }: Props) {
+/**
+ * /create: Discord login → pick role / Icon / name. Players who already have a (living) character
+ * are sent to /profile, where all the settings live.
+ */
+export function CharacterForge({ roles, icons }: Props) {
+  const router = useRouter();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    api<MeResponse>("/api/me").then(setMe, (e: Error) => setError(e.message));
-  }, []);
+    api<MeResponse>("/api/me").then(
+      (m) => {
+        announceAuth(m.user);
+        if (m.user && m.character && !m.character.fiend) return router.replace("/profile");
+        setMe(m);
+      },
+      (e: Error) => setError(e.message),
+    );
+  }, [router]);
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("login") === "failed") {
@@ -73,6 +43,7 @@ export function CharacterForge({ roles, icons, slots }: Props) {
 
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
+    announceAuth(null);
     setMe({ user: null, character: null, inGuild: false, guildUrl: null });
   };
 
@@ -86,6 +57,7 @@ export function CharacterForge({ roles, icons, slots }: Props) {
       ) : (
         <>
           <div className="forge-account">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             {me.user.avatar && <img src={me.user.avatar} alt="" width={28} height={28} />}
             <span>
               เข้าสู่ระบบเป็น <b>{me.user.username}</b>
@@ -94,11 +66,13 @@ export function CharacterForge({ roles, icons, slots }: Props) {
               ออกจากระบบ
             </button>
           </div>
-          {me.character && !me.character.fiend ? (
-            <Dossier me={me} roles={roles} icons={icons} slots={slots} onChange={setMe} onError={setError} />
-          ) : (
-            <CreateForm fiend={!!me.character?.fiend} roles={roles} icons={icons} onDone={setMe} onError={setError} />
-          )}
+          <CreateForm
+            fiend={!!me.character?.fiend}
+            roles={roles}
+            icons={icons}
+            onDone={() => router.push("/profile?welcome=1")}
+            onError={setError}
+          />
         </>
       )}
     </section>
@@ -107,7 +81,7 @@ export function CharacterForge({ roles, icons, slots }: Props) {
 
 function Login() {
   return (
-    <section className="step">
+    <section className="step forge-login">
       <header>
         <span className="step-no">01</span>
         <div>
@@ -117,6 +91,7 @@ function Login() {
       </header>
       <ol className="flow">
         <li>หนึ่งบัญชี Discord = หนึ่งตัวละคร ผูกกันถาวร</li>
+        <li>มีตัวละครอยู่แล้ว? เข้าสู่ระบบแล้วระบบจะพาไปหน้าโปรไฟล์</li>
         <li>ตัวละครที่กลายเป็น Fiend จึงจะสร้างใหม่ได้</li>
       </ol>
       <a className="cta forge-cta" href="/api/auth/login">
@@ -130,7 +105,7 @@ function CreateForm(props: {
   fiend: boolean;
   roles: ForgeRole[];
   icons: ForgeIcon[];
-  onDone: (m: MeResponse) => void;
+  onDone: () => void;
   onError: (e: string | null) => void;
 }) {
   const { roles, icons } = props;
@@ -146,14 +121,8 @@ function CreateForm(props: {
     setBusy(true);
     props.onError(null);
     try {
-      props.onDone(
-        await api<MeResponse>("/api/me/character", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ name: name.trim(), role, icon }),
-        }),
-      );
-      window.scrollTo({ top: document.getElementById("forge")?.offsetTop ?? 0, behavior: "smooth" });
+      await api<MeResponse>("/api/me/character", jsonInit("POST", { name: name.trim(), role, icon }));
+      props.onDone();
     } catch (err) {
       props.onError((err as Error).message);
     } finally {
@@ -227,7 +196,7 @@ function CreateForm(props: {
           <span className="step-no">04</span>
           <div>
             <h3>ตั้งชื่อตัวละคร</h3>
-            <p className="sub">2–32 ตัวอักษร · ตัวอักษร ตัวเลข เว้นวรรค และ . _ &apos; - เท่านั้น · เปลี่ยนภายหลังไม่ได้</p>
+            <p className="sub">2–32 ตัวอักษร · ตัวอักษร ตัวเลข เว้นวรรค และ . _ &apos; - เท่านั้น · เปลี่ยนได้ภายหลังในหน้าโปรไฟล์</p>
           </div>
         </header>
         <div className="forge-name">
@@ -246,513 +215,5 @@ function CreateForm(props: {
         {!role || !icon ? <p className="sub">เลือกบทบาทและเทพให้ครบก่อน</p> : null}
       </section>
     </form>
-  );
-}
-
-function Dossier(props: {
-  me: MeResponse;
-  roles: ForgeRole[];
-  icons: ForgeIcon[];
-  slots: ImageSlotDef[];
-  onChange: (m: MeResponse) => void;
-  onError: (e: string | null) => void;
-}) {
-  const { me } = props;
-  const c = me.character!;
-  const role = props.roles.find((r) => r.id === c.role);
-  const icon = props.icons.find((i) => i.id === c.icon);
-  const portrait = c.images.find((i) => i.slot === "portrait");
-  const [joining, setJoining] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [newName, setNewName] = useState(c.name);
-  const [renaming, setRenaming] = useState(false);
-
-  const setChar = (character: AccountView) => props.onChange({ ...me, character });
-
-  const rename = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setRenaming(true);
-    props.onError(null);
-    try {
-      const r = await api<{ character: AccountView }>("/api/me/character", {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name: newName.trim() }),
-      });
-      setChar(r.character);
-      setEditing(false);
-    } catch (err) {
-      props.onError((err as Error).message);
-    } finally {
-      setRenaming(false);
-    }
-  };
-  const st = c.status;
-
-  const join = async () => {
-    setJoining(true);
-    props.onError(null);
-    try {
-      const r = await api<{ inGuild: boolean }>("/api/me/join", { method: "POST" });
-      props.onChange({ ...me, inGuild: r.inGuild });
-      if (!r.inGuild) props.onError("ยังเข้าเซิร์ฟไม่ได้ — ลองออกจากระบบแล้วเข้าใหม่");
-    } catch (err) {
-      props.onError((err as Error).message);
-    } finally {
-      setJoining(false);
-    }
-  };
-
-  return (
-    <div className="create">
-      <section className="step forge-dossier" style={{ "--door": doorVar(icon?.door ?? "red") } as React.CSSProperties}>
-        <div className="forge-portrait">
-          {portrait?.url ? (
-            <img src={portrait.url} alt={`ภาพโปรไฟล์ ${c.name}`} />
-          ) : DEFAULT_AVATAR_ROLES.has(c.role) ? (
-            // no upload yet → the role's default avatar (same files the bot uses, src/render/kit.ts ROLE_AVATAR)
-            <img src={`/avatar/role-${c.role}.webp`} alt={`ภาพเริ่มต้นของ ${role?.name ?? c.role}`} />
-          ) : (
-            <span>No Record</span>
-          )}
-        </div>
-        <div className="forge-id">
-          <p className="forge-file">M.A.I.D.S · PERSONNEL FILE</p>
-          {editing ? (
-            <form className="forge-rename" onSubmit={rename}>
-              <input
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                minLength={2}
-                maxLength={32}
-                required
-                autoFocus
-                aria-label="ชื่อตัวละครใหม่"
-              />
-              <button type="submit" className="cta" disabled={renaming || newName.trim() === c.name}>
-                {renaming ? "กำลังบันทึก…" : "บันทึก"}
-              </button>
-              <button type="button" className="ghost" onClick={() => (setEditing(false), setNewName(c.name))}>
-                ยกเลิก
-              </button>
-              <span className="sub">เปลี่ยนได้ชั่วโมงละครั้ง · ห้อง RP ใน Discord จะโพสต์ด้วยชื่อนี้</span>
-            </form>
-          ) : (
-            <h3 className="forge-name">
-              {c.name}
-              <button type="button" className="forge-edit" onClick={() => setEditing(true)} aria-label="เปลี่ยนชื่อ" title="เปลี่ยนชื่อ">
-                ✎
-              </button>
-            </h3>
-          )}
-          <p className="sub">
-            {role ? `${role.emoji} ${role.name}` : c.role} · {icon ? `${icon.emoji} ${icon.name}` : c.icon}
-          </p>
-          {st && (
-            <dl className="forge-status">
-              <div><dt>เลเวล</dt><dd>{c.level} <small>({st.xp}/{st.xpNext} XP)</small></dd></div>
-              <div><dt>เนื้อกาย</dt><dd>{st.hp}/{st.maxHp}</dd></div>
-              <div><dt>แรง</dt><dd>{st.stamina}/{st.maxStamina}</dd></div>
-              <div><dt>ความเป็นมนุษย์</dt><dd>{st.humanity}</dd></div>
-              <div><dt>สติ</dt><dd>{st.sanity}</dd></div>
-              <div><dt>เนื้อสด</dt><dd>🥩 {st.flesh}</dd></div>
-              <div><dt>พละ / ว่องไว / สัมผัส</dt><dd>{st.stats.str} / {st.stats.agi} / {st.stats.int}</dd></div>
-              <div><dt>อยู่ที่</dt><dd>{st.where}</dd></div>
-            </dl>
-          )}
-          <div className="forge-discord">
-            {me.inGuild && me.guildUrl ? (
-              <a className="cta" href={me.guildUrl} target="_blank" rel="noreferrer">
-                ✦ เข้า Discord
-              </a>
-            ) : (
-              <button type="button" className="cta" onClick={join} disabled={joining}>
-                {joining ? "กำลังพาเข้าเซิร์ฟ…" : "✦ เข้าร่วมเซิร์ฟ Discord"}
-              </button>
-            )}
-            <span className="sub">{me.inGuild ? "คุณอยู่ในเซิร์ฟแล้ว เริ่มที่ห้อง #butchery" : "ตัวละครพร้อมแล้ว กดเพื่อเข้าเซิร์ฟ"}</span>
-          </div>
-        </div>
-      </section>
-
-      <section className="step">
-        <header>
-          <span className="step-no">05</span>
-          <div>
-            <h3>ภาพตัวละคร</h3>
-            <p className="sub">อัปโหลดได้ทั้ง webp / png / jpg — ระบบย่อขนาดให้อัตโนมัติ · CW: เนื้อหารุนแรงได้ แต่ห้ามภาพผิดกฎหมาย</p>
-          </div>
-        </header>
-        <div className="forge-slots">
-          {props.slots.map((s) => (
-            <Slot key={s.id} slot={s} images={c.images.filter((i) => i.slot === s.id)} onChange={setChar} onError={props.onError} />
-          ))}
-        </div>
-      </section>
-
-      <SpriteSection character={c} onChange={setChar} onError={props.onError} />
-
-      <BioSection character={c} onChange={setChar} onError={props.onError} />
-
-      <RoomEditor character={c} onChange={setChar} onError={props.onError} />
-    </div>
-  );
-}
-
-/** Public notes / backstory, shown on /players/<slug> and under /profile in Discord. */
-function BioSection(props: { character: AccountView; onChange: (c: AccountView) => void; onError: (e: string | null) => void }) {
-  const saved = props.character.bio ?? "";
-  const [text, setText] = useState(saved);
-  const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState(false);
-  const dirty = text.trim() !== saved;
-
-  const save = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    setDone(false);
-    props.onError(null);
-    try {
-      const r = await api<{ character: AccountView }>("/api/me/bio", {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ bio: text }),
-      });
-      props.onChange(r.character);
-      setText(r.character.bio ?? "");
-      setDone(true);
-    } catch (err) {
-      props.onError((err as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <section className="step">
-      <header>
-        <span className="step-no">07</span>
-        <div>
-          <h3>บันทึกตัวละคร</h3>
-          <p className="sub">ประวัติ นิสัย ข้อมูลเพิ่มเติม หรือโน้ตอะไรก็ได้ — ทุกคนเห็นได้ในหน้าโปรไฟล์และคำสั่ง /profile ใน Discord</p>
-        </div>
-      </header>
-      <form className="forge-bio" onSubmit={save}>
-        <textarea
-          value={text}
-          onChange={(e) => (setText(e.target.value), setDone(false))}
-          maxLength={BIO_MAX}
-          rows={8}
-          placeholder="เช่น อดีตพ่อครัวจากปารีส ตกลงรอยแยกมิติระหว่างกะดึก…"
-          aria-label="บันทึกตัวละคร"
-        />
-        <div className="forge-bio-bar">
-          <span className="sub">{text.length}/{BIO_MAX}</span>
-          {props.character.slug && (
-            <a className="ghost" href={`/players/${props.character.slug}`} target="_blank" rel="noreferrer">
-              ดูโปรไฟล์สาธารณะ ↗
-            </a>
-          )}
-          <button type="submit" className="cta" disabled={busy || !dirty}>
-            {busy ? "กำลังบันทึก…" : done && !dirty ? "บันทึกแล้ว ✓" : "บันทึก"}
-          </button>
-        </div>
-      </form>
-    </section>
-  );
-}
-
-/** PSD → animated paper doll. Parsed in the browser; only the trimmed parts are uploaded. */
-function SpriteSection(props: { character: AccountView; onChange: (c: AccountView) => void; onError: (e: string | null) => void }) {
-  const saved = props.character.sprite;
-  const input = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState<"parse" | "save" | "delete" | null>(null);
-  const [draft, setDraft] = useState<(ParsedSprite & { urls: Map<string, string> }) | null>(null);
-  const [debug, setDebug] = useState(false);
-  /** slider value; null = use whatever the shown sprite has saved */
-  const [heightEdit, setHeightEdit] = useState<number | null>(null);
-  const shownHeight = draft?.rig.heightCm ?? saved?.heightCm ?? HEIGHT_DEFAULT;
-  const heightCm = heightEdit ?? shownHeight;
-  const heightDirty = !draft && !!saved && heightEdit !== null && heightEdit !== (saved.heightCm ?? HEIGHT_DEFAULT);
-
-  const saveHeight = async () => {
-    setBusy("save");
-    props.onError(null);
-    try {
-      const r = await api<{ character: AccountView }>("/api/me/sprite", {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ heightCm }),
-      });
-      props.onChange(r.character);
-      setHeightEdit(null);
-    } catch (err) {
-      props.onError((err as Error).message);
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  const dropDraft = useCallback(() => {
-    setDraft((d) => {
-      d?.urls.forEach((u) => URL.revokeObjectURL(u));
-      return null;
-    });
-  }, []);
-  useEffect(() => dropDraft, [dropDraft]);
-
-  const savedUrl = saved?.url;
-  const savedSrc = useMemo(() => (savedUrl ? (id: string, ext: string) => `${savedUrl}/${id}.${ext}` : null), [savedUrl]);
-  const draftSrc = useMemo(() => (draft ? (id: string) => draft.urls.get(id) ?? "" : null), [draft]);
-
-  const pick = async (file: File) => {
-    setBusy("parse");
-    props.onError(null);
-    dropDraft();
-    try {
-      const { parsePsdFile } = await import("@/lib/psd");
-      const parsed = await parsePsdFile(file);
-      const urls = new Map([...parsed.files].map(([id, b]) => [id, URL.createObjectURL(b as Blob)]));
-      setDraft({ ...parsed, rig: { ...parsed.rig, heightCm: heightEdit ?? saved?.heightCm ?? HEIGHT_DEFAULT }, urls });
-      setHeightEdit(null);
-    } catch (err) {
-      props.onError((err as Error).message);
-    } finally {
-      setBusy(null);
-      if (input.current) input.current.value = "";
-    }
-  };
-
-  const save = async () => {
-    if (!draft) return;
-    setBusy("save");
-    props.onError(null);
-    try {
-      const fd = new FormData();
-      fd.set("rig", JSON.stringify({ ...draft.rig, heightCm }));
-      for (const p of draft.rig.parts) fd.set(`p_${p.id}`, draft.files.get(p.id) as Blob, `${p.id}.${p.ext}`);
-      const r = await api<{ character: AccountView }>("/api/me/sprite", { method: "POST", body: fd });
-      props.onChange(r.character);
-      dropDraft();
-    } catch (err) {
-      props.onError((err as Error).message);
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  const remove = async () => {
-    if (!confirm("ลบสไปรต์ตัวละคร?")) return;
-    setBusy("delete");
-    props.onError(null);
-    try {
-      props.onChange((await api<{ character: AccountView }>("/api/me/sprite", { method: "DELETE" })).character);
-    } catch (err) {
-      props.onError((err as Error).message);
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  return (
-    <section className="step">
-      <header>
-        <span className="step-no">06</span>
-        <div>
-          <h3>สไปรต์ตัวละคร (PSD)</h3>
-          <p className="sub">
-            อัปโหลดไฟล์ .psd ที่แยกส่วนเป็น group ตามเทมเพลต — ระบบประกอบร่างและขยับให้อัตโนมัติ · ไฟล์ถูกแยกในเครื่องคุณ อัปโหลดแค่ชิ้นส่วน
-          </p>
-        </div>
-      </header>
-      <div className="sprite-wrap">
-        <div className="sprite-view">
-          {draft && draftSrc ? (
-            <SpriteStage rig={draft.rig} src={draftSrc} label="ตัวอย่างสไปรต์" debug={debug} heightCm={heightCm} />
-          ) : saved && savedSrc ? (
-            <SpriteStage rig={saved} src={savedSrc} label={`สไปรต์ ${props.character.name}`} debug={debug} heightCm={heightCm} />
-          ) : (
-            <div className="sprite-template">
-              <SpriteStage rig={TEMPLATE_RIG} src={templateSrc} label="สไปรต์ตัวอย่างจากเทมเพลต" debug={debug} heightCm={heightCm} />
-              <span className="sprite-tag">TEMPLATE</span>
-            </div>
-          )}
-        </div>
-        <div className="sprite-side">
-          <div className="sprite-height">
-            <label htmlFor="sprite-height">
-              ส่วนสูง <b>{heightCm} cm</b>
-            </label>
-            <input
-              id="sprite-height"
-              type="range"
-              min={HEIGHT_MIN}
-              max={HEIGHT_MAX}
-              step={1}
-              value={heightCm}
-              onChange={(e) => setHeightEdit(Number(e.target.value))}
-            />
-            {/* always rendered (disabled when unchanged): a button popping in/out resized the slider mid-drag */}
-            {!draft && saved && (
-              <button type="button" className="cta" onClick={saveHeight} disabled={!!busy || !heightDirty}>
-                {busy === "save" ? "กำลังบันทึก…" : heightDirty ? "บันทึกส่วนสูง" : "บันทึกแล้ว ✓"}
-              </button>
-            )}
-          </div>
-          {(
-            <label className="sprite-debug">
-              <input type="checkbox" checked={debug} onChange={(e) => setDebug(e.target.checked)} /> แสดงจุดหมุน (debug)
-            </label>
-          )}
-          {draft ? (
-            <>
-              <p className="forge-file">PREVIEW · ยังไม่บันทึก</p>
-              <ul className="sprite-map">
-                {draft.mapping.map((m) => (
-                  <li key={m.id}>
-                    <span>{m.name}</span>
-                    <code>{m.id}</code>
-                  </li>
-                ))}
-              </ul>
-              {draft.warnings.length > 0 && (
-                <ul className="sprite-warn">
-                  {draft.warnings.map((w) => (
-                    <li key={w}>{w}</li>
-                  ))}
-                </ul>
-              )}
-              <div className="sprite-actions">
-                <button type="button" className="cta" onClick={save} disabled={!!busy}>
-                  {busy === "save" ? "กำลังบันทึก…" : "✦ บันทึกสไปรต์"}
-                </button>
-                <button type="button" className="forge-link" onClick={dropDraft} disabled={!!busy}>
-                  ยกเลิก
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <p className="sub">ชื่อ group ที่ระบบรู้จัก (สะกดคล้าย ๆ ได้ · ซ้าย/ขวาเดาจากตำแหน่งได้):</p>
-              <p className="sprite-groups">{TEMPLATE_GROUPS.join(" · ")}</p>
-              <p className="sub">
-                เริ่มจากเทมเพลตได้เลย — วาดทับในแต่ละ group แล้วอัปโหลดกลับมา (ลองจับหัว ตัว สะโพก หรือมือของตัวอย่างดูได้)
-              </p>
-              <div className="sprite-actions">
-                <button type="button" className="cta" onClick={() => input.current?.click()} disabled={!!busy}>
-                  {busy === "parse" ? "กำลังแยกชิ้นส่วน…" : saved ? "อัปโหลด PSD ใหม่" : "✦ อัปโหลด PSD"}
-                </button>
-                <a className="cta ghost sprite-dl" href={TEMPLATE_PSD} download="fleshfall-sprite-template.psd">
-                  ⬇ โหลดเทมเพลต PSD
-                </a>
-                {saved && (
-                  <button type="button" className="forge-link" onClick={remove} disabled={!!busy}>
-                    ลบสไปรต์
-                  </button>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-      <input
-        ref={input}
-        type="file"
-        accept=".psd,image/vnd.adobe.photoshop"
-        hidden
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) void pick(f);
-        }}
-      />
-    </section>
-  );
-}
-
-function Slot(props: {
-  slot: ImageSlotDef;
-  images: AccountView["images"];
-  onChange: (c: AccountView) => void;
-  onError: (e: string | null) => void;
-}) {
-  const { slot, images } = props;
-  const input = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
-  const full = images.length >= slot.max;
-  const canAdd = slot.max === 1 || !full;
-
-  const upload = async (file: File) => {
-    setBusy(true);
-    props.onError(null);
-    try {
-      const blob = await shrink(file, MAX_DIM[slot.id]);
-      const fd = new FormData();
-      fd.set("slot", slot.id);
-      fd.set("file", blob, `upload.${blob.type === "image/webp" ? "webp" : "jpg"}`);
-      const r = await api<{ character: AccountView }>("/api/me/images", { method: "POST", body: fd });
-      props.onChange(r.character);
-    } catch (err) {
-      props.onError((err as Error).message);
-    } finally {
-      setBusy(false);
-      if (input.current) input.current.value = "";
-    }
-  };
-
-  const remove = async (key: string) => {
-    if (!confirm("ลบภาพนี้?")) return;
-    setBusy(true);
-    props.onError(null);
-    try {
-      const r = await api<{ character: AccountView }>("/api/me/images", {
-        method: "DELETE",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ key }),
-      });
-      props.onChange(r.character);
-    } catch (err) {
-      props.onError((err as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <article className={`forge-slot slot-${slot.id}`}>
-      <header>
-        <h4>{slot.name}</h4>
-        <span className="sub">
-          {slot.desc}
-          {slot.max > 1 && ` · ${images.length}/${slot.max}`}
-        </span>
-      </header>
-      <div className="forge-thumbs">
-        {images.map((img) => (
-          <figure key={img.key}>
-            <a href={img.url} target="_blank" rel="noreferrer">
-              <img src={img.url} alt={slot.name} loading="lazy" />
-            </a>
-            <button type="button" className="forge-x" aria-label="ลบภาพ" disabled={busy} onClick={() => remove(img.key)}>
-              ✕
-            </button>
-          </figure>
-        ))}
-        {canAdd && (
-          <button type="button" className="forge-add" disabled={busy} onClick={() => input.current?.click()}>
-            {busy ? "กำลังอัปโหลด…" : images.length && slot.max === 1 ? "เปลี่ยนภาพ" : "+ เพิ่มภาพ"}
-          </button>
-        )}
-      </div>
-      <input
-        ref={input}
-        type="file"
-        accept="image/png,image/jpeg,image/webp"
-        hidden
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) void upload(f);
-        }}
-      />
-    </article>
   );
 }

@@ -118,6 +118,8 @@ export interface AccountView {
   bio?: string;
   /** opaque public profile id → /players/<slug> (never the Discord id) */
   slug?: string;
+  /** pretty public URL → /profile/<handle> (lowercased name, spaces → "-"; unique for new names) */
+  handle?: string;
   images: { slot: ImageSlot; key: string; at: number; url?: string }[];
   /** paper-doll sprite from PSD; part file = `${url}/${id}.${ext}` */
   sprite: (import("./rig").Rig & { base: string; at: number; url?: string }) | null;
@@ -140,6 +142,8 @@ export const BIO_MAX = 1500;
 /** GET /api/characters?q= row (bot src/web/api.ts searchCharacters). `portrait` = image key. */
 export interface PlayerHit {
   slug: string;
+  /** missing from older bots — derive with nameHandle(name) */
+  handle?: string;
   name: string;
   role: string;
   icon: string;
@@ -155,6 +159,7 @@ type Named = { id: string; name: string; emoji: string };
 /** GET /api/characters/<slug> (bot src/web/api.ts characterProfile). Everything is public by design, except Discord ids. */
 export interface PlayerProfile {
   slug: string;
+  handle?: string;
   name: string;
   role: string;
   icon: string;
@@ -172,3 +177,19 @@ export interface PlayerProfile {
   sprite: AccountView["sprite"];
   room: AccountView["room"];
 }
+
+/** GET /api/characters/by-name/<handle> (bot src/web/api.ts characterByHandle): one owner → profile, else candidates. */
+export interface HandleLookup {
+  profile: PlayerProfile | null;
+  matches: PlayerHit[];
+}
+
+/** URL handle from a character name — keep in sync with bot src/game/account.ts nameHandle. */
+export const nameHandle = (name: string) => name.normalize("NFC").trim().toLowerCase().replace(/\s+/g, "-");
+
+/** Public profile path for a character handle (Thai stays readable; the browser shows it decoded). */
+export const profilePath = (handle: string) => `/profile/${encodeURIComponent(handle)}`;
+
+/** Best public link for the player's own character: pretty /profile/<handle>, else the /players/<slug> permalink. */
+export const ownProfilePath = (c: { handle?: string; name?: string; slug?: string }) =>
+  c.handle || c.name ? profilePath(c.handle || nameHandle(c.name!)) : c.slug ? `/players/${c.slug}` : null;

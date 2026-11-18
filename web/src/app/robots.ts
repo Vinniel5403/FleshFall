@@ -3,7 +3,7 @@ import { SITE } from "@/lib/site";
 
 /** Everything public is crawlable (incl. AI/LLM crawlers); API + auth routes are not. */
 export default function robots(): MetadataRoute.Robots {
-  const disallow = ["/api/"];
+  const disallow = ["/api/"]; // /profile (own settings) is noindex via metadata; /profile/<name> is public
   return {
     rules: [
       { userAgent: "*", allow: "/", disallow },

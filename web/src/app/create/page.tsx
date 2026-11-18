@@ -33,13 +33,12 @@ const DESIGN = [
 export default function CreatePage() {
   return (
     <>
-      <PageBanner art="maid" en="CREATE" th="สร้างตัวละคร" lead="เข้าสู่ระบบด้วย Discord สร้างตัวละคร อัปโหลดภาพ แล้วก้าวเข้าสู่ FleshFall" />
+      <PageBanner art="maid" en="CREATE" th="สร้างตัวละคร" lead="เข้าสู่ระบบด้วย Discord เลือกบทบาทและเทพที่ศรัทธา แล้วก้าวเข้าสู่ FleshFall — ภาพ สไปรต์ และห้อง ตั้งค่าต่อได้ที่หน้าโปรไฟล์" />
       <main>
         <section className="block page-body create">
           <CharacterForge
             roles={GAME.roles.filter((r) => r.id !== "survivor").map(({ id, name, emoji, short }) => ({ id, name, emoji, short }))}
             icons={GAME.icons.map(({ id, name, emoji, concept, door, doorName }) => ({ id, name, emoji, concept, door, doorName }))}
-            slots={GAME.imageSlots}
           />
 
           {/* after joining */}

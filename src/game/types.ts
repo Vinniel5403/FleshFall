@@ -203,6 +203,8 @@ export interface Character {
   banked?: { text: string; at: number };
   /** Player-written notes / backstory, public on the profile (web + Discord). Max BIO_MAX chars. */
   bio?: string;
+  /** when the current name was taken (rename); absent = createdAt. Orders duplicate-name handles (assignHandles). */
+  nameAt?: number;
   /** Knocked out in an easy/normal city: can't act until a friend revives or `until` passes (→ home, trip lost). */
   downed?: { at: number; until: number; zone: ZoneId };
   /** Fell in a hard/epic city: choose 🥚 placenta revive (keep fighting) or give up (real death). */

@@ -3,7 +3,7 @@
  * The website verifies the Discord login; the bot owns the character store and the guild.
  * Every handler keeps load → mutate → save synchronous (no await in between).
  */
-import { accountView, attachImage, BIO_MAX, cleanBio, cleanHeight, cleanRoom, cleanName, cleanSprite, detachImage, isSlot, legacyMedia, mediaId, renameMedia, spriteKeys } from '../game/account.js';
+import { accountView, attachImage, BIO_MAX, cleanBio, cleanHeight, cleanRoom, cleanName, cleanSprite, detachImage, isSlot, legacyMedia, mediaId, assignHandles, nameHandle, renameMedia, spriteKeys } from '../game/account.js';
 import { db } from '../db/index.js';
 import { createCharacter, loadCharacter, saveCharacter } from '../game/character.js';
 import { ICONS } from '../game/icons.js';
@@ -39,7 +39,15 @@ async function joinSafe(gate: GuildGate, userId: string, token: unknown): Promis
 export async function getAccount(gate: GuildGate, userId: string): Promise<Reply> {
   const char = loadCharacter(userId);
   const inGuild = await gate.isMember(userId).catch(() => false);
-  return ok({ character: char ? accountView(char) : null, inGuild, guildId: gate.guildId });
+  return ok({ character: char ? view(char) : null, inGuild, guildId: gate.guildId });
+}
+
+/** Real players (Discord ids); dev/test fixtures excluded — same filter as the public API. */
+const realPlayers = () => db.allCharacters().filter((c) => /^\d+$/.test(c.userId));
+
+/** accountView + the character's unique public handle (assignHandles over every real player). */
+function view(char: Parameters<typeof accountView>[0]) {
+  return { ...accountView(char), handle: assignHandles(realPlayers()).get(char.userId) ?? nameHandle(char.name) };
 }
 
 /** Create the character (one per Discord account; a Fiend may start over), then join the guild. */
@@ -55,7 +63,7 @@ export async function createAccount(gate: GuildGate, userId: string, b: Record<s
   const char = createCharacter(userId, name, b.role as RoleId, b.icon as IconId);
   // saved — now it's safe to await
   const inGuild = await joinSafe(gate, userId, b.accessToken);
-  return ok({ character: accountView(char), inGuild, guildId: gate.guildId, evicted });
+  return ok({ character: view(char), inGuild, guildId: gate.guildId, evicted });
 }
 
 /** Rename the character (website). Cooldown via cooldowns.rename (= next allowed time). */
@@ -64,14 +72,16 @@ export function renameAccount(userId: string, b: Record<string, unknown>): Reply
   if (!name) return fail(400, 'ชื่อต้องยาว 2–32 ตัว ใช้ได้แค่ตัวอักษร ตัวเลข เว้นวรรค . _ \' -');
   const char = loadCharacter(userId);
   if (!char) return fail(404, 'ยังไม่มีตัวละคร');
-  if (char.name === name) return ok({ character: accountView(char) });
+  if (char.name === name) return ok({ character: view(char) });
   const now = Date.now();
   const next = char.cooldowns.rename ?? 0;
   if (next > now) return fail(429, `เปลี่ยนชื่อได้อีกครั้งใน ${Math.ceil((next - now) / 60_000)} นาที`);
+  // keep nameAt when only case/spacing changed (same base handle) so the holder keeps their spot
+  if (nameHandle(char.name) !== nameHandle(name)) char.nameAt = now;
   char.name = name;
   char.cooldowns.rename = now + RENAME_COOLDOWN_MS;
   saveCharacter(char);
-  return ok({ character: accountView(char) });
+  return ok({ character: view(char) });
 }
 
 // ---------- one-off media migration (web/scripts/migrate-media.ts) ----------
@@ -94,7 +104,7 @@ export function applyMediaRename(userId: string, b: Record<string, unknown>): Re
   const err = renameMedia(char, map);
   if (err) return fail(400, err);
   saveCharacter(char);
-  return ok({ character: accountView(char) });
+  return ok({ character: view(char) });
 }
 
 /** Set the character's public notes / backstory ('' clears it). */
@@ -106,7 +116,7 @@ export function setBio(userId: string, b: Record<string, unknown>): Reply {
   if (bio) char.bio = bio;
   else delete char.bio;
   saveCharacter(char);
-  return ok({ character: accountView(char) });
+  return ok({ character: view(char) });
 }
 
 /** Save the private room layout (template + furniture); `room: null` resets it. */
@@ -118,7 +128,7 @@ export function setRoom(userId: string, b: Record<string, unknown>): Reply {
   if (room) char.room = room;
   else delete char.room;
   saveCharacter(char);
-  return ok({ character: accountView(char) });
+  return ok({ character: view(char) });
 }
 
 /** Retry the guild join (first attempt failed, or the player left the server). */
@@ -136,7 +146,7 @@ export function addImage(userId: string, b: Record<string, unknown>): Reply {
   const r = attachImage(char, b.slot, b.key);
   if (!r.ok) return fail(400, r.error);
   saveCharacter(char);
-  return ok({ character: accountView(char), evicted: r.evicted });
+  return ok({ character: view(char), evicted: r.evicted });
 }
 
 export function removeImage(userId: string, b: Record<string, unknown>): Reply {
@@ -145,7 +155,7 @@ export function removeImage(userId: string, b: Record<string, unknown>): Reply {
   if (!char) return fail(404, 'ยังไม่มีตัวละคร');
   const removed = detachImage(char, b.key);
   if (removed) saveCharacter(char);
-  return ok({ character: accountView(char), removed });
+  return ok({ character: view(char), removed });
 }
 
 /** Replace the character's sprite; returns the old sprite's object keys for deletion. */
@@ -157,7 +167,7 @@ export function setSprite(userId: string, b: Record<string, unknown>): Reply {
   const evicted = spriteKeys(char.sprite);
   char.sprite = sprite;
   saveCharacter(char);
-  return ok({ character: accountView(char), evicted });
+  return ok({ character: view(char), evicted });
 }
 
 export function setSpriteHeight(userId: string, b: Record<string, unknown>): Reply {
@@ -167,7 +177,7 @@ export function setSpriteHeight(userId: string, b: Record<string, unknown>): Rep
   if (!char?.sprite) return fail(404, 'ยังไม่มีสไปรต์');
   char.sprite.heightCm = heightCm;
   saveCharacter(char);
-  return ok({ character: accountView(char) });
+  return ok({ character: view(char) });
 }
 
 export function clearSprite(userId: string): Reply {
@@ -176,5 +186,5 @@ export function clearSprite(userId: string): Reply {
   const evicted = spriteKeys(char.sprite);
   delete char.sprite;
   saveCharacter(char);
-  return ok({ character: accountView(char), evicted });
+  return ok({ character: view(char), evicted });
 }

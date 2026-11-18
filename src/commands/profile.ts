@@ -1,5 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
-import { imageUrl, pickImage, profileSlug } from '../game/account.js';
+import { assignHandles, imageUrl, nameHandle, pickImage, profileSlug } from '../game/account.js';
 import { db } from '../db/index.js';
 import { loadCharacter, saveCharacter } from '../game/character.js';
 import type { Character } from '../game/types.js';
@@ -25,12 +25,16 @@ function findByName(q: string): Character[] {
 }
 
 /** Link buttons under someone's profile: their reference sheet + the full web profile. */
+/** Unique web handle (first creator keeps the plain name; see assignHandles). */
+const webHandle = (char: Character) =>
+  assignHandles(db.allCharacters().filter((c) => /^\d+$/.test(c.userId))).get(char.userId) ?? nameHandle(char.name);
+
 function profileLinks(char: Character): ActionRowBuilder<ButtonBuilder>[] {
   const row = new ActionRowBuilder<ButtonBuilder>();
   const sheet = pickImage(char, ['sheet']);
   const sheetUrl = sheet && imageUrl(sheet.key);
   if (sheetUrl) row.addComponents(new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('ชีทตัวละคร').setEmoji('📜').setURL(sheetUrl));
-  if (WEB_URL) row.addComponents(new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('โปรไฟล์บนเว็บ').setEmoji('🩸').setURL(`${WEB_URL}/players/${profileSlug(char.userId)}`));
+  if (WEB_URL) row.addComponents(new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('โปรไฟล์บนเว็บ').setEmoji('🩸').setURL(`${WEB_URL}/profile/${encodeURIComponent(webHandle(char))}`));
   return row.components.length ? [row] : [];
 }
 

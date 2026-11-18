@@ -92,8 +92,35 @@ export function cleanName(raw: unknown): string | null {
   if (typeof raw !== 'string') return null;
   const name = raw.normalize('NFC').replace(/\s+/g, ' ').trim();
   if (name.length < 2 || name.length > 32) return null;
-  return /^[\p{L}\p{M}\p{N} ._'-]+$/u.test(name) ? name : null;
+  // must also contain a letter/digit, so the URL handle is never "..", "--" etc.
+  return /^[\p{L}\p{M}\p{N} ._'-]+$/u.test(name) && /[\p{L}\p{N}]/u.test(name) ? name : null;
 }
+
+/** Base URL handle of a name: NFC, lowercase, spaces → '-'. Names may repeat — see assignHandles for the unique one. */
+export const nameHandle = (name: string) => name.normalize('NFC').trim().toLowerCase().replace(/\s+/g, '-');
+
+/**
+ * Unique public handles → fleshfall.org/profile/<handle>. First come, first served by *when each character took
+ * its current name* (`nameAt`, else `createdAt`): the earliest keeps the base handle, later duplicates get
+ * `<base>-2`, `-3`… (skipping handles already taken, e.g. by a real "Sonya 2"). Derived, not stored — if the
+ * holder renames away, the next one moves up.
+ * Pass every real player (same list everywhere, or handles disagree).
+ */
+export function assignHandles(chars: readonly Pick<Character, 'userId' | 'name' | 'createdAt' | 'nameAt'>[]): Map<string, string> {
+  const taken = new Set<string>();
+  const out = new Map<string, string>();
+  const since = (c: Pick<Character, 'createdAt' | 'nameAt'>) => c.nameAt ?? c.createdAt;
+  const ordered = [...chars].sort((a, b) => since(a) - since(b) || (a.userId < b.userId ? -1 : 1));
+  for (const c of ordered) {
+    const base = nameHandle(c.name);
+    let h = base;
+    for (let n = 2; taken.has(h); n++) h = `${base}-${n}`;
+    taken.add(h);
+    out.set(c.userId, h);
+  }
+  return out;
+}
+
 
 /** Player notes / backstory (public on the profile). */
 export const BIO_MAX = 1500;

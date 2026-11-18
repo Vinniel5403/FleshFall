@@ -6,10 +6,10 @@ import { setSession, STATE_COOKIE } from "@/lib/server/session";
 const WEEK = 7 * 24 * 3600 * 1000;
 const same = (a: string, b: string) => !!a && a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 
-/** Discord OAuth callback → encrypted session cookie → back to /create. */
+/** Discord OAuth callback → encrypted session cookie → /profile (which sends players without a character on to /create). */
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const back = (q = "") => Response.redirect(`${url.origin}/create${q}#forge`, 302);
+  const back = (q = "") => Response.redirect(q ? `${url.origin}/create${q}#forge` : `${url.origin}/profile`, 302);
   const failed = (why: string) => (console.warn(`[auth] login failed: ${why}`), back("?login=failed"));
   const jar = await cookies();
   const state = jar.get(STATE_COOKIE)?.value ?? "";

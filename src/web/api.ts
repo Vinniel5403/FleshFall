@@ -1,7 +1,7 @@
 /**
  * Web API: read-only views of the game world. Discord-free; never writes to the player store.
  */
-import { IMAGE_SLOTS, pickImage, profileSlug, publicMedia } from '../game/account.js';
+import { assignHandles, IMAGE_SLOTS, nameHandle, pickImage, profileSlug, publicMedia } from '../game/account.js';
 import { balance } from '../config.js';
 import { MONSTERS } from '../game/hunt.js';
 import { ICONS } from '../game/icons.js';
@@ -89,7 +89,23 @@ export function searchCharacters(src: PlayerSource, q: string) {
       return b.createdAt - a.createdAt;
     })
     .slice(0, 30);
-  return list.map((c) => ({ slug: profileSlug(c.userId), name: c.name, role: c.role, icon: c.icon, level: c.level, fiend: c.fiend, portrait: portraitKey(c) }));
+  const handles = assignHandles(realPlayers(src));
+  return list.map((c) => hit(c, handles));
+}
+
+const hit = (c: Character, handles: Map<string, string>) => ({ slug: profileSlug(c.userId), handle: handles.get(c.userId) ?? nameHandle(c.name), name: c.name, role: c.role, icon: c.icon, level: c.level, fiend: c.fiend, portrait: portraitKey(c) });
+
+/**
+ * fleshfall.org/profile/<handle> → that character's profile (handles are unique: first creator keeps the
+ * plain name, later duplicates get `-2`, `-3`…). `matches` = the one card, for the web's HandleLookup shape.
+ */
+export function characterByHandle(src: PlayerSource, raw: string) {
+  const h = nameHandle(raw).slice(0, 80);
+  const players = realPlayers(src);
+  const handles = assignHandles(players);
+  const c = players.find((x) => handles.get(x.userId) === h);
+  if (!c) return null;
+  return { profile: characterProfile(src, profileSlug(c.userId)), matches: [hit(c, handles)] };
 }
 
 /** Full public profile by opaque slug (players chose "everything public"; still no Discord id). */
@@ -99,6 +115,7 @@ export function characterProfile(src: PlayerSource, slug: string) {
   const item = (id: string) => ({ id, name: ITEMS[id]?.name ?? id, emoji: ITEMS[id]?.emoji ?? '❔' });
   return {
     slug,
+    handle: assignHandles(realPlayers(src)).get(c.userId) ?? nameHandle(c.name),
     name: c.name,
     role: c.role,
     icon: c.icon,

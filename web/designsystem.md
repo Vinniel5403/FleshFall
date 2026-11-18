@@ -80,7 +80,7 @@ EN serif ตรงกลาง ขนาบเส้นเรียวแดง�
 ### Buttons
 - `.cta` สี่เหลี่ยมไล่แดง + เส้นในขาวบาง (inset 1px) · hover: เส้นในชัดขึ้น + เงาแดง
 - `.cta.ghost` พื้นดำโปร่ง เส้นขาวจาง
-- ปุ่มหลัก = **“✦ สร้างตัวละคร”** → `/create`
+- ปุ่มหลักใน nav = **“✦ สร้างตัวละคร”** → `/create` (ยังไม่ล็อกอิน) / **avatar + “โปรไฟล์”** → `/profile` (ล็อกอินแล้ว, `.nav-me` กรอบเส้นบาง)
 
 ### Cards — `.card` `.land` `.guide-card` `.step`
 กรอบเส้นเดียว `--line` · hover: ขอบแดงจาง + **กรอบในเส้นบาง** (outline offset −6px) โผล่
@@ -96,6 +96,11 @@ EN serif ตรงกลาง ขนาบเส้นเรียวแดง�
 
 ### Nav — `components/Header.tsx`
 บนสุด: **ใส ไม่มีขอบ** · เลื่อน > 40px: กระจกเบลอ `blur(22px) saturate(150%)` บนพื้น `rgba(11,6,6,.5)` + เส้นล่างบาง · โลโก้ blackletter แดง · มือถือ ☰ (framer-motion)
+
+### Profile studio — `/profile` (`components/profile/*`, `app/profile.css`)
+หน้าตั้งค่าส่วนตัว: **hero แฟ้ม** (portrait ใน Brackets กดแล้วไปแท็บภาพ · ชื่อ · tags ◆ · ปุ่มโปรไฟล์สาธารณะ/Discord · กล่อง `FILE n/6`) → **2 คอลัมน์**: ซ้าย = แท็บแนวตั้ง sticky (ไอคอน SVG เส้นบาง ในกรอบสี่เหลี่ยม + EN Cinzel เล็ก + ชื่อไทย + สถานะ 1 บรรทัด, แท็บที่เลือก = เส้นซ้ายแดง + ไล่แดงจาง, ◆ แดงกะพริบ = ยังไม่บันทึก) · ขวา = panel (`PanelHead` kicker EN แดง + หัวไทย + ขีดแดงสั้นใต้, `Card` = plate สามเหลี่ยมสีประตู)
+- ปุ่มใน studio ใช้ `.st-btn primary|ghost|danger (sm)` (รีเซ็ตปุ่ม pill ของ globals) · บันทึกด้วย `SaveBar` sticky ล่าง (โผล่เมื่อมีการแก้) · ผลลัพธ์แจ้งด้วย toast มุมขวาล่าง (ขอบซ้ายเขียว/แดง) ไม่ใช้กล่อง error บนหน้า
+- มือถือ ≤900px: แท็บกลายเป็นแถบเลื่อนแนวนอน sticky ใต้ nav · ≤640px: hero แบน (portrait | ชื่อ, ปุ่มเต็มแถว)
 
 ### Hero — `components/HeroCarousel.tsx`
 ทุกรูปใน `public/background/` (เรียงตามชื่อ) · Ken Burns ~8 วิ → crossfade 1.6 วิ · `object-fit: cover` (ครอป ไม่ยืด) · โลโก้ blackletter แดงใหญ่
@@ -122,7 +127,7 @@ EN serif ตรงกลาง ขนาบเส้นเรียวแดง�
 ## 7. Content rules
 
 - ไทยเป็นหลัก ชื่อเฉพาะคงอังกฤษ (Icon, M.A.I.D.S, Rouge Land, Fiend, Miasma)
-- หน้าเว็บ **static** — ข้อมูลเกมจาก `src/data/game.json` (`npm run web:data` ที่ root) · ยกเว้น `/create` ที่ client component `CharacterForge` เรียก `/api/me/*` (ล็อกอิน Discord / สร้างตัวละคร / อัปโหลดภาพ) — สไตล์ใน `app/forge.css`
+- หน้าเว็บ **static** — ข้อมูลเกมจาก `src/data/game.json` (`npm run web:data` ที่ root) · ยกเว้น `/create` (`CharacterForge`: ล็อกอิน Discord + สร้างตัวละคร, `app/forge.css`) และ `/profile` (`profile/ProfileStudio`: ตั้งค่าทุกอย่างหลังสร้าง, `app/profile.css`) ที่เรียก `/api/me/*` ฝั่ง client
 - **ไม่แสดงค่าพลัง/ตัวเลขเกม** ในหน้าแรกและ `/create`
 - ป้าย **20+ / CW** ในส่วนต้อนรับและแนวทางออกแบบ
 

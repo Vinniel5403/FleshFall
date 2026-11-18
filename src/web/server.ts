@@ -89,6 +89,17 @@ export function startApi(port: number, opts: ApiOptions) {
             case '/api/leaderboard': return json(res, 200, api.leaderboard(players));
             case '/api/characters': return json(res, 200, api.searchCharacters(players, url.searchParams.get('q') ?? ''));
           }
+          const named = /^\/api\/characters\/by-name\/([^/]{1,200})$/.exec(p);
+          if (named) {
+            let raw: string;
+            try {
+              raw = decodeURIComponent(named[1]!);
+            } catch {
+              return json(res, 400, { error: 'bad name' });
+            }
+            const r = api.characterByHandle(players, raw);
+            return r ? json(res, 200, r) : json(res, 404, { error: 'not found' });
+          }
           const prof = /^\/api\/characters\/([0-9a-f]{16})$/.exec(p);
           if (prof) {
             const c = api.characterProfile(players, prof[1]!);

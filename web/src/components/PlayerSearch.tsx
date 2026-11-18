@@ -1,16 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { GAME } from "@/lib/game";
-import { roleAvatar } from "@/lib/avatar";
-import { doorVar } from "@/lib/md";
 import type { PlayerHit } from "@/lib/types";
+import { PlayerCard } from "./PlayerCard";
 
-const roleName = (id: string) => GAME.roles.find((r) => r.id === id);
-const iconOf = (id: string) => GAME.icons.find((i) => i.id === id);
-
-/** Character name search → cards linking to /players/<slug>. Empty query lists the newest characters. */
+/** Character name search → cards linking to /profile/<handle>. Empty query lists the newest characters. */
 export function PlayerSearch() {
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<PlayerHit[] | null>(null);
@@ -43,27 +37,9 @@ export function PlayerSearch() {
       {hits?.length === 0 && <p className="sub">ไม่พบตัวละครชื่อนี้</p>}
       <ul className="players-grid">
         {hits?.map((h) => {
-          const role = roleName(h.role);
-          const icon = iconOf(h.icon);
           return (
             <li key={h.slug}>
-              <Link href={`/players/${h.slug}`} className={`player-card ${h.fiend ? "fiend" : ""}`} style={{ "--door": doorVar(icon?.door ?? "red") } as React.CSSProperties}>
-                <span className="player-thumb">
-                  {(h.portraitUrl ?? roleAvatar(h.role)) ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={(h.portraitUrl ?? roleAvatar(h.role))!} alt="" loading="lazy" />
-                  ) : (
-                    <i>{h.name.slice(0, 1)}</i>
-                  )}
-                </span>
-                <span className="player-meta">
-                  <b>{h.name}</b>
-                  <small>
-                    Lv.{h.level} · {role ? `${role.emoji} ${role.name}` : h.role}
-                  </small>
-                  <small>{icon ? `${icon.emoji} ${icon.name}` : h.icon}{h.fiend ? " · Fiend" : ""}</small>
-                </span>
-              </Link>
+              <PlayerCard h={h} />
             </li>
           );
         })}

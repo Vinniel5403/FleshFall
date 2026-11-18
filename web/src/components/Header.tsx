@@ -4,17 +4,73 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { AUTH_EVENT, type AuthUser } from "@/lib/client";
 
 const NAV_ITEMS = [
   { href: "/players", label: "ผู้เล่น" },
 ];
-const CTA = { href: "/create", label: "✦ สร้างตัวละคร" };
+const CREATE = { href: "/create", label: "✦ สร้างตัวละคร" };
+const PROFILE = { href: "/profile", label: "โปรไฟล์" };
+const AUTH_CACHE = "ff:auth";
+
+/**
+ * Logged-in Discord user for the nav CTA: undefined = still checking (CTA hidden, no wrong-button flash).
+ * Cached in sessionStorage so page loads after the first paint the right button at once.
+ */
+function useAuthUser() {
+  const [user, setUser] = useState<AuthUser | null | undefined>(undefined);
+  useEffect(() => {
+    const keep = (u: AuthUser | null) => {
+      setUser(u);
+      try {
+        sessionStorage.setItem(AUTH_CACHE, JSON.stringify(u));
+      } catch {}
+    };
+    try {
+      const c = sessionStorage.getItem(AUTH_CACHE);
+      if (c) setUser(JSON.parse(c) as AuthUser | null);
+    } catch {}
+    let live = true;
+    fetch("/api/auth/session", { cache: "no-store" })
+      .then((r) => r.json() as Promise<{ user: AuthUser | null }>)
+      .then((d) => live && keep(d.user))
+      .catch(() => live && setUser((u) => (u === undefined ? null : u)));
+    const onAuth = (e: Event) => keep((e as CustomEvent<AuthUser | null>).detail);
+    window.addEventListener(AUTH_EVENT, onAuth);
+    return () => {
+      live = false;
+      window.removeEventListener(AUTH_EVENT, onAuth);
+    };
+  }, []);
+  return user;
+}
+
+function NavCta({ user, active, onClick, mobile }: { user: AuthUser | null | undefined; active: (h: string) => boolean; onClick?: () => void; mobile?: boolean }) {
+  if (user) {
+    return (
+      <Link href={PROFILE.href} onClick={onClick} className={`nav-me ${active(PROFILE.href) ? "on" : ""}`} aria-label={`โปรไฟล์ของ ${user.username}`}>
+        <span className="nav-me-avatar" aria-hidden="true">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {user.avatar ? <img src={user.avatar} alt="" width={28} height={28} /> : <i>{user.username.slice(0, 1).toUpperCase()}</i>}
+        </span>
+        <span className="nav-me-label">{PROFILE.label}</span>
+        {mobile && <span className="nav-me-name">{user.username}</span>}
+      </Link>
+    );
+  }
+  return (
+    <Link href={CREATE.href} onClick={onClick} className={`nav-cta ${active(CREATE.href) ? "on" : ""}${user === undefined ? " pending" : ""}`}>
+      {CREATE.label}
+    </Link>
+  );
+}
 
 /** Full-width bar over the art; its solid background fades in once you scroll. */
 const SCROLL_THRESHOLD = 40;
 
 export function Header() {
   const path = usePathname();
+  const user = useAuthUser();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -58,9 +114,7 @@ export function Header() {
             </li>
           ))}
           <li>
-            <Link href={CTA.href} className={`nav-cta ${active(CTA.href) ? "on" : ""}`}>
-              {CTA.label}
-            </Link>
+            <NavCta user={user} active={active} />
           </li>
         </ul>
 
@@ -97,9 +151,7 @@ export function Header() {
                 </li>
               ))}
               <li>
-                <Link href={CTA.href} onClick={close} className="nav-cta">
-                  {CTA.label}
-                </Link>
+                <NavCta user={user} active={active} onClick={close} mobile />
               </li>
             </ul>
           </motion.div>
