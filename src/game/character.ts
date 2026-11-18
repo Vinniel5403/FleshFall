@@ -1,4 +1,5 @@
 import { isDev } from './dev.js';
+import { feed } from './feed.js';
 import { balance } from '../config.js';
 import { db } from '../db/index.js';
 import { endTripSafe, inField, loseTrip, tripGain } from './expedition.js';
@@ -203,6 +204,12 @@ const MUTATIONS = [
   'ฟันซี่ใหม่ขึ้นที่ต้นคอ',
 ];
 
+/** Where a character is, for feed lines ("🗼 Paris"). */
+const zoneLabel = (char: Character) => {
+  const z = currentZone(char);
+  return `${z.emoji} ${z.name}`;
+};
+
 export function applyOutcome(char: Character, o: Outcome): AppliedOutcome {
   const m = mods(char.icon);
   const lines: string[] = [];
@@ -323,6 +330,7 @@ function changeSanity(char: Character, delta: number, crimson: boolean, lines: s
 function levelUp(char: Character, lines: string[]): void {
   const m = mods(char.icon);
   char.level += 1;
+  feed(char, 'level', `**${char.name}** เลเวลอัปเป็น **Lv.${char.level}**`);
   char.maxHp += 4;
   char.maxStamina += 1;
   char.hp = char.maxHp;
@@ -360,6 +368,7 @@ function knockOut(char: Character, lines: string[], now = Date.now()): void {
   delete char.run;
   delete char.pendingEvent;
   char.downed = { at: now, until: now + balance.downedMs, zone: currentZone(char).id };
+  feed(char, 'downed', `**${char.name}** ล้มหมดสติที่ ${zoneLabel(char)} — ใครอยู่เมืองเดียวกัน \`/wake\` ช่วยได้`);
   lines.push(
     `😵 **คุณล้มลงหมดสติ** กลางเมือง ${currentZone(char).name} — การล่า/ดันเจียนจบลง`,
     `-# ให้เพื่อนที่อยู่เมืองเดียวกันใช้ \`/wake\` ปลุก (ได้กลับบ้านพร้อมของรอบนี้) · ไม่มีใครมา = ฟื้นเองแล้วถูกลากกลับบ้าน <t:${Math.ceil(char.downed.until / 1000)}:R> (ของรอบนี้หาย)`,
@@ -369,6 +378,7 @@ function knockOut(char: Character, lines: string[], now = Date.now()): void {
 function startDying(char: Character, lines: string[], now = Date.now()): void {
   char.hp = 0;
   char.dying = { at: now, zone: currentZone(char).id };
+  feed(char, 'dying', `**${char.name}** ร่างแหลกเหลวที่ ${zoneLabel(char)} — กำลังจะตาย`);
   const n = itemCount(char, 'placenta');
   lines.push(
     `🩸 **ร่างของคุณแหลกเหลว...** เมืองระดับนี้ไม่มีใครมาปลุกคุณได้`,
@@ -412,6 +422,7 @@ export function wakeUp(target: Character, by: Character, now = Date.now()): Wake
   if (!isDev(by) && (by.traveling || by.location !== 'old_realm' || currentZone(by).id !== target.downed.zone)) {
     return { ok: false, error: `ต้องอยู่เมืองเดียวกับ ${target.name} ถึงจะปลุกได้` };
   }
+  feed(by, 'rescue', `**${by.name}** ปลุก **${target.name}** ที่ ${zoneLabel(by)} ขึ้นมาได้`);
   delete target.downed;
   target.hp = Math.max(1, Math.ceil(target.maxHp * 0.3));
   const lines = [`🤝 **${by.name}** เขย่าร่างของ **${target.name}** จนได้สติ (🩸 ${target.hp}/${target.maxHp})`];
@@ -443,6 +454,7 @@ export function resolveFall(char: Character, now = Date.now()): void {
 
 function die(char: Character, lines: string[]): void {
   const m = mods(char.icon);
+  feed(char, 'death', `**${char.name}** ตายที่ ${zoneLabel(char)}${char.trip && Object.keys(char.trip.loot).length ? ' — ของทั้งรอบหายหมด' : ''}`);
   char.deaths += 1;
   delete char.run;
   delete char.pendingEvent;
@@ -469,6 +481,7 @@ function die(char: Character, lines: string[]): void {
 
 function breakdown(char: Character, lines: string[]): void {
   char.breakdowns += 1;
+  feed(char, 'breakdown', `**${char.name}** สติแตกกรีดร้องวิ่งหนีที่ ${zoneLabel(char)}`);
   delete char.run;
   delete char.pendingEvent;
   const droppable = Object.keys(char.inventory).filter((id) => id !== char.equipped.weapon && id !== char.equipped.armor);
@@ -482,6 +495,7 @@ function breakdown(char: Character, lines: string[]): void {
 
 function becomeFiend(char: Character, lines: string[]): void {
   char.fiend = true;
+  feed(char, 'fiend', `**${char.name}** สูญสิ้นความเป็นมนุษย์ กลายเป็น Fiend แห่ง ${ICONS[char.icon].name}`);
   char.humanity = 0;
   delete char.trip;
   delete char.buff;

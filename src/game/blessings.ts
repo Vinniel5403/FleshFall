@@ -9,6 +9,7 @@
  */
 import { balance } from '../config.js';
 import { isDev } from './dev.js';
+import { feed } from './feed.js';
 import { ICON_BY_DOOR, ICONS } from './icons.js';
 import type { Character, IconDoor, IconId, StatKey } from './types.js';
 import { CONTINENTS, currentZone } from './zones.js';
@@ -51,6 +52,7 @@ export function receiveBlessing(char: Character, door: IconDoor): string[] {
     char.blessings = { ...char.blessings, [icon.id]: before + gain };
     const perk = BLESSING_PERK[icon.id];
     for (let n = 0; n < gain; n++) perk.apply(char);
+    feed(char, 'shrine', `**${char.name}** ได้รับพรของ ${icon.emoji} ${icon.name} ขั้น ${before + gain}/${MAX_BLESSING}`);
     lines.push(`✨ **พรของ ${icon.name}** ขั้น ${before} → **${before + gain}**/${MAX_BLESSING} (${perk.label}${gain > 1 ? ` ×${gain}` : ''})`);
     if (follower) lines.push(`-# ผู้ศรัทธาของ ${icon.name} ได้พรเป็นสองเท่า`);
   } else {

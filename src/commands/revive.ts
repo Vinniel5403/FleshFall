@@ -1,6 +1,7 @@
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { itemCount, loadCharacter, removeItem, saveCharacter } from '../game/character.js';
 import { isDev } from '../game/dev.js';
+import { feed } from '../game/feed.js';
 import { COLORS, resultEmbed } from '../ui.js';
 import { syncMember } from '../zoneRoles.js';
 import type { Command } from './types.js';
@@ -28,6 +29,7 @@ export const revive: Command = {
 
     if (!god) removeItem(me, 'sophia_rite');
     friend.fiend = false;
+    feed(me, 'rescue', `**${me.name}** ประกอบพิธีของ Sophia ชุบชีวิต **${friend.name}** กลับจากการเป็น Fiend`);
     friend.humanity = 25;
     friend.sanity = Math.max(friend.sanity, 40);
     friend.hp = Math.ceil(friend.maxHp / 2);

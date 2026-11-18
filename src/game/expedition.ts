@@ -9,6 +9,7 @@
  * Pure data helpers — no imports from character.ts (zones.ts uses this on arrival).
  */
 import { itemLabel } from './items.js';
+import { feed } from './feed.js';
 import type { Character } from './types.js';
 
 /** Loot bonus per streak step, and where it stops growing. */
@@ -66,6 +67,8 @@ export function endTripSafe(char: Character): string[] {
   const items = Object.entries(t?.loot ?? {});
   for (const [id, n] of items) char.inventory[id] = (char.inventory[id] ?? 0) + n;
   if (!items.length) return [];
+  const total = items.reduce((s, [, n]) => s + n, 0);
+  feed(char, 'home', `**${char.name}** กลับถึง Rouge Land พร้อมของ ${total} ชิ้น${t!.streak ? ` (ล่าติดกัน ${t!.streak} รอบ)` : ''}`);
   const text = `📦 **กลับถึงบ้าน — ได้ของจากรอบสำรวจนี้ ${items.reduce((s, [, n]) => s + n, 0)} ชิ้น** (ล่าติดกัน ${t!.streak} รอบ): ${items.map(([id, n]) => itemLabel(id, n)).join(', ')}`;
   char.banked = { text, at: Date.now() };
   return [text];

@@ -6,6 +6,7 @@
 import { gearDef, statMod } from './character.js';
 import { d20Success, levelDC, type DiceRoll } from './dice.js';
 import { rand } from './engine.js';
+import { feed } from './feed.js';
 import type { Character } from './types.js';
 
 export type DuelAction = 'hit' | 'smash' | 'guard';
@@ -141,6 +142,7 @@ export function duelAct(d: Duel, action: DuelAction): DuelStep {
 
   if (foe.hp <= 0) {
     d.winner = d.turn;
+    feed({ userId: me.id, name: me.name }, 'duel', `**${me.name}** ดวลชนะ **${foe.name}**`);
     lines.push(`🏆 **${me.name}** ชนะการดวล! **${foe.name}** นอนกองกับพื้น`);
   } else {
     d.turn = d.turn === 0 ? 1 : 0;

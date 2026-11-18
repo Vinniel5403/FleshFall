@@ -14,6 +14,7 @@ import { handleDuelButton } from './interactions/duel.js';
 import { handlePanelButton, handlePanelSelect } from './interactions/panels.js';
 import { handleMarketModal } from './interactions/market.js';
 import { proxyEnabled, startProxy } from './rpProxy.js';
+import { startFeed } from './feed.js';
 
 /** Kick members who join without a website character (needs the privileged Server Members intent). */
 const REQUIRE_CHARACTER = process.env.REQUIRE_CHARACTER === '1';
@@ -46,6 +47,7 @@ client.once(Events.ClientReady, (c) => {
   console.log(`🩸 FleshFall online as ${c.user.tag}`);
   void startZoneSync(c);
   startProxy(c);
+  void startFeed(c);
 });
 
 /** Role name that grants god mode (env GOD_ROLE, default "Dev"). */

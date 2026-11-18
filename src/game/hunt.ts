@@ -1,4 +1,5 @@
 import { isDev } from './dev.js';
+import { feed } from './feed.js';
 /**
  * Zone hunting: spawn 3 monsters, fight turn by turn, collect raw meat / loot / XP.
  * Lucky hunts reveal a dungeon door after victory.
@@ -197,6 +198,7 @@ function rollLoot(char: Character, h: Hunt, m: MonsterState): string[] {
     const n = Math.max(1, Math.round((d.qty ? rand(d.qty[0], d.qty[1]) : 1) * mult));
     gainItem(char, d.item, n);
     h.loot[d.item] = (h.loot[d.item] ?? 0) + n;
+    if (d.chance < 0.1 && d.item !== 'hunted_flesh') feed(char, 'rare', `**${char.name}** ได้ ${itemLabel(d.item, n)} จาก ${def.name}!`);
     got.push(itemLabel(d.item, n));
   }
   h.xp += Math.round(def.xp * t.xpMul);
@@ -207,6 +209,12 @@ function finishIfWon(char: Character, h: Hunt, lines: string[]): RoundResult['en
   if (alive(h).length > 0) return undefined;
   h.won = true;
   bumpStreak(char);
+  {
+    const z = getZone(h.zone);
+    const names = [...new Set(h.monsters.map((m) => getMonster(m.id)?.name ?? m.id))].join(', ');
+    const streak = char.trip?.streak ?? 0;
+    feed(char, 'hunt', `**${char.name}** ล่า ${names} ที่ ${z ? `${z.emoji} ${z.name}` : h.zone} สำเร็จ${streak > 1 ? ` (ติดกัน ${streak})` : ''}`, h.zone);
+  }
   const a = applyOutcome(char, { text: '', xp: h.xp });
   lines.push('', `🏆 **กำจัดได้ทั้งหมด!**`, ...a.lines);
   if (h.door) lines.push(`\n${DOORS[h.door].emoji} **ท่ามกลางซากศพ มี${DOORS[h.door].name}ปรากฏขึ้น...**`);

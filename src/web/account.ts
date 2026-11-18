@@ -8,6 +8,7 @@ import { db } from '../db/index.js';
 import { createCharacter, loadCharacter, saveCharacter } from '../game/character.js';
 import { ICONS } from '../game/icons.js';
 import { ROLES } from '../game/roles.js';
+import { feed } from '../game/feed.js';
 import type { IconId, RoleId } from '../game/types.js';
 
 /** Discord side, injected by index.ts so this file stays Discord-free. */
@@ -61,6 +62,7 @@ export async function createAccount(gate: GuildGate, userId: string, b: Record<s
   if (existing && !existing.fiend) return fail(409, 'บัญชีนี้มีตัวละครอยู่แล้ว');
   const evicted = [...(existing?.images ?? []).map((i) => i.key), ...spriteKeys(existing?.sprite)];
   const char = createCharacter(userId, name, b.role as RoleId, b.icon as IconId);
+  feed(char, 'newcomer', `**${char.name}** ${ROLES[char.role].emoji} ${ROLES[char.role].name} ${existing ? 'ลุกขึ้นมาจากซากเดิม เริ่มชีวิตใหม่' : 'ก้าวเข้าสู่โลก Fleshfall'}`);
   // saved — now it's safe to await
   const inGuild = await joinSafe(gate, userId, b.accessToken);
   return ok({ character: view(char), inGuild, guildId: gate.guildId, evicted });

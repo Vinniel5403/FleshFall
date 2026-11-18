@@ -1,6 +1,7 @@
 import { applyOutcome, changeHumanity, itemCount, removeItem, statMod, stopped, type AppliedOutcome } from './character.js';
 import { EVENTS, EVENTS_BY_ID } from './events/index.js';
 import { rollIconDungeon, receiveBlessing } from './blessings.js';
+import { feed } from './feed.js';
 import { d20Success, type DiceRoll } from './dice.js';
 import { ICON_BY_DOOR, mods } from './icons.js';
 import type { Character, EventChoice, EventContext, GameEventDef, IconDoor, Outcome } from './types.js';
@@ -194,6 +195,7 @@ export function exitDungeon(char: Character, choice: ExitChoice): DungeonStep {
   delete char.run;
   delete char.pendingEvent;
   char.dungeonsCleared += 1;
+  feed(char, 'dungeon', `**${char.name}** ผ่าน${DOORS[run.door].emoji} ${DOORS[run.door].name}${run.icon ? ' (ดันเจียน Icon)' : ''} ออกทาง${choice === 'black' ? 'ประตูดำ' : choice === 'red' ? 'ประตูแดงสู่ Cypress Isle' : `ศาลของ ${ICON_BY_DOOR[run.door].name}`}`);
   let o: Outcome;
   if (choice === 'black') {
     o = { text: '', xp: 10, travel: 'old_realm' };

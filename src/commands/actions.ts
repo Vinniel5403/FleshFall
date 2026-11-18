@@ -1,4 +1,5 @@
 import { isDev } from '../game/dev.js';
+import { feed } from '../game/feed.js';
 /**
  * Shared player actions used by both slash commands and menu-panel buttons.
  * Each returns an ActionResult; callers decide reply vs update and visibility.
@@ -522,6 +523,7 @@ export function mergeGear(char: Character): ActionResult {
   (char.gearMerged ??= {})[m.id] = m.copies + m.take;
   saveCharacter(char);
   const up = m.next > m.bonus;
+  if (up) feed(char, 'forge', `**${char.name}** หลอม ${itemLabel(m.id)} รวม ×${m.copies + m.take} (ดาเมจ +${m.next})`);
   return done(
     resultEmbed(
       char,
@@ -560,6 +562,7 @@ export function upgradeGear(char: Character, slot: GearSlot): ActionResult {
   char.flesh -= c.flesh;
   if (!god) for (const [it, n] of Object.entries(c.items)) removeItem(char, it, n);
   (char.gearLevels ??= {})[id] = lv + 1;
+  if (lv + 1 >= MAX_GEAR_LEVEL) feed(char, 'forge', `**${char.name}** ตี ${itemLabel(id)} จนถึง **+${MAX_GEAR_LEVEL}** เต็มขั้น`);
   saveCharacter(char);
   return done(resultEmbed(char, `⚒️ ${itemLabel(id)} +${lv + 1}`, ['ค้อนกระดูกกระทบโลหะ เสียงกรีดร้องเบา ๆ ดังออกมาจากตัวอาวุธ'], COLORS.bone));
 }
