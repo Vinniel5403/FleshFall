@@ -33,13 +33,14 @@ const loadImg = (url: string) =>
 
 /** Where the character first stands (fraction of the room width) — just right of the door. */
 const START_X = 0.2;
-/** Drag near the left/right edge of a zoomed-in room → the camera pans (fraction of the view width). */
-const EDGE = 0.1;
+/** Camera follow rate (1/s): locked on the doll with a little lag. While held, holding it off-centre scrolls the room. */
+const CAM_FOLLOW = 3;
 
 /**
  * A private room: side-view background, furniture stickers, and the player's paper doll standing on the floor.
  * Grab the doll (head / torso / hips / hands, same physics as the sprite preview) and drop or throw it anywhere —
  * it stays where it lands. Narrow screens show part of the room; the camera follows the doll.
+ * ⛶ preview = fullscreen overlay: room height = viewport height, side-scrolling.
  */
 export function RoomStage({ layout, rig, src, label, edit }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -48,6 +49,20 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
   const [sprite, setSprite] = useState<Map<string, HTMLImageElement> | null>(null);
   const stickers = useRef(new Map<string, HTMLImageElement>());
   const [failed, setFailed] = useState(false);
+  const [full, setFull] = useState(false);
+
+  // fullscreen preview: Esc closes, page doesn't scroll underneath
+  useEffect(() => {
+    if (!full) return;
+    const key = (e: KeyboardEvent) => e.key === "Escape" && setFull(false);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", key);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", key);
+    };
+  }, [full]);
   const bones = useMemo(() => buildSkeleton(rig), [rig]);
   const extent = useMemo(() => {
     const top = Math.min(...rig.parts.map((p) => p.y));
@@ -233,7 +248,8 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
       if (!still) step(p, bones, dt, { w: rig.width, h: rig.height }, { home: false, bounds });
       if (!still && !live.current.edit) stepWander(w, p, dt, { bounds, height: extent.h });
 
-      // --- camera: follows the doll; frozen while it's held (else the room slides under the pointer), edge-pans instead ---
+      // --- camera: side-scroll locked on the doll with a little lag (also while held: the doll stays under the pointer,
+      // so holding it towards an edge keeps scrolling that way until the wall) ---
       const roomW = tpl.w * (H / tpl.h);
       const k = roomW / roomRig;
       const dollX = (anchorRig + p.x) * k; // doll centre in room px
@@ -243,12 +259,7 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
         cam = null;
       } else {
         const want = Math.max(0, Math.min(roomW - W, dollX - W / 2));
-        if (cam === null) cam = want;
-        else if (p.grabbed) {
-          const edge = W * EDGE;
-          const pan = pointerX < edge ? -(edge - pointerX) / edge : pointerX > W - edge ? (pointerX - (W - edge)) / edge : 0;
-          cam = Math.max(0, Math.min(roomW - W, cam + pan * W * 0.9 * dt));
-        } else cam += (want - cam) * Math.min(1, dt * 4);
+        cam = cam === null ? want : Math.max(0, Math.min(roomW - W, cam + (want - cam) * Math.min(1, dt * CAM_FOLLOW)));
         offX = -cam;
       }
       const oy = floorY * H - extent.bottom * k;
@@ -292,10 +303,13 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
 
   if (!tpl) return <p className="sub">ยังไม่มีเทมเพลตห้อง</p>;
   return (
-    <div className="room-stage" style={{ aspectRatio: `${tpl.w} / ${tpl.h}` }}>
+    <div className={`room-stage${full ? " full" : ""}`} style={full ? undefined : { aspectRatio: `${tpl.w} / ${tpl.h}` }}>
       <canvas ref={canvas} role="img" aria-label={label ?? `ห้อง ${tpl.name}`} />
       {(!bg || !sprite) && <span className="sprite-note">{failed ? "โหลดห้องไม่สำเร็จ" : "กำลังโหลด…"}</span>}
       <span className="room-hint">จับตัวละครลากหรือโยนได้</span>
+      <button type="button" className="room-full" onClick={() => setFull((f) => !f)} aria-label={full ? "ปิดโหมดเต็มจอ" : "ดูห้องเต็มจอ"}>
+        {full ? "✕ ปิด" : "⛶ เต็มจอ"}
+      </button>
     </div>
   );
 }

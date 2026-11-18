@@ -21,6 +21,10 @@ export const balance = {
   /** Travel time between zones. Override with env TRAVEL_MINUTES (e.g. 1 for testing). */
   travelMs: Number(process.env.TRAVEL_MINUTES ?? 30) * 60_000,
   huntStaminaCost: 2,
+  /** Monster hits: sanity / Miasma per hit is multiplied by this (min 1). Was 1 — playtesters found sanity draining too fast. */
+  huntSanityMult: 0.5,
+  /** Passive sanity regen per stamina tick (5 min) while safe in Rouge Land. */
+  homeSanityRegen: 1,
   /** Chance a hunt reveals a dungeon door after victory. */
   huntDoorChance: 0.2,
   /** Chance a dungeon is an Icon dungeon (shrine at the end): continent's main color / elsewhere. */

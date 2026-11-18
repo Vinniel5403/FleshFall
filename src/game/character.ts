@@ -84,6 +84,8 @@ export function regen(char: Character, now = Date.now()): void {
   const m = mods(char.icon);
   char.stamina = Math.min(char.maxStamina, char.stamina + ticks * (m.staminaRegenMult ?? 1));
   if (m.hpRegenPerTick) char.hp = Math.min(char.maxHp, char.hp + ticks * m.hpRegenPerTick);
+  // the mind settles at home (not on the road, not in the field)
+  if (char.location === 'rouge_land' && !char.traveling) char.sanity = Math.min(100, char.sanity + ticks * balance.homeSanityRegen);
 }
 
 // ---------- inventory ----------

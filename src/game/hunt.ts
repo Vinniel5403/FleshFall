@@ -5,11 +5,11 @@ import { feed } from './feed.js';
  * Lucky hunts reveal a dungeon door after victory.
  */
 import { balance } from '../config.js';
-import { applyOutcome, gainItem, gearAtk, mergeDmg, statMod, stopped, type AppliedOutcome } from './character.js';
+import { applyOutcome, consume, gainItem, gearAtk, mergeDmg, statMod, stopped, type AppliedOutcome } from './character.js';
 import { bumpStreak, lootMult, rareBonus, streakDmg, streakMiasma } from './expedition.js';
 import { chance, rand, startRun } from './engine.js';
 import { d20Success, levelDC, type DiceRoll } from './dice.js';
-import { itemLabel } from './items.js';
+import { getItem, itemLabel } from './items.js';
 import type { Character, Hunt, IconDoor, MonsterState, Outcome } from './types.js';
 import { DOORS, DUNGEON_RULES, isCrimsonMoon } from './world.js';
 import { currentZone, getZone, zoneTier, type TierDef, type ZoneDef } from './zones.js';
@@ -177,8 +177,9 @@ function monstersAttack(char: Character, h: Hunt): { lines: string[]; applied?: 
     let dmg = rand(def.dmg[0], def.dmg[1]) + t.dmgAdd + streakDmg(char);
     if (crimson) dmg = Math.ceil(dmg * 1.3);
     const o: Outcome = { text: '', hp: -dmg };
-    if (def.miasma) o.miasma = def.miasma;
-    if (def.sanity) o.sanity = -def.sanity;
+    const soft = (n: number) => Math.max(1, Math.round(n * balance.huntSanityMult));
+    if (def.miasma) o.miasma = soft(def.miasma);
+    if (def.sanity) o.sanity = -soft(def.sanity);
     const a = applyOutcome(char, o);
     lines.push(`${nameOf(m)} โจมตี! ${a.lines.join(' ')}`);
     if (stopped(a)) return { lines, applied: a };
@@ -261,6 +262,31 @@ export function attack(char: Character, idx: number): RoundResult {
   const back = monstersAttack(char, h);
   lines.push(...back.lines);
   return { lines, applied: back.applied, ended: endIfFallen(char, back.applied), dice };
+}
+
+/** Consumables in the inventory that can be used mid-fight (trip loot isn't usable until home). */
+export function huntUsable(char: Character): { id: string; qty: number }[] {
+  return Object.entries(char.inventory)
+    .filter(([id, n]) => n > 0 && getItem(id)?.type === 'consumable')
+    .map(([id, qty]) => ({ id, qty }));
+}
+
+/** Spend the turn on an item instead of attacking (heal / stamina / sanity / meal buff), then survivors strike back. */
+export function useInHunt(char: Character, itemId: string): RoundResult {
+  const h = char.hunt;
+  if (char.dying) return { lines: ['🩸 คุณกำลังจะตาย — เลือก 🥚 ใช้รกคืนชีพ หรือ ☠️ ยอมตาย ก่อน'], ended: 'dying' };
+  if (!h || h.won || alive(h).length === 0) return { lines: ['การต่อสู้จบไปแล้ว'] };
+  const got = consume(char, itemId);
+  if (!got) return { lines: ['ใช้ไม่ได้ หรือไม่มีของชิ้นนี้ในกระเป๋า'] };
+  const lines = [`🎒 ใช้ ${itemLabel(itemId)} แทนการโจมตี${got.length ? ` — ${got.join(' ')}` : ''}`];
+  if (char.fiend) {
+    // e.g. raw flesh at rock-bottom humanity: the hunt is over, you are the monster now
+    delete char.hunt;
+    return { lines, ended: 'died' };
+  }
+  const back = monstersAttack(char, h);
+  lines.push(...back.lines);
+  return { lines, applied: back.applied, ended: endIfFallen(char, back.applied) };
 }
 
 // No fleeing: a hunt ends when every monster is dead — or you are.

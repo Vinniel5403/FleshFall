@@ -131,6 +131,13 @@
   position: absolute; right: 10px; bottom: 8px; padding: 2px 8px; background: rgba(5, 3, 3, .55); color: var(--muted);
   font-size: 12px; pointer-events: none;
 }
+.room-full {
+  position: absolute; top: 10px; right: 10px; padding: 5px 12px; border-radius: 0; font-size: 13px;
+  background: rgba(5, 3, 3, .65); border: 1px solid rgba(230, 184, 162, .35); color: var(--flesh);
+}
+.room-full:hover { border-color: var(--crimson); box-shadow: none; }
+/* fullscreen preview: room height = viewport height, side-scroll */
+.room-stage.full { position: fixed; inset: 0; z-index: 1000; width: 100vw; height: 100dvh; min-height: 0; max-height: none; background: #050303; }
 @media (max-width: 560px) { .room-hint { display: none; } }
 .room-edit { display: grid; gap: 14px; }
 .room-tools { display: grid; gap: 12px; }

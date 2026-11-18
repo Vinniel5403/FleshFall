@@ -1,13 +1,14 @@
 /**
- * Hunt UI. customId: hn:<userId>:<atk|door|leave|again|home>[:<idx>] — no fleeing: kill them all or fall.
+ * Hunt UI. customId: hn:<userId>:<atk|bag|back|door|leave|again|home>[:<idx>] — no fleeing: kill them all or fall.
+ * Item picker select: hns:<userId> (using an item spends the turn).
  * Hunts usually live on ephemeral messages, so everything is i.update.
  */
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, type ButtonInteraction, type RepliableInteraction } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, StringSelectMenuBuilder, type ButtonInteraction, type RepliableInteraction, type StringSelectMenuInteraction } from 'discord.js';
 import { loadCharacter, saveCharacter } from '../game/character.js';
-import { attack, enterHuntDoor, getMonster, leaveHunt, startHunt } from '../game/hunt.js';
+import { attack, enterHuntDoor, getMonster, huntUsable, leaveHunt, startHunt, useInHunt, type RoundResult } from '../game/hunt.js';
 import { fallRow } from './fallRow.js';
 import { inField, streakOf, streakText, tripSize } from '../game/expedition.js';
-import { itemLabel } from '../game/items.js';
+import { getItem, itemLabel } from '../game/items.js';
 import type { Character } from '../game/types.js';
 import { DOORS } from '../game/world.js';
 import { currentZone, getZone, tierLabel } from '../game/zones.js';
@@ -96,7 +97,53 @@ export function huntButtons(char: Character): ActionRowBuilder<ButtonBuilder>[] 
     .map((m, idx) => ({ m, idx }))
     .filter(({ m }) => m.hp > 0)
     .map(({ m, idx }) => btn(uid, `atk:${idx}`, `${idx + 1}. ${getMonster(m.id)?.name ?? m.id}`.slice(0, 80), ButtonStyle.Danger, '⚔️'));
-  return [new ActionRowBuilder<ButtonBuilder>().addComponents(...attacks)];
+  const usable = huntUsable(char).length;
+  return [
+    new ActionRowBuilder<ButtonBuilder>().addComponents(...attacks),
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      btn(uid, 'bag', usable ? `ใช้ไอเท็ม (เสียเทิร์น)` : 'ไม่มีไอเท็มที่ใช้ได้', ButtonStyle.Secondary, '🎒').setDisabled(!usable),
+    ),
+  ];
+}
+
+/** Item picker in place of the attack buttons: consumables from the inventory (max 25) + back. */
+function bagRows(char: Character): ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[] {
+  const opts = huntUsable(char)
+    .slice(0, 25)
+    .map(({ id, qty }) => {
+      const d = getItem(id)!;
+      const fx = [d.heal && `🩸+${d.heal}`, d.stamina && `⚡+${d.stamina}`, d.sanity && `🧠+${d.sanity}`, d.humanity && `🫀${d.humanity > 0 ? '+' : ''}${d.humanity}`, d.buff && '🍽️ บัฟ']
+        .filter(Boolean)
+        .join(' ');
+      return { label: `${d.name} ×${qty}`.slice(0, 100), value: id, emoji: d.emoji, description: (fx || d.description || '').slice(0, 100) || undefined };
+    });
+  return [
+    new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+      new StringSelectMenuBuilder().setCustomId(`hns:${char.userId}`).setPlaceholder('🎒 เลือกไอเท็ม — ใช้แล้วมอนสเตอร์จะโจมตีสวน').addOptions(opts),
+    ),
+    new ActionRowBuilder<ButtonBuilder>().addComponents(btn(char.userId, 'back', 'กลับไปสู้', ButtonStyle.Secondary, '⚔️')),
+  ];
+}
+
+/** Shared tail of a combat turn (attack or item): save, end text, dice, final card. */
+async function showRound(i: ButtonInteraction | StringSelectMenuInteraction, char: Character, r: RoundResult): Promise<unknown> {
+  saveCharacter(char);
+  const lines = [...r.lines];
+  if (r.ended === 'died') lines.push('', '-# การล่าจบลง');
+  // after death/downed/Fiend the hunt is gone; dying keeps it and shows 🥚/☠️ (huntButtons handles both)
+  const components = r.ended === 'died' ? [] : huntButtons(char);
+  await i.deferUpdate();
+  const final = huntPayload(char, lines, r.ended); // renders while the die rolls
+  if (r.dice && i.isButton()) await playDice(i, [r.dice], COLORS.blood);
+  return i.editReply({ ...(await final), components });
+}
+
+export async function handleHuntSelect(i: StringSelectMenuInteraction): Promise<unknown> {
+  const [, ownerId] = i.customId.split(':');
+  if (i.user.id !== ownerId) return i.reply({ content: 'นี่ไม่ใช่การล่าของคุณ', flags: MessageFlags.Ephemeral });
+  const char = loadCharacter(i.user.id);
+  if (!char || char.fiend || !char.hunt) return i.update({ components: [] });
+  return showRound(i, char, useInHunt(char, i.values[0] ?? ''));
 }
 
 /** Start (or resume) a hunt from a zone panel. Replies ephemerally. */
@@ -160,15 +207,12 @@ export async function handleHuntButton(i: ButtonInteraction): Promise<unknown> {
     return i.editReply({ ...(await huntPayload(char, ['🚶 คุณหันหลังให้ประตู มันค่อย ๆ จางหายไปในหมอก'])), components: huntButtons(char) });
   }
 
+  if (action === 'bag') {
+    if (char.hunt.won || char.dying || !huntUsable(char).length) return i.update({ components: huntButtons(char) });
+    return i.update({ components: bagRows(char) });
+  }
+  if (action === 'back') return i.update({ components: huntButtons(char) });
+
   if (action !== 'atk') return i.update({ components: huntButtons(char) }); // old 🏃 flee buttons
-  const r = attack(char, Number(arg));
-  saveCharacter(char);
-  const lines = [...r.lines];
-  if (r.ended === 'died') lines.push('', '-# การล่าจบลง');
-  // after death/downed/Fiend the hunt is gone; dying keeps it and shows 🥚/☠️ (huntButtons handles both)
-  const components = r.ended === 'died' ? [] : huntButtons(char);
-  await i.deferUpdate();
-  const final = huntPayload(char, lines, r.ended); // renders while the die rolls
-  await playDice(i, r.dice && [r.dice], COLORS.blood);
-  return i.editReply({ ...(await final), components });
+  return showRound(i, char, attack(char, Number(arg)));
 }

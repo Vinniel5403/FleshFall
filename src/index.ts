@@ -8,7 +8,7 @@ import { startApi } from './web/server.js';
 import type { GuildGate } from './web/account.js';
 import { loadCharacter } from './game/character.js';
 import { handleDungeonButton, handleEventButton } from './interactions/buttons.js';
-import { handleHuntButton } from './interactions/hunt.js';
+import { handleHuntButton, handleHuntSelect } from './interactions/hunt.js';
 import { handleFallButton } from './interactions/fall.js';
 import { handleDuelButton } from './interactions/duel.js';
 import { handlePanelButton, handlePanelSelect } from './interactions/panels.js';
@@ -76,6 +76,7 @@ client.on(Events.InteractionCreate, async (i: Interaction) => {
       else if (i.customId.startsWith('du:')) await handleDuelButton(i);
     } else if (i.isStringSelectMenu()) {
       if (i.customId.startsWith('pns:')) await handlePanelSelect(i);
+      else if (i.customId.startsWith('hns:')) await handleHuntSelect(i);
     } else if (i.isModalSubmit()) {
       if (i.customId.startsWith('pnm:')) await handleMarketModal(i);
     }

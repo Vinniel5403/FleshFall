@@ -323,11 +323,11 @@ export function restAction(char: Character): ActionResult {
   if (char.location === 'old_realm') {
     // sleep isn't needed here; body doesn't recover
     o.stamina = Math.ceil(char.maxStamina * 0.4 * mult);
-    o.sanity = 5;
+    o.sanity = 8;
     flavor.push('ใน Old Realm การนอนไม่จำเป็น ร่างกายไม่ฟื้นฟู... แต่อย่างน้อยก็ได้หยุดวิ่ง');
   } else {
     o.stamina = Math.ceil(char.maxStamina * 0.5 * mult);
-    o.sanity = 10;
+    o.sanity = 20;
     if (m.noNaturalHeal) flavor.push('💀 ร่างของสาวก Thanatos ไม่ฟื้นฟูเอง — ต้องใช้ยา');
     else o.hp = Math.ceil(char.maxHp * 0.5 * mult);
     flavor.push(char.location === 'rouge_land' ? 'คุณนอนในห้องพักสไตล์นีโอคลาสสิก กลิ่นเนื้อสดลอยมาจากโถงทางเดิน' : 'คุณพักพิงซากเสาหินกรีก ฟังเสียงคลื่นข้นเหมือนเลือด');

@@ -38,7 +38,7 @@ export const lootMult = (char: Character) => 1 + STREAK_LOOT_STEP * Math.min(str
 /** Extra chance added to rare drops (base chance < 30%). */
 export const rareBonus = (char: Character) => 0.03 * Math.min(streakOf(char), STREAK_CAP);
 /** Miasma breathed in when starting another hunt this deep into a round. */
-export const streakMiasma = (char: Character) => (streakOf(char) >= 2 ? 2 * (streakOf(char) - 1) : 0);
+export const streakMiasma = (char: Character) => (streakOf(char) >= 2 ? streakOf(char) - 1 : 0);
 /** Extra monster damage. */
 export const streakDmg = (char: Character) => Math.floor(Math.min(streakOf(char), STREAK_CAP) / 2);
 
