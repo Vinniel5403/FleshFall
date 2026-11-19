@@ -65,7 +65,7 @@ function drawRuler(ctx: CanvasRenderingContext2D, w: number, floorY: number, pxP
   ctx.restore();
 }
 
-/** Animated paper-doll (Canvas2D). Idle loop from lib/rig; static when reduced motion is on. */
+/** Animated paper-doll (Canvas2D). Idle loop from lib/rig; reduced motion = no idle loop, but it can still be grabbed. */
 export function SpriteStage({ rig, src, className, label, debug, heightCm }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [images, setImages] = useState<Mips | null>(null);
@@ -139,7 +139,7 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
       return toRig.current((e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr);
     };
     const down = (e: PointerEvent) => {
-      if (still || active !== null || e.button !== 0) return;
+      if (active !== null || e.button !== 0) return;
       const [x, y] = local(e);
       const part = hitPart(p, bones, x, y);
       if (!part) return;
@@ -150,6 +150,7 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
       } catch {} // pointer already gone
       grab(p, x, y, part, bones);
       cv.style.cursor = "grabbing";
+      kick(); // reduced motion: the loop is asleep until grabbed
     };
     const move = (e: PointerEvent) => {
       if (active !== null && e.pointerId !== active) return;
@@ -159,7 +160,7 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
         p.tx = Math.max(l, Math.min(r, x));
         p.ty = Math.max(t, Math.min(b, y));
       }
-      else cv.style.cursor = !still && hitPart(p, bones, x, y) ? "grab" : "";
+      else cv.style.cursor = hitPart(p, bones, x, y) ? "grab" : "";
     };
     const up = (e: PointerEvent) => {
       if (e.pointerId !== active) return;
@@ -205,19 +206,22 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
       ruler?.();
       images.fit(s / carryZoom); // not the carry zoom: no re-bake mid-grab
       ctx.imageSmoothingQuality = "medium";
-      const t = (now - start) / 1000;
+      // reduced motion: idle loop frozen at t = 0 (no breathing/blinking); grab physics still runs — the user moves it
+      const t = still ? 0 : (now - start) / 1000;
       const view: M = [s, 0, 0, s, ox, oy];
       toRig.current = (cx, cy) => [(cx - ox) / s, (cy - oy) / s];
       frameBox.current = [...toRig.current(0, 0), ...toRig.current(w, h)];
-      if (!still && !settled(p)) step(p, bones, (now - last) / 1000, { w: rig.width, h: rig.height });
+      if (!settled(p)) step(p, bones, (now - last) / 1000, { w: rig.width, h: rig.height });
       last = now;
       const v = mul(view, bodyMatrix(p));
-      drawRig(ctx, rig, bones, images, t, v, !still, { pose, eyesShut: squinting(p), onTop: onTopParts(p, bones) });
-      if (debug) drawDebug(ctx, rig, bones, t, v, !still, pose);
-      if (!still && visible) raf = requestAnimationFrame(frame);
+      drawRig(ctx, rig, bones, images, t, v, true, { pose, eyesShut: squinting(p), onTop: onTopParts(p, bones) });
+      if (debug) drawDebug(ctx, rig, bones, t, v, true, pose);
+      if (visible && (!still || !settled(p))) raf = requestAnimationFrame(frame);
     };
     const kick = () => {
-      if (!raf) raf = requestAnimationFrame(frame);
+      if (raf) return;
+      last = performance.now(); // don't simulate the time spent asleep
+      raf = requestAnimationFrame(frame);
     };
     kick();
     // size from the observer (no layout read per frame); also redraws the single reduced-motion frame on resize

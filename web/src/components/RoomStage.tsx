@@ -188,7 +188,7 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
       };
       // draw order, top first: front furniture → doll → back furniture
       let handled = ed ? pickItem(hitItem(rx, ry, true)) : false;
-      if (!handled && !still) {
+      if (!handled) {
         const [x, y] = unflip(...toRig(cx, cy));
         const part = hitPart(p, bones, x, y);
         if (part) {
@@ -220,7 +220,7 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
         return;
       }
       const [x, y] = unflip(...toRig(cx, cy));
-      const over = (!still && hitPart(p, bones, x, y)) || (ed && (hitItem(rx, ry, true) ?? hitItem(rx, ry, false)) !== null);
+      const over = hitPart(p, bones, x, y) || (ed && (hitItem(rx, ry, true) ?? hitItem(rx, ry, false)) !== null);
       cv.style.cursor = over ? "grab" : "";
     };
     const up = (e: PointerEvent) => {
@@ -269,9 +269,10 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
       if (cv.width !== W || cv.height !== H) (cv.width = W), (cv.height = H);
       const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
       last = now;
-      const t = (now - start) / 1000;
+      // reduced motion: no idle loop (frozen at t = 0) and no wandering; grab physics still runs — the user moves it
+      const t = still ? 0 : (now - start) / 1000;
 
-      if (!still) step(p, bones, dt, { w: rig.width, h: rig.height }, { home: false, bounds, ceiling });
+      step(p, bones, dt, { w: rig.width, h: rig.height }, { home: false, bounds, ceiling });
       if (!still && !live.current.edit) stepWander(w, p, dt, { bounds, height: extent.h });
 
       // --- camera: side-scroll locked on the doll with a little lag (also while held: the doll stays under the pointer,
@@ -314,7 +315,7 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
       ctx.fill();
       ctx.restore();
       const view: M = [k, 0, 0, k, geo.ox, oy + walkBob(w, extent.h) * k];
-      drawRig(ctx, rig, bones, dollMips, t, mul(mul(view, bodyMatrix(p)), flipMatrix(w, extent.cx)), !still, { pose, eyesShut: squinting(p), onTop: onTopParts(p, bones) });
+      drawRig(ctx, rig, bones, dollMips, t, mul(mul(view, bodyMatrix(p)), flipMatrix(w, extent.cx)), true, { pose, eyesShut: squinting(p), onTop: onTopParts(p, bones) });
 
       lay.items.forEach((it, i) => it.front && drawItem(it, ed?.selected === i));
       if (visible) raf = requestAnimationFrame(frame);
