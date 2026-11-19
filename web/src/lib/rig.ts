@@ -186,6 +186,10 @@ export function buildSkeleton(rig: Rig): Map<string, Bone> {
     let py = part.y + part.h * fy;
     if (kind && TOP_HINGED.has(kind) && part.top) [px, py] = part.top;
     let parent: string | null = parentKind(kind);
+    // bang / back hair cover the scalp (the head layer is usually bald): turn them around the middle of the head so
+    // they stay on the skull while the ends swing — pivoting at their top edge slides them off and shows the bald head
+    const head = byKind.get("head");
+    if ((kind === "bang" || kind === "back_hair") && head) py = Math.min(part.y + part.h, Math.max(py, head.y + head.h * 0.5));
     if (kind === "weapon") {
       const arms = rig.parts.filter((p) => kindOf(p.id).kind === "arm");
       // weapon always goes in the left hand (screen side); nearest hand only if there's no left arm

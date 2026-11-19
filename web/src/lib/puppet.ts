@@ -14,7 +14,7 @@ const DANGLE: Partial<Record<string, number>> = {
   leg: 0.9,
   hair_tail: 1.4,
   back_hair: 0.45,
-  bang: 0.55,
+  bang: 0.3,
   skirt: 0.35,
   back_acc: 0.8,
   weapon: 0.7,
@@ -32,7 +32,7 @@ const GRAVITY: Partial<Record<string, number>> = {
   skirt: 0.8,
   head: 0.93,
   back_hair: 0.85,
-  bang: 1,
+  bang: 0.3, // moves with the head, not like loose hair
   back_acc: 0.15,
 };
 
@@ -49,7 +49,7 @@ const SWING_MAX: Partial<Record<string, number>> = {
   leg: 0.5,
   hair_tail: 0.55,
   back_hair: 0.3,
-  bang: 0.1,
+  bang: 0.06,
   skirt: 0.3,
   back_acc: 0.45,
   weapon: 0.5,
@@ -64,20 +64,12 @@ const JOINT_MAX: Partial<Record<string, number>> = {
   arm: 2.7,
   leg: 0.6,
   hair_tail: 2.8,
-  back_hair: 1.2,
-  bang: 0.25,
+  back_hair: 0.5, // scalp cover: flung further, the head shows bald
+  bang: 0.1, // scalp cover
   skirt: 0.45,
   back_acc: 0.5,
   weapon: 0.6,
   head: 0.3,
-};
-
-/**
- * Hard cap on swinging outward, away from the head (rad, relative to the parent, every mode) — a ponytail flung
- * back peels its root off the scalp and shows a bald patch. Inward (behind the head) keeps the normal range.
- */
-const OUT_MAX: Partial<Record<string, number>> = {
-  hair_tail: 0.3,
 };
 
 /** Pointer velocity low-pass (s): the throw uses this, so it must not depend on the frame rate. */
@@ -521,15 +513,10 @@ export function step(p: Puppet, bones: Map<string, Bone>, dt: number, _size: { w
     const swing = (b.kind && SWING_MAX[b.kind]) || 0.4;
     const joint = (b.kind && JOINT_MAX[b.kind]) || swing;
     const lo = -joint + (hang - swing + joint) * p.carry, hi = joint + (hang + swing - joint) * p.carry;
-    const back = Math.exp(-dt * 16);
+    // scalp covers stop dead at the limit: easing back lets a hard throw push them past it
+    const back = b.kind === "bang" || b.kind === "back_hair" ? 0 : Math.exp(-dt * 16);
     if (l.a > hi) (l.a = hi + (l.a - hi) * back), (l.v = Math.min(0, l.v) * 0.3);
     else if (l.a < lo) (l.a = lo + (l.a - lo) * back), (l.v = Math.max(0, l.v) * 0.3);
-    const outMax = b.kind && OUT_MAX[b.kind];
-    if (outMax && b.side) {
-      // screen-left part: + (clockwise) swings it outward; screen-right: −
-      const o = b.side === "l" ? 1 : -1;
-      if (l.a * o > outMax) (l.a = outMax * o), (l.v = o > 0 ? Math.min(0, l.v) : Math.max(0, l.v));
-    }
     p.limbs.set(b.part.id, l);
     worldOf.set(b.part.id, parentWorld + l.a);
   }
