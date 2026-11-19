@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { AUTH_EVENT, type AuthUser } from "@/lib/client";
 
 const NAV_ITEMS = [
+  { href: "/codex", label: "Codex" },
   { href: "/players", label: "ผู้เล่น" },
 ];
 const CREATE = { href: "/create", label: "✦ สร้างตัวละคร" };

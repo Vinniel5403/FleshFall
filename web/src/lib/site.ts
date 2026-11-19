@@ -3,11 +3,18 @@ export const SITE = "https://fleshfall.org";
 export const SITE_NAME = "Fleshfall";
 export const SITE_TITLE = "Fleshfall — เมดเนื้อ";
 export const DESCRIPTION =
-  "Fleshfall (เมดเนื้อ) เกม RPG สยองขวัญบน Discord จากโลก ARG — สร้างเมด นักล่าเนื้อ หรือคนหลงมิติ ออกล่าใน Old Realm ผ่านประตูสี 7 บานของ 7 Icon แล้วกลับ Rouge Land ให้รอดพร้อมเนื้อ";
+  "Fleshfall (เมดเนื้อ) เกม ARG เขย่าขวัญบน Discord — สร้างเมด สุนัขล่าเนื้อ หรือคนหลงมิติ ออกล่าในโลกเก่า ผ่านประตูสี 7 บานของ 7 Icon แล้วกลับเกาะสีชาดให้รอดพร้อมเนื้อ";
 
 /** Public, indexable pages. `/create` stays indexable: it's the sign-up landing. */
 export const PAGES: { path: string; title: string; desc: string; priority: number; freq: "daily" | "weekly" | "monthly" }[] = [
   { path: "/", title: SITE_TITLE, desc: DESCRIPTION, priority: 1, freq: "weekly" },
+  {
+    path: "/codex",
+    title: "Codex · คลังบันทึกแห่งเกาะสีชาด",
+    desc: "คลังข้อมูลโลก Fleshfall ฉบับเต็ม — เกาะสีชาด วังวนโลกเก่า องค์กร M.A.I.D.S รูปบูชาทั้งเจ็ด ประตูดันเจียน ปีศาจ Abysmarine และแนวทางการแต่งกายของทุกบทบาท",
+    priority: 0.9,
+    freq: "monthly",
+  },
   {
     path: "/players",
     title: "แฟ้มประวัติผู้เล่น",

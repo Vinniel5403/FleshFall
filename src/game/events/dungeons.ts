@@ -382,7 +382,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'อดทน',
         emoji: '🧘',
         style: 'primary',
-        hint: 'สัมผัส DC 12 — ความทุกข์คือสัจธรรม',
+        hint: 'สัมผัส DC 12 — ความทรมานคือสัจธรรม',
         resolve: ({ check }) => {
           const r = check('int', 12);
           return r.success

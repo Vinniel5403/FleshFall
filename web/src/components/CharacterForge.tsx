@@ -166,11 +166,11 @@ function CreateForm(props: {
         <header>
           <span className="step-no">03</span>
           <div>
-            <h3>เลือกเทพที่ศรัทธา</h3>
-            <p className="sub">เทพที่คุณศรัทธาจะติดตัวไปตลอด — เลือกให้ดี</p>
+            <h3>เลือกรูปเคารพที่บูชา</h3>
+            <p className="sub">รูปเคารพที่คุณบูชาจะผูกพันธสัญญากับคุณไปตลอด — พรทุกประการมาพร้อมผลกรรม</p>
           </div>
         </header>
-        <div className="guide-grid" role="radiogroup" aria-label="เทพที่ศรัทธา">
+        <div className="guide-grid" role="radiogroup" aria-label="รูปเคารพที่บูชา">
           {icons.map((ic) => (
             <button
               key={ic.id}
@@ -212,7 +212,7 @@ function CreateForm(props: {
             {busy ? "กำลังสร้าง…" : "✦ สร้างตัวละคร"}
           </button>
         </div>
-        {!role || !icon ? <p className="sub">เลือกบทบาทและเทพให้ครบก่อน</p> : null}
+        {!role || !icon ? <p className="sub">เลือกบทบาทและรูปเคารพให้ครบก่อน</p> : null}
       </section>
     </form>
   );

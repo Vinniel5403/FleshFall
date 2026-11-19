@@ -11,8 +11,14 @@
  * Output web/public/rooms/<template>.webp        background (≤2560 wide)
  *        web/public/rooms/items/<item>.webp      trimmed furniture
  *        web/src/data/rooms.json                 catalog (positions as fractions of the room)
+ *
+ * Source PNGs are gitignored, so a machine may only have some of them: templates whose
+ * <Template>.png is missing keep their previous catalog entry + webp files untouched.
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+
+interface Template { id: string; name: string; w: number; h: number; heightCm: number; floorTop: number; floorBottom: number }
+interface Item { id: string; name: string; room: string; x: number; y: number; w: number; h: number }
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
@@ -60,17 +66,19 @@ const files = readdirSync(SRC).filter((f) => f.toLowerCase().endsWith('.png'));
 const names = files.map((f) => f.slice(0, -4));
 const templateNames = names.filter((n) => !n.includes('-'));
 
-rmSync(OUT, { recursive: true, force: true });
+const prev: { templates: Template[]; items: Item[] } = existsSync(DATA) ? JSON.parse(readFileSync(DATA, 'utf8')) : { templates: [], items: [] };
 mkdirSync(`${OUT}/items`, { recursive: true });
 
-const templates = [];
-const items = [];
+const templates: Template[] = [];
+const items: Item[] = [];
 for (const t of templateNames) {
   const conf = cfg.templates[t];
   if (!conf) {
     console.log(`⚠ ${t}.png has no entry in rooms.json → skipped`);
     continue;
   }
+  // rebuilding this room: drop its old furniture files (re-exported below)
+  for (const old of prev.items.filter((i) => i.room === id(t))) rmSync(`${OUT}/items/${old.id}.webp`, { force: true });
   const img = await loadImage(`${SRC}/${t}.png`);
   const s = Math.min(1, BG_W / img.width);
   const w = Math.round(img.width * s), h = Math.round(img.height * s);
@@ -108,6 +116,21 @@ for (const t of templateNames) {
     console.log(`  ✓ item ${id(n)} ${iw}x${ih}`);
   }
 }
+
+// rooms without a source PNG here: keep what was built before
+const built = new Set(templates.map((t) => t.id));
+for (const t of prev.templates) {
+  if (built.has(t.id)) continue;
+  const conf = Object.entries(cfg.templates).find(([k]) => id(k) === t.id)?.[1];
+  templates.push(conf ? { ...t, name: conf.name, heightCm: conf.heightCm, floorTop: conf.floorTop, floorBottom: conf.floorBottom } : t);
+  items.push(...prev.items.filter((i) => i.room === t.id));
+  console.log(`· room ${t.id} kept (no ${t.id} source PNG)`);
+}
+// catalog order = rooms.json order
+const order = Object.keys(cfg.templates).map(id);
+const rank = (rid: string) => (order.includes(rid) ? order.indexOf(rid) : order.length);
+templates.sort((a, b) => rank(a.id) - rank(b.id));
+items.sort((a, b) => rank(a.room) - rank(b.room));
 
 if (!existsSync(root('web/src/data'))) mkdirSync(root('web/src/data'), { recursive: true });
 writeFileSync(DATA, JSON.stringify({ templates, items }, null, 1) + '\n');

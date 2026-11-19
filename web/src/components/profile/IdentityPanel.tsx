@@ -27,7 +27,7 @@ export function IdentityPanel({
       <div className="st-bond">
         <BondCard label="บทบาท" emoji={role?.emoji ?? "◆"} name={role?.name ?? character.role} sub={role?.short} />
         <BondCard
-          label="เทพที่ศรัทธา"
+          label="รูปเคารพที่บูชา"
           emoji={icon?.emoji ?? "◆"}
           name={icon?.name ?? character.icon}
           sub={icon ? `${icon.doorName} · ${icon.concept}` : undefined}

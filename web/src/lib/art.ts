@@ -13,6 +13,7 @@ export const ART = {
   kv: { src: bg("01-halo-embrace.webp"), alt: "เทพมีวงแหวนก้มลงหาผู้หลงมิติ", pos: "72% 35%" },
   door: { src: bg("02-green-door-wide.webp"), alt: "ประตูสีเขียวกลางผนังเนื้อ", pos: "50% 55%" },
   maid: { src: bg("03-diner-maid.webp"), alt: "เมดแห่ง M.A.I.D.S ในไดเนอร์", pos: "28% 40%" },
+  fontaine: { src: "/codex/place-fontaine.webp", alt: "Le Fontaine de Sang — คฤหาสน์ใหญ่ขององค์กรแจกจ่ายเนื้อสด", pos: "60% 55%" }, // /codex banner
   // character assets
   cleaver: { src: asset("maid-cleaver.webp"), alt: "เมดถือมีดอีโต้เปื้อนเลือด", pos: "50% 20%" }, // transparent cut-out
   gramophone: { src: asset("maid-gramophone.webp"), alt: "เมดมีวงแหวนกับเครื่องเล่นแผ่นเสียงวินเทจ", pos: "40% 45%" },

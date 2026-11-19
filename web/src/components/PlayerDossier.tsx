@@ -263,7 +263,7 @@ export function PlayerDossier({ p }: { p: PlayerProfile }) {
             <section className="step">
               {p.blessings.length > 0 && (
                 <>
-                  <h2 className="pf-h">พรเทพ</h2>
+                  <h2 className="pf-h">พรแห่งรูปเคารพ</h2>
                   <ul className="pf-list">
                     {p.blessings.map((b) => (
                       <li key={b.icon}>

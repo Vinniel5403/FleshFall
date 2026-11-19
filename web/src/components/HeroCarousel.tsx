@@ -6,10 +6,10 @@ import { useEffect, useState } from "react";
 import type { Slide } from "@/lib/backgrounds";
 
 const LINES: { kicker: string; line: string }[] = [
-  { kicker: "OLD REALM", line: "พรทุกอย่างมีผลกรรม" },
-  { kicker: "DUNGEON", line: "หลังประตูสี มีบางอย่างรออยู่" },
-  { kicker: "M.A.I.D.S", line: "ต้องการอะไรคะ" },
-  { kicker: "ROUGE LAND", line: "ฉันมีเนื้อ ฉันจึงมีตัวตน" },
+  { kicker: "OLD REALM", line: "ผลข้างเคียงของพรมิอาจเลี่ยงได้" },
+  { kicker: "DUNGEON", line: "ประตูจะนำพาคุณไปที่แห่งใดกัน" },
+  { kicker: "M.A.I.D.S", line: "รับอะไรดีคะ..?" },
+  { kicker: "ROUGE LAND", line: "เพราะมีกายเนื้อ ฉันจึงมีอยู่" }, // Carne Habe, Ego Sum
 ];
 
 /** Each slide zooms + pans for HOLD ms, then crossfades (FADE ms) into the next. */
@@ -73,8 +73,8 @@ export function HeroCarousel({ slides }: { slides: Slide[] }) {
           <Link className="cta" href="/create">
             ✦ สร้างตัวละคร
           </Link>
-          <Link className="cta ghost" href="/#icons">
-            สำรวจโลก
+          <Link className="cta ghost" href="/codex">
+            สำรวจเพิ่มเติม
           </Link>
         </div>
       </div>

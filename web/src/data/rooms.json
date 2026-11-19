@@ -8,6 +8,42 @@
    "heightCm": 310,
    "floorTop": 0.948,
    "floorBottom": 0.99
+  },
+  {
+   "id": "concretedark",
+   "name": "ห้องคอนกรีตหม่น",
+   "w": 2560,
+   "h": 835,
+   "heightCm": 310,
+   "floorTop": 0.948,
+   "floorBottom": 0.99
+  },
+  {
+   "id": "wood",
+   "name": "ห้องไม้ซุง",
+   "w": 2560,
+   "h": 835,
+   "heightCm": 310,
+   "floorTop": 0.948,
+   "floorBottom": 0.99
+  },
+  {
+   "id": "maid",
+   "name": "ห้องเมด",
+   "w": 2560,
+   "h": 827,
+   "heightCm": 310,
+   "floorTop": 0.948,
+   "floorBottom": 0.99
+  },
+  {
+   "id": "flesh",
+   "name": "ห้องเนื้อ",
+   "w": 2560,
+   "h": 835,
+   "heightCm": 310,
+   "floorTop": 0.948,
+   "floorBottom": 0.99
   }
  ],
  "items": [

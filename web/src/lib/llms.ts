@@ -12,7 +12,7 @@ export function llmsTxt(): string {
     "Fleshfall เป็นโปรเจกต์ ARG สยองขวัญภาษาไทย เล่นเป็นเกม RPG ผ่านบอท Discord ส่วนเว็บไซต์ใช้สร้างตัวละคร (ล็อกอินด้วย Discord) และเป็นคลังข้อมูลโลก",
     "ผู้เล่นออกจาก Rouge Land (เกาะเนื้อ) ไปล่าสัตว์ประหลาดในเมืองต่าง ๆ ของ Old Realm ของที่ได้ระหว่างทางจะใช้ได้ก็ต่อเมื่อกลับบ้านได้อย่างปลอดภัย ถ้าตายก่อนถึงบ้านจะเสียของทั้งรอบ",
     "",
-    `- 7 Icon (เทพ): ${icons.map((i) => `${i.name} (${i.doorName})`).join(", ")}`,
+    `- 7 Icon (รูปเคารพ): ${icons.map((i) => `${i.name} (${i.doorName})`).join(", ")}`,
     `- บทบาท: ${roles.map((r) => r.name).join(", ")}`,
     "- ศัพท์เฉพาะที่ใช้เป็นภาษาอังกฤษ: Icon, M.A.I.D.S, Miasma, Rouge Land, Fiend, Old Realm, Cypress Isle",
     "",

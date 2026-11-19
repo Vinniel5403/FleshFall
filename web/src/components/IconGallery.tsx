@@ -36,6 +36,11 @@ const ICON_ART: Record<string, IconArt | undefined> = {
   wendigo: { src: icon("wendigo"), w: 1241, h: 1800, y: "-30%" },
 };
 
+/** Landing-only concept overrides (game data keeps the doc's wording). */
+const CONCEPT: Record<string, string> = {
+  beelzebub: "“ตัณหาที่ไม่มีวันพอ ความหิวคือศาสนา”",
+};
+
 const EPITHET: Record<string, string> = {
   beelzebub: "GLUTTONY",
   hastur: "FEAR",
@@ -43,7 +48,7 @@ const EPITHET: Record<string, string> = {
   belphegor: "DESPAIR",
   sophia: "THE PROGENITOR",
   thanatos: "DECAY",
-  wendigo: "DESTITUTE",
+  wendigo: "DESTITUTION",
 };
 
 /**
@@ -153,7 +158,7 @@ export function IconGallery() {
                     <i /> {EPITHET[ic.id] ?? ""}
                   </span>
                   <span className="ig-name">{ic.name}</span>
-                  <span className="ig-concept">{ic.concept}</span>
+                  <span className="ig-concept">{CONCEPT[ic.id] ?? ic.concept}</span>
                 </span>
               )}
             </button>

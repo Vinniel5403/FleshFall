@@ -1,9 +1,40 @@
 {
   "_doc": "Room art config for `npm run web:rooms`. <Template>.png = background, <Template>-<item>.png = furniture drawn on the same canvas (its position on that canvas = default placement). Coordinates are fractions of the room size. heightCm = real height of the whole image so sprites stand at their real heights. Concrete: ceiling (image top) → floor where feet stand (≈0.969) = 300 cm → 300 / 0.969 ≈ 310.",
   "templates": {
-    "Concrete": { "name": "ห้องคอนกรีต", "heightCm": 310, "floorTop": 0.948, "floorBottom": 0.99 }
+    "Concrete": {
+      "name": "ห้องคอนกรีต",
+      "heightCm": 310,
+      "floorTop": 0.948,
+      "floorBottom": 0.99
+    },
+    "ConcreteDark": {
+      "name": "ห้องคอนกรีตหม่น",
+      "heightCm": 310,
+      "floorTop": 0.948,
+      "floorBottom": 0.99
+    },
+    "Wood": {
+      "name": "ห้องไม้ซุง",
+      "heightCm": 310,
+      "floorTop": 0.948,
+      "floorBottom": 0.99
+    },
+    "Maid": {
+      "name": "ห้องเมด",
+      "heightCm": 310,
+      "floorTop": 0.948,
+      "floorBottom": 0.99
+    },
+    "Flesh": {
+      "name": "ห้องเนื้อ",
+      "heightCm": 310,
+      "floorTop": 0.948,
+      "floorBottom": 0.99
+    }
   },
   "items": {
-    "Concrete-shelf": { "name": "ชั้นวางเหล็ก" }
+    "Concrete-shelf": {
+      "name": "ชั้นวางเหล็ก"
+    }
   }
 }
