@@ -1,8 +1,9 @@
 /**
  * "Picked up" physics for the paper doll: grab the torso and it's carried by the scruff —
  * body tips over to horizontal, arms/legs hang straight down, hair/skirt fall, head stays mostly upright.
- * Body = pendulum around the carry angle; limbs = damped angular springs toward their gravity target
- * plus a kick from the body's acceleration; release = flip upright, fall, bounce + squash.
+ * Body = pendulum around the carry angle; limbs = damped pendulums in the field they feel (gravity − the body's
+ * acceleration + air drag: weightless and trailing while it flies) plus a kick from sideways acceleration;
+ * release = thrown rigid body: tumbles, bounces off floor/walls/ceiling with friction, falls over, gets back up.
  * Units: rig pixels / seconds. Pure — SpriteStage feeds it pointer positions each frame.
  */
 import { hand, idlePose, legPhase, mul, type Bone, type M, type Pose } from "./rig";
@@ -55,7 +56,62 @@ const SWING_MAX: Partial<Record<string, number>> = {
   head: 0.3,
 };
 
+/**
+ * Joint range relative to the parent (rad) once let go — wide for loose parts so arms/hair can fly up in a fall,
+ * tight for legs/skirt so a tumbling body doesn't fold in half. While held, SWING_MAX around the hanging angle applies instead.
+ */
+const JOINT_MAX: Partial<Record<string, number>> = {
+  arm: 2.7,
+  leg: 0.6,
+  hair_tail: 2.8,
+  back_hair: 1.2,
+  bang: 0.25,
+  skirt: 0.45,
+  back_acc: 0.5,
+  weapon: 0.6,
+  head: 0.3,
+};
+
+/** Pointer velocity low-pass (s): the throw uses this, so it must not depend on the frame rate. */
+const VEL_TAU = 0.04;
+const THROW_MAX = 12000; // fastest throw (rig px/s, ~10 m/s)
+/** Air drag on loose parts as a "wind" opposite to the motion: at 1/WIND px/s it pulls as hard as gravity. */
+const WIND_FREE = 1 / 4200, WIND_HELD = 1 / 14000;
+const FIELD_TAU = 0.045;
+
+// thrown body = one rigid capsule (feet → head) with its centre of mass at the chest
+const AIR_DRAG = 0.25, AIR_SPIN_DRAG = 1.0;
+const AIR_RIGHTING = 7; // weak pull back to upright while flying (heavy feet), so it often lands on them
+const FLOOR_MU = 0.8, WALL_MU = 0.3;
+const FLOOR_BOUNCE = 0.3, WALL_BOUNCE = 0.45, BOUNCE_MIN = 600;
+/** Tilted further than this on the floor = it can't catch itself: falls over, lies dazed, then gets up. */
+const TOPPLE = 0.9, DAZED = 0.55;
+const UP = 0, DOWN = 1, RISE = 2;
+
 interface Limb { a: number; v: number }
+
+interface Shape { cx: number; top: number; bottom: number; r: number; comY: number; k2: number }
+const shapes = new WeakMap<Map<string, Bone>, Shape>();
+/** Collision capsule + mass properties from the rest pose (cached per skeleton). */
+function shapeOf(bones: Map<string, Bone>): Shape {
+  let s = shapes.get(bones);
+  if (s) return s;
+  const parts = [...bones.values()].map((b) => b.part);
+  const torso = bones.get("torso")?.part, head = bones.get("head")?.part;
+  const bottom = Math.max(...parts.map((q) => q.y + q.h));
+  const top = head ? head.y : Math.min(...parts.map((q) => q.y));
+  const h = Math.max(1, bottom - top);
+  const left = Math.min(...parts.map((q) => q.x)), right = Math.max(...parts.map((q) => q.x + q.w));
+  s = {
+    cx: torso ? torso.x + torso.w / 2 : (left + right) / 2,
+    top, bottom,
+    r: Math.min(h * 0.2, torso ? torso.w / 2 : h * 0.09),
+    comY: torso ? torso.y + torso.h / 2 : top + h * 0.48,
+    k2: (h * 0.28) ** 2,
+  };
+  shapes.set(bones, s);
+  return s;
+}
 
 export interface Puppet {
   x: number; y: number; vx: number; vy: number;
@@ -68,6 +124,8 @@ export interface Puppet {
   /** pointer target in rig coords (where the grab point should be) */
   tx: number; ty: number;
   ax: number;
+  /** what loose parts feel, in g: gravity − the body's own acceleration + air drag (0, 1 = hanging still; ~0 in free fall) */
+  fx: number; fy: number;
   squash: number;
   /** seconds of squinting left after release */
   squint: number;
@@ -76,11 +134,27 @@ export interface Puppet {
   limbs: Map<string, Limb>;
   /** seconds simulated (drives the legs' air-walk while carried) */
   clock: number;
+  /** just let go: next step turns the hold into a throw */
+  thrown: boolean;
+  /** touching the floor (free body only) */
+  ground: boolean;
+  /** 0 standing / catching itself, 1 fallen over (limp), 2 getting back up */
+  pose: number;
+  /** seconds spent lying still */
+  downT: number;
+  /** 0…1 lying on the floor: loose parts rest along the body instead of hanging through the floor */
+  lay: number;
+  /** dangling from a hand: swing of the hand→shoulder line from straight down (rad, + = body to the right) and its speed */
+  sw: number; swV: number;
+  /** pointer last step + its low-passed velocity (drives that swing) */
+  px: number; py: number; pvx: number; pvy: number;
 }
 
 export const newPuppet = (): Puppet => ({
   x: 0, y: 0, vx: 0, vy: 0, ang: 0, angV: 0, grabbed: false,
-  gx: 0, gy: 0, tx: 0, ty: 0, ax: 0, squash: 0, squint: 0, carry: 0, mode: "hips", limbs: new Map(), clock: 0,
+  gx: 0, gy: 0, tx: 0, ty: 0, ax: 0, fx: 0, fy: 1, squash: 0, squint: 0, carry: 0, mode: "hips", limbs: new Map(), clock: 0,
+  thrown: false, ground: true, pose: UP, downT: 0, lay: 0,
+  sw: 0, swV: 0, px: 0, py: 0, pvx: 0, pvy: 0,
 });
 
 /** Multi-legged rigs paddle their legs in the air while held (rad, around the hanging angle). */
@@ -105,6 +179,12 @@ export type GrabMode = "head" | "torso" | "hips" | "hand_l" | "hand_r";
 
 /** Lean toward the held hand while dangling from it (rad). */
 const HAND_LEAN = 0.18;
+/**
+ * Dangling from a hand = a pendulum under the HAND (not the shoulder): the whole doll swings out behind a moving hand
+ * and keeps swinging when it stops. Length as a multiple of the arm (the weight hangs well below the shoulder),
+ * damping (1/s), widest swing (rad), and how much of the swing the body's own tilt follows.
+ */
+const HANG_LEN = 1.9, HANG_DAMP = 1.5, HANG_MAX = 1.35, HANG_FOLLOW = 0.9;
 
 /** Hips zone: bottom of the torso + top of the skirt (fractions of each box's height). */
 const HIPS_TORSO_FROM = 0.65;
@@ -150,13 +230,15 @@ export function grab(p: Puppet, x: number, y: number, mode: GrabMode = "hips", b
   const arm = heldArm(p) && bones?.get(heldArm(p)!);
   if (arm) rePivot(p, arm.px, arm.py); // dangle from the shoulder; the arm reaches for the pointer
   else rePivot(p, ...apply(invert(bodyMatrix(p)), x, y)); // keep the visual pose continuous
-  p.tx = x;
-  p.ty = y;
+  p.tx = p.px = x;
+  p.ty = p.py = y;
+  p.pvx = p.pvy = p.sw = p.swV = 0;
   p.grabbed = true;
 }
 
 export function release(p: Puppet): void {
   p.grabbed = false;
+  p.thrown = true;
   p.squint = 0.5;
 }
 
@@ -165,12 +247,123 @@ export interface StepOptions {
   home?: boolean;
   /** walls for the body offset p.x (rig px): bounce off them */
   bounds?: [number, number];
+  /** ceiling (rig y, same space as the rest pose) */
+  ceiling?: number;
 }
+
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
+
+/**
+ * Let go → free rigid body: gravity, tumbling, and impulse contacts (with friction) of the capsule's two ends
+ * against floor / walls / ceiling. Landing feet-first while moving trips it forward; past TOPPLE it falls flat,
+ * lies dazed, then pushes itself back upright.
+ */
+function fly(p: Puppet, s: Shape, dt: number, opts: StepOptions): void {
+  const home = opts.home !== false;
+  if (p.thrown || p.gx !== s.cx || p.gy !== s.comY) {
+    // spin about the centre of mass from now on; it moves with the grab point + the swing around it
+    const [px, py] = apply(bodyMatrix(p), p.gx, p.gy);
+    rePivot(p, s.cx, s.comY);
+    if (p.thrown) {
+      p.vx -= p.angV * (s.comY + p.y - py);
+      p.vy += p.angV * (s.cx + p.x - px);
+      const v = Math.hypot(p.vx, p.vy);
+      if (v > THROW_MAX) (p.vx *= THROW_MAX / v), (p.vy *= THROW_MAX / v);
+      p.pose = UP;
+      p.downT = 0;
+    }
+    p.thrown = false;
+  }
+  p.ang = wrap(p.ang);
+
+  // --- forces ---
+  p.vy += G * dt;
+  if (home) p.vx += (-22 * p.x - 8 * p.vx) * dt;
+  const drag = Math.exp(-dt * AIR_DRAG);
+  p.vx *= drag;
+  p.vy *= drag;
+  if (p.pose === DOWN) p.angV *= Math.exp(-dt * (p.ground ? 2.5 : AIR_SPIN_DRAG)); // limp
+  // legs hold it up / push it back up. Stiff: pivoting on the feet it has to lift its own weight
+  else if (p.ground) p.angV += (p.pose === RISE ? -85 * p.ang - 20 * p.angV : -120 * p.ang - 22 * p.angV) * dt;
+  else p.angV += (-AIR_RIGHTING * Math.sin(p.ang) - AIR_SPIN_DRAG * p.angV) * dt;
+
+  p.x += p.vx * dt;
+  p.y += p.vy * dt;
+  p.ang = wrap(p.ang + p.angV * dt);
+
+  // --- contacts: each end of the capsule against each plane ---
+  const c = Math.cos(p.ang), sn = Math.sin(p.ang);
+  const ends = [s.bottom - s.r - s.comY, s.top + s.r - s.comY].map((d) => [-sn * d, c * d] as const); // offsets from the centre of mass
+  const comX = s.cx + p.x, comY = s.comY + p.y;
+  const [wl, wr] = opts.bounds ? [s.cx + opts.bounds[0] - s.r, s.cx + opts.bounds[1] + s.r] : [-Infinity, Infinity];
+  const ceil = opts.ceiling ?? -Infinity;
+  let ground = false;
+  let pushX = 0, pushY = 0;
+  const hit = (rx: number, ry: number, nx: number, ny: number, e: number, mu: number): number => {
+    const vn = (p.vx - p.angV * ry) * nx + (p.vy + p.angV * rx) * ny;
+    if (vn >= 0) return 0;
+    const rn = rx * ny - ry * nx;
+    const jn = (-(1 + (-vn > BOUNCE_MIN ? e : 0)) * vn) / (1 + (rn * rn) / s.k2);
+    p.vx += jn * nx;
+    p.vy += jn * ny;
+    p.angV += (rn * jn) / s.k2;
+    if (mu > 0) {
+      const tx = -ny, ty = nx;
+      const vt = (p.vx - p.angV * ry) * tx + (p.vy + p.angV * rx) * ty;
+      const rt = rx * ty - ry * tx;
+      const jt = clamp(-vt / (1 + (rt * rt) / s.k2), -mu * jn, mu * jn);
+      p.vx += jt * tx;
+      p.vy += jt * ty;
+      p.angV += (rt * jt) / s.k2;
+    }
+    return jn;
+  };
+  for (let pass = 0; pass < 3; pass++) {
+    for (const [ex, ey] of ends) {
+      const x = comX + ex, y = comY + ey;
+      const floor = y + s.r - s.bottom;
+      if (floor > -0.5) {
+        ground = true;
+        const jn = hit(ex, ey + s.r, 0, -1, FLOOR_BOUNCE, home ? 0 : FLOOR_MU);
+        if (jn > 900) p.squash = Math.max(p.squash, Math.min(0.13, jn / 34000));
+        if (!pass) pushY = Math.min(pushY, -floor);
+      }
+      const top = ceil - (y - s.r);
+      if (top > 0) {
+        hit(ex, ey - s.r, 0, 1, FLOOR_BOUNCE, WALL_MU);
+        if (!pass) pushY = Math.max(pushY, top);
+      }
+      const left = wl - (x - s.r), right = x + s.r - wr;
+      if (left > 0) {
+        hit(ex - s.r, ey, 1, 0, WALL_BOUNCE, WALL_MU);
+        if (!pass) pushX = Math.max(pushX, left);
+      } else if (right > 0) {
+        hit(ex + s.r, ey, -1, 0, WALL_BOUNCE, WALL_MU);
+        if (!pass) pushX = Math.min(pushX, -right);
+      }
+    }
+  }
+  p.x += pushX;
+  p.y += pushY;
+  p.ground = ground;
+
+  // --- posture ---
+  if (p.pose === UP && ground && Math.abs(p.ang) > TOPPLE) (p.pose = DOWN), (p.downT = 0);
+  else if (p.pose === DOWN) {
+    if (ground && Math.hypot(p.vx, p.vy) < 500 && Math.abs(p.angV) < 1.5) p.downT += dt;
+    if (p.downT > DAZED) p.pose = RISE;
+  } else if (p.pose === RISE && Math.abs(p.ang) < 0.15) p.pose = UP;
+}
+
 
 export function step(p: Puppet, bones: Map<string, Bone>, dt: number, _size: { w: number; h: number }, opts: StepOptions = {}): void {
   dt = Math.min(dt, 1 / 30);
+  if (!(dt > 0)) return; // first frame can report a zero/negative step
   p.clock += dt;
-  const pvx = p.vx;
+  const shape = shapeOf(bones);
+  const pvx = p.vx, pvy = p.vy;
+  const follow = 1 - Math.exp(-dt / VEL_TAU);
   const armId = p.grabbed ? heldArm(p) : null;
   const armBone = armId ? bones.get(armId) : undefined;
   let lifted = false;
@@ -179,71 +372,84 @@ export function step(p: Puppet, bones: Map<string, Bone>, dt: number, _size: { w
     // body is dragged; lifted, it hangs below the hand (shoulder under the hand)
     const h0 = hand(armBone.part);
     const L = Math.hypot(h0.x - armBone.px, h0.y - armBone.py);
-    const sx = armBone.px + p.x, sy = armBone.py + p.y; // shoulder now (pivot = shoulder)
+    const sx = armBone.px + p.x; // shoulder now (pivot = shoulder)
     let nx = p.x, ny = p.y;
-    const hangY = p.ty + L - armBone.py; // body offset if hanging straight below the hand
-    if (hangY < 0) {
+    // the hand's own motion (low-passed pointer) is what swings the doll
+    const hvx = p.pvx, hvy = p.pvy;
+    p.pvx += ((p.tx - p.px) / dt - p.pvx) * follow;
+    p.pvy += ((p.ty - p.py) / dt - p.pvy) * follow;
+    p.px = p.tx;
+    p.py = p.ty;
+    if (p.ty + L < armBone.py) {
       lifted = true;
-      nx = p.tx - armBone.px;
-      ny = hangY;
+      // pendulum under the hand: pulled back by gravity (heavier while the hand jerks up), flung out by the hand's sideways acceleration
+      const hax = clamp((p.pvx - hvx) / dt, -60000, 60000), hay = clamp((p.pvy - hvy) / dt, -2 * G, 0.7 * G);
+      const len = L * HANG_LEN;
+      p.swV += (-((G - hay) / len) * Math.sin(p.sw) - (hax / len) * Math.cos(p.sw) - HANG_DAMP * p.swV) * dt;
+      p.sw += p.swV * dt;
+      if (Math.abs(p.sw) > HANG_MAX) (p.sw = Math.sign(p.sw) * HANG_MAX), (p.swV *= -0.2);
+      nx = p.tx + L * Math.sin(p.sw) - armBone.px;
+      ny = Math.min(0, p.ty + L * Math.cos(p.sw) - armBone.py);
     } else {
+      // feet on the floor: remember where the shoulder sits under the hand, so lifting starts the swing from there
+      p.sw = clamp(Math.atan2(sx - p.tx, Math.max(L * 0.6, armBone.py + p.y - p.ty)), -HANG_MAX, HANG_MAX);
+      p.swV = 0;
       ny = 0;
       const dx = p.tx - sx, dy = p.ty - (armBone.py);
       const d = Math.hypot(dx, dy);
       if (d > L) nx = p.x + (dx / d) * (d - L);
     }
-    p.vx += ((nx - p.x) / dt - p.vx) * 0.45;
-    p.vy += ((ny - p.y) / dt - p.vy) * 0.45;
-    p.x += (nx - p.x) * 0.5;
-    p.y += (ny - p.y) * 0.5;
+    const ease = 1 - Math.exp(-dt * 42); // catch up with the hand (≈ half-way per 60 Hz frame)
+    const mx = (nx - p.x) * ease, my = (ny - p.y) * ease;
+    p.vx += (mx / dt - p.vx) * follow;
+    p.vy += (my / dt - p.vy) * follow;
+    p.x += mx;
+    p.y += my;
   } else if (p.grabbed) {
-    // follow the pointer (clamped), velocity smoothed so pointer jitter doesn't explode the springs
+    // follow the pointer; velocity low-passed so pointer jitter doesn't explode the springs (and the throw is steady)
     // no drag limit here: the stage clamps the pointer to the visible frame
-    const nx = p.tx - p.gx, ny = p.ty - p.gy;
-    p.vx += ((nx - p.x) / dt - p.vx) * 0.45;
-    p.vy += ((ny - p.y) / dt - p.vy) * 0.45;
+    const nx = p.tx - p.gx, ny = Math.min(p.ty - p.gy, 0); // can't push it into the floor
+    p.vx += ((nx - p.x) / dt - p.vx) * follow;
+    p.vy += ((ny - p.y) / dt - p.vy) * follow;
     p.x = nx;
-    p.y = Math.min(ny, 0); // can't push it into the floor
-  } else {
-    // fall back down, spring home sideways, bounce on the floor
-    if (opts.home === false) {
-      if (p.y >= 0) p.vx *= Math.exp(-dt * 7); // floor friction; thrown = keeps flying sideways
-    } else p.vx += (-22 * p.x - 8 * p.vx) * dt;
-    p.vy += G * dt;
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
-    if (p.y > 0) {
-      if (p.vy > 600) p.squash = Math.min(0.13, p.vy / 26000);
-      p.y = 0;
-      p.vy = p.vy > 600 ? -p.vy * 0.32 : 0;
-    }
-  }
-  if (opts.bounds && !p.grabbed) {
-    const [l, r] = opts.bounds;
-    if (p.x < l) (p.x = l), (p.vx = Math.abs(p.vx) * 0.3);
-    else if (p.x > r) (p.x = r), (p.vx = -Math.abs(p.vx) * 0.3);
-  }
-  p.ax = Math.max(-60000, Math.min(60000, (p.vx - pvx) / dt));
+    p.y = ny;
+  } else fly(p, shape, dt, opts);
+  p.ax = clamp((p.vx - pvx) / dt, -60000, 60000);
 
   // tip over into the carry pose while held, back upright when released
   p.carry += ((p.grabbed ? 1 : 0) - p.carry) * Math.min(1, dt * (p.grabbed ? 7 : 5));
-  const rest =
-    p.mode === "hips" ? p.carry * CARRY_ANGLE
-    : armBone && lifted ? (p.mode === "hand_l" ? HAND_LEAN : -HAND_LEAN) // the body swings under the held hand
-    : 0;
-  // body: pendulum around the carry angle while held, springs upright when released
-  const simple = p.grabbed && (p.mode === "head" || p.mode === "torso"); // held by head/torso: stays upright and follows the pointer
-  const angAcc = !p.grabbed || simple
-    ? -40 * (p.ang - rest) - 9 * p.angV
-    : armBone && !lifted
-    ? -40 * (p.ang - rest) - 9 * p.angV // pulled by the hand with feet on the floor: stays upright, no swing
-    : armBone
-    // dangling from a hand: pendulum under the shoulder. + ang swings the feet LEFT (canvas y-down), so a hand
-    // accelerating right must give + angular accel → the body trails behind the hand, same side as the limbs' lag
-    ? -26 * Math.sin(p.ang - rest) - 4 * p.angV + (p.ax / PEND_L) * Math.cos(p.ang - rest) * 0.8
-    : -55 * Math.sin(p.ang - rest) - 10 * p.angV - (p.ax / PEND_L) * Math.cos(p.ang - rest) * 0.6; // quick tip-over, small wobble
-  p.angV += angAcc * dt;
-  p.ang = Math.max(-2.6, Math.min(2.6, p.ang + p.angV * dt));
+  const simple = p.grabbed && (p.mode === "head" || p.mode === "torso"); // held by head/torso: hangs upright under the pointer
+  if (p.grabbed) {
+    p.ground = false;
+    p.pose = UP;
+    const rest =
+      p.mode === "hips" ? p.carry * CARRY_ANGLE
+      // dangling: the body lines up with the hand→shoulder line (+ ang puts the feet LEFT, so it's −swing), leaning a touch toward the hand
+      : armBone && lifted ? (p.mode === "hand_l" ? HAND_LEAN : -HAND_LEAN) * Math.cos(p.sw) - HANG_FOLLOW * p.sw
+      : 0;
+    // how far the centre of mass hangs below the grab point: held by the head the body trails behind a moving hand,
+    // held near the chest it barely swings
+    const lever = clamp((shape.comY - p.gy) / PEND_L, 0, 1);
+    const angAcc = simple
+      ? -40 * (p.ang - rest) - 9 * p.angV + lever * (p.ax / PEND_L) * Math.cos(p.ang) * 0.45
+      : armBone && !lifted
+      ? -40 * (p.ang - rest) - 9 * p.angV // pulled by the hand with feet on the floor: stays upright, no swing
+      : armBone
+      // second link of the pendulum: the body trails the arm's swing a little (shoulder accelerating right → feet lag left = + ang)
+      ? -34 * Math.sin(p.ang - rest) - 6 * p.angV + (p.ax / PEND_L) * Math.cos(p.ang - rest) * 0.35
+      : -55 * Math.sin(p.ang - rest) - 10 * p.angV - (p.ax / PEND_L) * Math.cos(p.ang - rest) * 0.6; // quick tip-over, small wobble
+    p.angV += angAcc * dt;
+    p.ang = clamp(p.ang + p.angV * dt, -2.6, 2.6);
+  }
+
+  // what loose parts feel: gravity minus the body's own vertical acceleration (free fall = weightless), plus air drag
+  // against the motion (sideways acceleration stays a separate, per-part tuned kick: `drive`)
+  const wind = p.grabbed ? WIND_HELD : WIND_FREE;
+  const ay = clamp((p.vy - pvy) / dt, -2 * G, 3 * G);
+  const ease = 1 - Math.exp(-dt / FIELD_TAU);
+  p.fx += (clamp(-p.vx * wind, -2.5, 2.5) - p.fx) * ease;
+  p.fy += (clamp(1 - ay / G - p.vy * wind, -2.5, 2.5) - p.fy) * ease;
+  p.lay += ((!p.grabbed && p.ground ? Math.min(1, Math.abs(Math.sin(p.ang)) * 1.6) : 0) - p.lay) * Math.min(1, dt * 10);
 
   // limbs: spring toward their gravity target (cancel the body's tilt in world space) + inertia kick
   // limbs swing with the body's motion; held by the head the body stays upright, so only its sideways acceleration drives them
@@ -276,22 +482,49 @@ export function step(p: Puppet, bones: Map<string, Bone>, dt: number, _size: { w
     if (b.part.id === armId) continue; // set above
     // held by the head → the head doesn't wobble on its own neck
     const w = b.kind && !(p.mode === "head" && p.grabbed && b.kind === "head") ? DANGLE[b.kind] : undefined;
-    const g = b.kind ? GRAVITY[b.kind] ?? 0 : 0;
-    if (!w && !g) continue;
+    const g0 = b.kind ? GRAVITY[b.kind] ?? 0 : 0;
+    if (!w && !g0) continue;
     const parentWorld = b.parent ? world(b.parent) : p.ang;
-    let target = p.ang * (1 - g) - parentWorld; // local angle that makes world = ang·(1−g)
     // walking legs: left/right swing in opposite phase when shaken, and paddle in the air while held
     const gaitSign = b.gait ? Math.cos(legPhase(b)) >= 0 ? 1 : -1 : 1;
-    if (b.gait && p.grabbed) target += AIR_WALK * p.carry * Math.sin(AIR_WALK_SPEED * p.clock + legPhase(b));
+    const paddle = b.gait && p.grabbed ? AIR_WALK * p.carry * Math.sin(AIR_WALK_SPEED * p.clock + legPhase(b)) : 0;
     const l = p.limbs.get(b.part.id) ?? { a: 0, v: 0 };
-    l.v += (-LIMB_K * (l.a - target) - LIMB_C * l.v + (w ?? 0) * LIMB_GAIN * drive * gaitSign) * dt;
+    let acc: number, hang: number;
+    if (b.kind === "head") {
+      // stands on the neck: kept level by a spring while carried, rigid with the body once let go (no neck-twisting tumbles)
+      const g = g0 * p.carry;
+      hang = p.ang * (1 - g) - parentWorld;
+      acc = -LIMB_K * (l.a - hang);
+    } else {
+      // hangs from its pivot: a pendulum in the felt field (share g), held to its drawn pose by the joint (share 1 − g)
+      // swung by a hand, the legs mostly follow the body's line instead of folding at the hips to hang straight down
+      const g = g0 * (1 - p.lay) * (armBone && b.kind === "leg" ? 0.45 : 1);
+      const th = parentWorld + l.a;
+      // weightless + falling = the field points up: arms and tails lift outward, not through the body
+      const out = b.kind === "leg" ? 0 : b.side === "l" ? -1 : b.side === "r" ? 1 : 0; // legs stay together
+      const fx = p.fx + out * 0.3 * Math.max(0, -p.fy);
+      hang = -g * parentWorld;
+      acc = -LIMB_K * (g * (Math.sin(th) * p.fy + Math.cos(th) * fx) + (1 - g) * l.a - paddle);
+    }
+    l.v += (acc - LIMB_C * l.v + (w ?? 0) * LIMB_GAIN * drive * gaitSign) * dt;
     l.a += l.v * dt;
-    // hard stop around the hanging angle: kill the velocity instead of letting it wrap around
-    const lim = (b.kind && SWING_MAX[b.kind]) || 0.4;
-    if (l.a > target + lim) (l.a = target + lim), (l.v = Math.min(0, l.v) * 0.3);
-    else if (l.a < target - lim) (l.a = target - lim), (l.v = Math.max(0, l.v) * 0.3);
+    // range: around the hanging angle while held (stops hair/skirt flipping out on hard shakes), the joint's own range once free.
+    // Past it the part is eased back, not snapped
+    const swing = (b.kind && SWING_MAX[b.kind]) || 0.4;
+    const joint = (b.kind && JOINT_MAX[b.kind]) || swing;
+    const lo = -joint + (hang - swing + joint) * p.carry, hi = joint + (hang + swing - joint) * p.carry;
+    const back = Math.exp(-dt * 16);
+    if (l.a > hi) (l.a = hi + (l.a - hi) * back), (l.v = Math.min(0, l.v) * 0.3);
+    else if (l.a < lo) (l.a = lo + (l.a - lo) * back), (l.v = Math.max(0, l.v) * 0.3);
     p.limbs.set(b.part.id, l);
     worldOf.set(b.part.id, parentWorld + l.a);
+  }
+
+  // a pair of legs swings as one — never splits apart (walking rigs keep their own gait)
+  const legs = [...bones.values()].filter((b) => b.kind === "leg" && !b.gait).map((b) => p.limbs.get(b.part.id)).filter((l) => !!l);
+  if (legs.length > 1) {
+    const a = legs.reduce((n, l) => n + l.a, 0) / legs.length, v = legs.reduce((n, l) => n + l.v, 0) / legs.length;
+    for (const l of legs) (l.a = a), (l.v = v);
   }
 
   p.squash *= Math.exp(-dt * 9);
@@ -323,9 +556,12 @@ export function onTopParts(p: Puppet, bones: Map<string, Bone>): string[] {
 }
 
 /** Eyes squeezed shut while held (and a moment after). */
-export const squinting = (p: Puppet) => p.grabbed || p.squint > 0;
+export const squinting = (p: Puppet) => p.grabbed || p.squint > 0 || p.pose !== 0;
+
+/** Standing on its own feet, nothing going on (the room's wander may walk it). */
+export const standing = (p: Puppet) => !p.grabbed && p.ground && p.pose === 0 && Math.abs(p.ang) < 0.05 && p.carry < 0.05;
 
 /** Settled = nothing left to simulate (lets the stage skip physics when idle). */
 export const settled = (p: Puppet) =>
-  !p.grabbed && Math.abs(p.x) < 0.5 && Math.abs(p.y) < 0.5 && Math.abs(p.vx) < 5 && Math.abs(p.vy) < 5 &&
+  !p.grabbed && p.pose === 0 && Math.abs(p.x) < 0.5 && Math.abs(p.y) < 0.5 && Math.abs(p.vx) < 5 && Math.abs(p.vy) < 5 &&
   Math.abs(p.ang) < 0.002 && p.carry < 0.002 && [...p.limbs.values()].every((l) => Math.abs(l.a) < 0.002 && Math.abs(l.v) < 0.01);

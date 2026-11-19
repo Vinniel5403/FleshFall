@@ -35,6 +35,8 @@ const loadImg = (url: string) =>
 const START_X = 0.2;
 /** Camera follow rate (1/s): locked on the doll with a little lag. While held, holding it off-centre scrolls the room. */
 const CAM_FOLLOW = 3;
+/** Where the ceiling is (fraction of the room height from the top) — a thrown doll bounces off it. */
+const CEILING = 0.02;
 
 /**
  * A private room: side-view background, furniture stickers, and the player's paper doll standing on the floor.
@@ -127,6 +129,8 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
     const anchorRig = START_X * roomRig;
     /** p.x walls: keep the body centre inside the room */
     const bounds: [number, number] = [0.03 * roomRig - anchorRig, 0.97 * roomRig - anchorRig];
+    /** ceiling in rig y (the floor line is extent.bottom) */
+    const ceiling = extent.bottom - (floorY - CEILING) * roomRig * (tpl.h / tpl.w);
 
     const canvasXY = (e: PointerEvent) => {
       const r = cv.getBoundingClientRect();
@@ -245,7 +249,7 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
       last = now;
       const t = (now - start) / 1000;
 
-      if (!still) step(p, bones, dt, { w: rig.width, h: rig.height }, { home: false, bounds });
+      if (!still) step(p, bones, dt, { w: rig.width, h: rig.height }, { home: false, bounds, ceiling });
       if (!still && !live.current.edit) stepWander(w, p, dt, { bounds, height: extent.h });
 
       // --- camera: side-scroll locked on the doll with a little lag (also while held: the doll stays under the pointer,
@@ -278,7 +282,7 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
       // --- doll: real height against the room, feet on the floor line at rest ---
       const lift = Math.max(0, -p.y) * k; // shadow shrinks as it's lifted
       const sx = geo.ox + (extent.cx + p.x) * k;
-      const shadowW = extent.h * k * 0.16 * Math.max(0.35, 1 - lift / (extent.h * k));
+      const shadowW = extent.h * k * 0.16 * Math.max(0.35, 1 - lift / (extent.h * k)) * (1 + 1.6 * Math.abs(Math.sin(p.ang))); // longer when lying down
       ctx.save();
       ctx.fillStyle = "rgba(0,0,0,.22)";
       ctx.beginPath();

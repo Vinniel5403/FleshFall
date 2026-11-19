@@ -12,6 +12,7 @@ export const CODEX_ART = {
   cypress: c("place-cypress"),
   rougeSea: c("place-rouge-sea"),
   map: c("place-map"),
+  oldRealm: c("place-old-realm"),
   greenDoor: c("place-green-door"),
   diner: c("place-diner"),
   priest: c("priest-damianos"),
@@ -92,7 +93,7 @@ export const LANDS = [
     en: "OLD REALM",
     th: "วังวนรอบนอกเกาะ (โลกเก่า)",
     tag: "Subspace",
-    art: CODEX_ART.greenDoor,
+    art: CODEX_ART.oldRealm,
     body: "มิติที่ซับซ้อน (subspace) ข้างนอกเกาะ คือวังวนแห่งเทียมโลกมนุษย์ สุดขอบฟ้าจากเกาะสีชาดจะมีทวีปที่รูปร่างเหมือนโลกมนุษย์ แต่มีมิติและทิศที่บิดเบี้ยว เป็นมิติที่คู่ขนานกับโลกจริงในปัจจุบัน ในบางสถานที่จะมีดันเจียนที่ลึกลงไปในหุบเหว ที่ใจกลางอาจมีแท่นบูชา artifact หรือประตูที่เชื่อมไปยังเกาะสีชาด",
     notes: [
       "มิติอวกาศขยายในแนวระนาบ 8–10 เท่า แต่ความสูงของตึกและบ้านเรือนเท่าเดิม",

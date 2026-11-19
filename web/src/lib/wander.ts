@@ -4,7 +4,7 @@
  * over the idle/physics pose. Units: rig px / seconds, same as puppet.ts.
  */
 import { legPhase, type Bone, type Pose } from "./rig";
-import type { Puppet } from "./puppet";
+import { standing, type Puppet } from "./puppet";
 
 export interface Wander {
   /** seconds left standing still before the next walk */
@@ -43,7 +43,7 @@ const rand = (a: number, b: number) => a + Math.random() * (b - a);
 export function stepWander(w: Wander, p: Puppet, dt: number, o: WanderOpts): void {
   const speed = o.height * 0.42; // a slow amble
   const stride = o.height * 0.22; // distance per half-cycle
-  const busy = p.grabbed || p.y < -1 || Math.abs(p.vx) > 40 || p.carry > 0.05;
+  const busy = !standing(p) || Math.abs(p.vx) > 40; // held, flying, sliding, fallen over
   if (busy) {
     w.target = null;
     w.dir = 1; // picked up / thrown: turn back to the way the art is drawn
