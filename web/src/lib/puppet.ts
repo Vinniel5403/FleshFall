@@ -72,6 +72,14 @@ const JOINT_MAX: Partial<Record<string, number>> = {
   head: 0.3,
 };
 
+/**
+ * Hard cap on swinging outward, away from the head (rad, relative to the parent, every mode) — a ponytail flung
+ * back peels its root off the scalp and shows a bald patch. Inward (behind the head) keeps the normal range.
+ */
+const OUT_MAX: Partial<Record<string, number>> = {
+  hair_tail: 0.3,
+};
+
 /** Pointer velocity low-pass (s): the throw uses this, so it must not depend on the frame rate. */
 const VEL_TAU = 0.04;
 const THROW_MAX = 12000; // fastest throw (rig px/s, ~10 m/s)
@@ -516,6 +524,12 @@ export function step(p: Puppet, bones: Map<string, Bone>, dt: number, _size: { w
     const back = Math.exp(-dt * 16);
     if (l.a > hi) (l.a = hi + (l.a - hi) * back), (l.v = Math.min(0, l.v) * 0.3);
     else if (l.a < lo) (l.a = lo + (l.a - lo) * back), (l.v = Math.max(0, l.v) * 0.3);
+    const outMax = b.kind && OUT_MAX[b.kind];
+    if (outMax && b.side) {
+      // screen-left part: + (clockwise) swings it outward; screen-right: −
+      const o = b.side === "l" ? 1 : -1;
+      if (l.a * o > outMax) (l.a = outMax * o), (l.v = o > 0 ? Math.min(0, l.v) : Math.max(0, l.v));
+    }
     p.limbs.set(b.part.id, l);
     worldOf.set(b.part.id, parentWorld + l.a);
   }
