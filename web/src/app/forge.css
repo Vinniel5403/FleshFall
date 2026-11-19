@@ -90,7 +90,8 @@
 .sprite-wrap { display: grid; grid-template-columns: minmax(220px, 360px) 1fr; gap: 24px; align-items: start; }
 .sprite-view { border: 1px solid rgba(230, 184, 162, .3); background: radial-gradient(circle at 50% 45%, rgba(224, 30, 55, .12), transparent 70%), #050303; }
 .sprite-stage { position: relative; width: 100%; max-height: 70vh; margin: 0 auto; }
-.sprite-stage canvas { display: block; width: 100%; height: 100%; touch-action: none; user-select: none; }
+/* absolute: Safari doesn't resolve height: 100% against an aspect-ratio box. pan-y: a touch that misses the doll still scrolls the page (a hit is held by guardGestures) */
+.sprite-stage canvas { display: block; position: absolute; inset: 0; width: 100%; height: 100%; touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
 .sprite-note, .sprite-empty {
   position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted);
   font: 600 13px var(--font-cinzel), serif; letter-spacing: .2em; text-transform: uppercase;
@@ -125,7 +126,8 @@
 /* private room (RoomStage / RoomEditor) */
 .room-view, .room-edit .room-stage { border: 1px solid rgba(230, 184, 162, .3); background: #050303; }
 .room-stage { position: relative; width: 100%; min-height: 300px; max-height: 72vh; overflow: hidden; }
-.room-stage canvas { display: block; position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; user-select: none; outline: none; }
+.room-stage canvas { display: block; position: absolute; inset: 0; width: 100%; height: 100%; touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; outline: none; }
+.room-stage.full canvas { touch-action: none; }
 .room-stage canvas:focus-visible { box-shadow: inset 0 0 0 2px var(--crimson); }
 .room-hint {
   position: absolute; right: 10px; bottom: 8px; padding: 2px 8px; background: rgba(5, 3, 3, .55); color: var(--muted);

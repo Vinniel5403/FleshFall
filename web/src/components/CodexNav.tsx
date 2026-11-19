@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-/** Sticky chapter index for /codex; highlights the chapter currently in view. */
-export function CodexNav({ chapters }: { chapters: readonly { id: string; no: string; en: string; th: string }[] }) {
+/** Sticky chapter index for /codex; highlights the chapter currently in view. `children` = tools above the list (search). */
+export function CodexNav({ chapters, children }: { chapters: readonly { id: string; no: string; en: string; th: string }[]; children?: React.ReactNode }) {
   const [active, setActive] = useState(chapters[0]?.id ?? "");
 
   useEffect(() => {
@@ -32,6 +32,7 @@ export function CodexNav({ chapters }: { chapters: readonly { id: string; no: st
         <span>CONTENTS</span>
         <b>สารบัญ</b>
       </p>
+      {children}
       <ol className="cx-nav-list">
         {chapters.map((c) => (
           <li key={c.id}>

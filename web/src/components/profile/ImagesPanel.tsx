@@ -1,5 +1,6 @@
 "use client";
 
+import { ZoomLink } from "@/components/ZoomLink";
 import { useRef, useState } from "react";
 import { api, jsonInit, MAX_DIM, shrink } from "@/lib/client";
 import type { AccountView, ImageSlotDef } from "@/lib/types";
@@ -108,10 +109,10 @@ function Slot({ slot, images, onChange }: { slot: ImageSlotDef; images: AccountV
       <div className="st-thumbs" {...drop}>
         {images.map((img) => (
           <figure key={img.key} className={busy === img.key ? "busy" : undefined}>
-            <a href={img.url} target="_blank" rel="noreferrer" aria-label={`เปิด${slot.name}ขนาดเต็ม`}>
+            <ZoomLink src={img.url ?? ""} alt={slot.name} label={`เปิด${slot.name}ขนาดเต็ม`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={img.url} alt={slot.name} loading="lazy" />
-            </a>
+            </ZoomLink>
             <div className="st-thumb-tools">
               {single && (
                 <button type="button" className="st-icon-btn" title="เปลี่ยนภาพ" aria-label="เปลี่ยนภาพ" disabled={!!busy} onClick={() => input.current?.click()}>

@@ -474,7 +474,7 @@ export function step(p: Puppet, bones: Map<string, Bone>, dt: number, _size: { w
     local = Math.atan2(Math.sin(local), Math.cos(local)); // wrap to (−π, π]
     const l = p.limbs.get(armId) ?? { a: 0, v: 0 };
     const prev = l.a;
-    l.a += Math.atan2(Math.sin(local - l.a), Math.cos(local - l.a)) * 0.5;
+    l.a += Math.atan2(Math.sin(local - l.a), Math.cos(local - l.a)) * (1 - Math.exp(-dt * 42)); // ≈ half-way per 60 Hz frame
     l.v = (l.a - prev) / dt;
     p.limbs.set(armId, l);
   }
@@ -562,6 +562,9 @@ export const squinting = (p: Puppet) => p.grabbed || p.squint > 0 || p.pose !== 
 export const standing = (p: Puppet) => !p.grabbed && p.ground && p.pose === 0 && Math.abs(p.ang) < 0.05 && p.carry < 0.05;
 
 /** Settled = nothing left to simulate (lets the stage skip physics when idle). */
-export const settled = (p: Puppet) =>
-  !p.grabbed && p.pose === 0 && Math.abs(p.x) < 0.5 && Math.abs(p.y) < 0.5 && Math.abs(p.vx) < 5 && Math.abs(p.vy) < 5 &&
-  Math.abs(p.ang) < 0.002 && p.carry < 0.002 && [...p.limbs.values()].every((l) => Math.abs(l.a) < 0.002 && Math.abs(l.v) < 0.01);
+export function settled(p: Puppet): boolean {
+  if (p.grabbed || p.pose !== 0 || Math.abs(p.x) >= 0.5 || Math.abs(p.y) >= 0.5 || Math.abs(p.vx) >= 5 || Math.abs(p.vy) >= 5) return false;
+  if (Math.abs(p.ang) >= 0.002 || p.carry >= 0.002) return false;
+  for (const l of p.limbs.values()) if (Math.abs(l.a) >= 0.002 || Math.abs(l.v) >= 0.01) return false;
+  return true;
+}

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { bodyMatrix, grab, hitPart, newPuppet, onTopParts, puppetPose, release, settled, squinting, step } from "@/lib/puppet";
 import { buildSkeleton, drawDebug, drawRig, mul, type M, type Rig } from "@/lib/rig";
+import { guardGestures, Mips, watchVisible } from "@/lib/stage";
 
 interface Props {
   rig: Rig;
@@ -67,7 +68,7 @@ function drawRuler(ctx: CanvasRenderingContext2D, w: number, floorY: number, pxP
 /** Animated paper-doll (Canvas2D). Idle loop from lib/rig; static when reduced motion is on. */
 export function SpriteStage({ rig, src, className, label, debug, heightCm }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
-  const [images, setImages] = useState<Map<string, HTMLImageElement> | null>(null);
+  const [images, setImages] = useState<Mips | null>(null);
   const [failed, setFailed] = useState(false);
   const bones = useMemo(() => buildSkeleton(rig), [rig]);
   const puppet = useRef(newPuppet());
@@ -89,6 +90,7 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
 
   useEffect(() => {
     let live = true;
+    let mips: Mips | null = null;
     setImages(null);
     setFailed(false);
     Promise.all(
@@ -103,11 +105,16 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
           }),
       ),
     ).then(
-      (pairs) => live && setImages(new Map(pairs)),
+      (pairs) => {
+        if (!live) return;
+        const byId = new Map(pairs);
+        setImages((mips = new Mips(rig.parts.map((p) => ({ id: p.id, img: byId.get(p.id)!, w: p.w, h: p.h })))));
+      },
       () => live && setFailed(true),
     );
     return () => {
       live = false;
+      mips?.clear();
     };
   }, [rig, src]);
 
@@ -120,6 +127,10 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
     let raf = 0;
     const start = performance.now();
     let last = start;
+    let visible = true;
+    let cssW = cv.clientWidth, cssH = cv.clientHeight;
+    /** the pointer holding the doll (one at a time: a second finger doesn't re-grab or drop it) */
+    let active: number | null = null;
 
     // grab the torso and shake
     const local = (e: PointerEvent) => {
@@ -128,16 +139,20 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
       return toRig.current((e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr);
     };
     const down = (e: PointerEvent) => {
-      if (still) return;
+      if (still || active !== null || e.button !== 0) return;
       const [x, y] = local(e);
       const part = hitPart(p, bones, x, y);
       if (!part) return;
       e.preventDefault();
-      cv.setPointerCapture(e.pointerId);
+      active = e.pointerId;
+      try {
+        cv.setPointerCapture(e.pointerId);
+      } catch {} // pointer already gone
       grab(p, x, y, part, bones);
       cv.style.cursor = "grabbing";
     };
     const move = (e: PointerEvent) => {
+      if (active !== null && e.pointerId !== active) return;
       const [x, y] = local(e);
       if (p.grabbed) {
         const [l, t, r, b] = frameBox.current;
@@ -147,8 +162,9 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
       else cv.style.cursor = !still && hitPart(p, bones, x, y) ? "grab" : "";
     };
     const up = (e: PointerEvent) => {
-      if (!p.grabbed) return;
-      release(p);
+      if (e.pointerId !== active) return;
+      active = null;
+      if (p.grabbed) release(p);
       if (cv.hasPointerCapture(e.pointerId)) cv.releasePointerCapture(e.pointerId);
       cv.style.cursor = "grab";
     };
@@ -156,11 +172,15 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
     cv.addEventListener("pointermove", move);
     cv.addEventListener("pointerup", up);
     cv.addEventListener("pointercancel", up);
+    cv.addEventListener("lostpointercapture", up);
+    const unguard = guardGestures(cv, () => active !== null);
     const pose = puppetPose(p);
 
     const frame = (now: number) => {
+      raf = 0;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const w = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
+      const w = Math.round(cssW * dpr), h = Math.round(cssH * dpr);
+      if (!w || !h) return; // hidden (studio tab closed): the resize observer restarts the loop
       if (cv.width !== w || cv.height !== h) (cv.width = w), (cv.height = h);
       ctx.clearRect(0, 0, w, h);
       const carryZoom = 1 - 0.22 * puppet.current.carry; // zoom out a little while carried sideways
@@ -183,7 +203,8 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
         oy = h - rig.height * s - h * 0.02; // stand near the bottom: room above to lift
       }
       ruler?.();
-      ctx.imageSmoothingQuality = "high";
+      images.fit(s / carryZoom); // not the carry zoom: no re-bake mid-grab
+      ctx.imageSmoothingQuality = "medium";
       const t = (now - start) / 1000;
       const view: M = [s, 0, 0, s, ox, oy];
       toRig.current = (cx, cy) => [(cx - ox) / s, (cy - oy) / s];
@@ -193,11 +214,30 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
       const v = mul(view, bodyMatrix(p));
       drawRig(ctx, rig, bones, images, t, v, !still, { pose, eyesShut: squinting(p), onTop: onTopParts(p, bones) });
       if (debug) drawDebug(ctx, rig, bones, t, v, !still, pose);
-      if (!still) raf = requestAnimationFrame(frame);
+      if (!still && visible) raf = requestAnimationFrame(frame);
     };
-    raf = requestAnimationFrame(frame);
+    const kick = () => {
+      if (!raf) raf = requestAnimationFrame(frame);
+    };
+    kick();
+    // size from the observer (no layout read per frame); also redraws the single reduced-motion frame on resize
+    const ro = new ResizeObserver((entries) => {
+      const r = entries[entries.length - 1].contentRect;
+      if (r.width === cssW && r.height === cssH) return;
+      (cssW = r.width), (cssH = r.height);
+      kick();
+    });
+    ro.observe(cv);
+    const unwatch = watchVisible(cv, (v) => {
+      visible = v;
+      if (v) kick();
+    });
     return () => {
       cancelAnimationFrame(raf);
+      ro.disconnect();
+      unwatch();
+      unguard();
+      cv.removeEventListener("lostpointercapture", up);
       cv.removeEventListener("pointerdown", down);
       cv.removeEventListener("pointermove", move);
       cv.removeEventListener("pointerup", up);

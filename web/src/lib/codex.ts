@@ -13,6 +13,7 @@ export const CODEX_ART = {
   rougeSea: c("place-rouge-sea"),
   map: c("place-map"),
   oldRealm: c("place-old-realm"),
+  moon: c("flesh-crimson-moon"),
   greenDoor: c("place-green-door"),
   diner: c("place-diner"),
   priest: c("priest-damianos"),

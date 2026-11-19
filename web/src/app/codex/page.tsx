@@ -6,7 +6,10 @@ import { SectionHead } from "@/components/SectionHead";
 import { Brackets } from "@/components/Dossier";
 import { Reveal, RevealGroup, RevealItem } from "@/components/Reveal";
 import { CodexNav } from "@/components/CodexNav";
+import { CodexSearch } from "@/components/CodexSearch";
+import { ZoomLink } from "@/components/ZoomLink";
 import { doorVar } from "@/lib/md";
+import { codexIndex } from "@/lib/codexSearch";
 import { pageMeta } from "@/lib/site";
 import {
   ABYSS,
@@ -50,7 +53,7 @@ function Chapter({ id, children, className = "" }: { id: (typeof CHAPTERS)[numbe
   );
 }
 
-/** Framed artwork, optionally linking to the full-size file. */
+/** Framed artwork; `zoom` = click opens the full image in a popup. */
 function Figure({ src, alt, caption, ratio, contain, zoom, label }: { src: string; alt: string; caption?: string; ratio: string; contain?: boolean; zoom?: boolean; label?: string }) {
   const img = (
     <span className="cx-fig-frame" style={css({ "--ratio": ratio })}>
@@ -66,9 +69,9 @@ function Figure({ src, alt, caption, ratio, contain, zoom, label }: { src: strin
     <figure className="cx-fig">
       {label && <Brackets label={label} />}
       {zoom ? (
-        <a href={src} target="_blank" rel="noreferrer" aria-label={`${alt} (เปิดภาพเต็ม)`}>
+        <ZoomLink src={src} alt={alt} caption={caption}>
           {img}
-        </a>
+        </ZoomLink>
       ) : (
         img
       )}
@@ -81,7 +84,7 @@ export default function CodexPage() {
   return (
     <>
       <PageBanner
-        art="fontaine"
+        art="codexCover"
         en="CODEX"
         th="คลังบันทึกแห่งเกาะสีชาด"
         lead="ทุกสิ่งที่ต้องรู้ก่อนก้าวเข้าสู่วังวน — ดินแดน องค์กร รูปบูชาทั้งเจ็ด ปีศาจ และบทบาทของคุณบนเกาะนี้"
@@ -90,7 +93,9 @@ export default function CodexPage() {
       <div className="cx-wrap">
       <div className="cx">
         <aside className="cx-side">
-          <CodexNav chapters={CHAPTERS} />
+          <CodexNav chapters={CHAPTERS}>
+            <CodexSearch entries={codexIndex()} chapters={CHAPTERS} />
+          </CodexNav>
         </aside>
 
         <main className="cx-main">
@@ -171,7 +176,7 @@ export default function CodexPage() {
               ))}
             </Reveal>
             <Reveal className="cx-moon">
-              <span className="cx-moon-disc" aria-hidden="true" />
+              <Image src={CODEX_ART.moon} alt="" width={480} height={480} sizes="120px" className="cx-moon-disc" />
               <div>
                 <p className="cx-kicker">CRIMSON MOON</p>
                 <h3>{FLESH.moon.th}</h3>

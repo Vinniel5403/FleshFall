@@ -1,4 +1,5 @@
 import { Backdrop, Brackets } from "@/components/Dossier";
+import { ZoomLink } from "@/components/ZoomLink";
 import { PlayerRoom } from "@/components/PlayerRoom";
 import { PlayerSprite } from "@/components/PlayerSprite";
 import { roleAvatar } from "@/lib/avatar";
@@ -174,35 +175,27 @@ export function PlayerDossier({ p }: { p: PlayerProfile }) {
                 )}
                 {art && (
                   <figure>
-                    <a
-                      href={publicUrl(art.key)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
+                    <ZoomLink src={publicUrl(art.key)} alt={`ภาพตัวละคร ${p.name}`}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={publicUrl(art.key)}
                         alt={`ภาพตัวละคร ${p.name}`}
                         loading="lazy"
                       />
-                    </a>
+                    </ZoomLink>
                     <figcaption>ภาพตัวละคร</figcaption>
                   </figure>
                 )}
                 {sheet && (
                   <figure className="wide">
-                    <a
-                      href={publicUrl(sheet.key)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
+                    <ZoomLink src={publicUrl(sheet.key)} alt={`ชีทตัวละคร ${p.name}`}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={publicUrl(sheet.key)}
                         alt={`ชีทตัวละคร ${p.name}`}
                         loading="lazy"
                       />
-                    </a>
+                    </ZoomLink>
                     <figcaption>ชีทตัวละคร</figcaption>
                   </figure>
                 )}
@@ -215,19 +208,14 @@ export function PlayerDossier({ p }: { p: PlayerProfile }) {
               <h2 className="pf-h">แกลเลอรี</h2>
               <div className="player-gallery">
                 {gallery.map((g) => (
-                  <a
-                    key={g.key}
-                    href={publicUrl(g.key)}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
+                  <ZoomLink key={g.key} src={publicUrl(g.key)} alt={`ภาพในแกลเลอรีของ ${p.name}`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={publicUrl(g.key)}
                       alt={`ภาพในแกลเลอรีของ ${p.name}`}
                       loading="lazy"
                     />
-                  </a>
+                  </ZoomLink>
                 ))}
               </div>
             </section>

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { apply, bodyMatrix, grab, hitPart, invert, newPuppet, onTopParts, puppetPose, release, squinting, step } from "@/lib/puppet";
 import { buildSkeleton, drawRig, HEIGHT_DEFAULT, mul, type M, type Rig } from "@/lib/rig";
 import { furniture, furnitureSrc, FURNITURE, roomBg, template, type PlacedItem, type RoomLayout } from "@/lib/room";
+import { guardGestures, Mips, watchVisible } from "@/lib/stage";
 import { flipMatrix, newWander, stepWander, walkBob, walkPose } from "@/lib/wander";
 
 export interface RoomEditHooks {
@@ -37,6 +38,8 @@ const START_X = 0.2;
 const CAM_FOLLOW = 3;
 /** Where the ceiling is (fraction of the room height from the top) — a thrown doll bounces off it. */
 const CEILING = 0.02;
+/** Mips id of the room background (furniture ids never start with #). */
+const BG = "#bg";
 
 /**
  * A private room: side-view background, furniture stickers, and the player's paper doll standing on the floor.
@@ -109,7 +112,7 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
   useEffect(() => {
     const cv = canvas.current;
     if (!cv || !bg || !sprite || !tpl) return;
-    const ctx = cv.getContext("2d")!;
+    const ctx = cv.getContext("2d", { alpha: false })!; // every frame paints the whole canvas
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const floorY = (tpl.floorTop + tpl.floorBottom) / 2;
     const p = newPuppet();
@@ -123,6 +126,13 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
     /** per-frame geometry: room → canvas, rig → canvas */
     let geo = { offX: 0, roomW: 1, H: 1, W: 1, k: 1, ox: 0, oy: 0 };
     let pointerX = 0, pointerY = 0; // last pointer position in canvas px
+    let visible = true;
+    let cssW = cv.clientWidth, cssH = cv.clientHeight;
+    /** the pointer doing the current drag (one at a time: a second finger doesn't re-grab or drop it) */
+    let active: number | null = null;
+    // shrunk copies at the drawn size: the room art (scale = canvas px per room px) and the doll's parts (per rig px)
+    const roomMips = new Mips([{ id: BG, img: bg, w: tpl.w, h: tpl.h }]);
+    const dollMips = new Mips(rig.parts.map((q) => ({ id: q.id, img: sprite.get(q.id)!, w: q.w, h: q.h })));
 
     /** room width in rig px — character scale is fixed against the room, so this doesn't depend on canvas size */
     const roomRig = (tpl.w / tpl.h) * extent.h * (tpl.heightCm / (rig.heightCm ?? HEIGHT_DEFAULT));
@@ -164,6 +174,7 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
     };
 
     const down = (e: PointerEvent) => {
+      if (active !== null || e.button !== 0) return;
       const [cx, cy] = canvasXY(e);
       (pointerX = cx), (pointerY = cy);
       const ed = live.current.edit;
@@ -188,10 +199,14 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
       if (!handled && ed) handled = pickItem(hitItem(rx, ry, false));
       if (!handled) return ed?.onSelect(null);
       e.preventDefault();
-      cv.setPointerCapture(e.pointerId);
+      active = e.pointerId;
+      try {
+        cv.setPointerCapture(e.pointerId);
+      } catch {} // pointer already gone
       cv.style.cursor = "grabbing";
     };
     const move = (e: PointerEvent) => {
+      if (active !== null && e.pointerId !== active) return;
       const [cx, cy] = canvasXY(e);
       (pointerX = cx), (pointerY = cy);
       const ed = live.current.edit;
@@ -209,7 +224,8 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
       cv.style.cursor = over ? "grab" : "";
     };
     const up = (e: PointerEvent) => {
-      if (!p.grabbed && !item) return;
+      if (e.pointerId !== active) return;
+      active = null;
       if (p.grabbed) release(p);
       item = null;
       if (cv.hasPointerCapture(e.pointerId)) cv.releasePointerCapture(e.pointerId);
@@ -219,11 +235,15 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
     cv.addEventListener("pointermove", move);
     cv.addEventListener("pointerup", up);
     cv.addEventListener("pointercancel", up);
+    cv.addEventListener("lostpointercapture", up);
+    const unguard = guardGestures(cv, () => active !== null);
 
     const drawItem = (it: PlacedItem, sel: boolean) => {
       const f = furniture(it.id);
-      const img = f && stickers.current.get(it.id);
       if (!f) return;
+      const raw = stickers.current.get(it.id);
+      if (raw && !roomMips.has(it.id)) roomMips.add({ id: it.id, img: raw, w: f.w * tpl.w, h: f.h * tpl.h });
+      const img = roomMips.get(it.id);
       const x = geo.offX + it.x * geo.roomW, y = it.y * geo.H, w = f.w * geo.roomW, h = f.h * geo.H;
       if (img) {
         ctx.save();
@@ -242,10 +262,12 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
     };
 
     const frame = (now: number) => {
+      raf = 0;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const W = Math.round(cv.clientWidth * dpr), H = Math.round(cv.clientHeight * dpr);
+      const W = Math.round(cssW * dpr), H = Math.round(cssH * dpr);
+      if (!W || !H) return; // hidden (studio tab closed): the resize observer restarts the loop
       if (cv.width !== W || cv.height !== H) (cv.width = W), (cv.height = H);
-      const dt = Math.min(0.05, (now - last) / 1000);
+      const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
       last = now;
       const t = (now - start) / 1000;
 
@@ -273,8 +295,10 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = "#0b0507";
       ctx.fillRect(0, 0, W, H);
-      ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(bg, offX, 0, roomW, H);
+      roomMips.fit(H / tpl.h);
+      dollMips.fit(k);
+      ctx.imageSmoothingQuality = "medium";
+      ctx.drawImage(roomMips.get(BG)!, offX, 0, roomW, H);
 
       const { layout: lay, edit: ed } = live.current;
       lay.items.forEach((it, i) => !it.front && drawItem(it, ed?.selected === i));
@@ -290,14 +314,37 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
       ctx.fill();
       ctx.restore();
       const view: M = [k, 0, 0, k, geo.ox, oy + walkBob(w, extent.h) * k];
-      drawRig(ctx, rig, bones, sprite, t, mul(mul(view, bodyMatrix(p)), flipMatrix(w, extent.cx)), !still, { pose, eyesShut: squinting(p), onTop: onTopParts(p, bones) });
+      drawRig(ctx, rig, bones, dollMips, t, mul(mul(view, bodyMatrix(p)), flipMatrix(w, extent.cx)), !still, { pose, eyesShut: squinting(p), onTop: onTopParts(p, bones) });
 
       lay.items.forEach((it, i) => it.front && drawItem(it, ed?.selected === i));
+      if (visible) raf = requestAnimationFrame(frame);
+    };
+    const kick = () => {
+      if (raf) return;
+      last = performance.now(); // don't simulate the time spent hidden
       raf = requestAnimationFrame(frame);
     };
-    raf = requestAnimationFrame(frame);
+    kick();
+    // size from the observer: no layout read per frame
+    const ro = new ResizeObserver((entries) => {
+      const r = entries[entries.length - 1].contentRect;
+      if (r.width === cssW && r.height === cssH) return;
+      (cssW = r.width), (cssH = r.height);
+      kick();
+    });
+    ro.observe(cv);
+    const unwatch = watchVisible(cv, (v) => {
+      visible = v;
+      if (v) kick();
+    });
     return () => {
       cancelAnimationFrame(raf);
+      ro.disconnect();
+      unwatch();
+      unguard();
+      roomMips.clear();
+      dollMips.clear();
+      cv.removeEventListener("lostpointercapture", up);
       cv.removeEventListener("pointerdown", down);
       cv.removeEventListener("pointermove", move);
       cv.removeEventListener("pointerup", up);

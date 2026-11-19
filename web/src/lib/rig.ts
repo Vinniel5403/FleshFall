@@ -342,14 +342,19 @@ export function drawDebug(ctx: any, rig: Rig, bones: Map<string, Bone>, t: numbe
   ctx.restore();
 }
 
+/** Parts back to front, cached per rig (sorting every frame adds up). */
+const zOrder = new WeakMap<Rig, Rig["parts"]>();
+
 /** Draw one frame. `view` maps rig space → canvas pixels. */
 export function drawRig(
-  ctx: Ctx2D, rig: Rig, bones: Map<string, Bone>, images: Map<string, unknown>, t: number, view: M, animate = true, opts: DrawOptions = {},
+  ctx: Ctx2D, rig: Rig, bones: Map<string, Bone>, images: { get(id: string): unknown }, t: number, view: M, animate = true, opts: DrawOptions = {},
 ): void {
   const world = solve(bones, animate ? t : 0, animate ? (opts.pose ?? idlePose) : () => REST);
   const top = opts.onTop ?? [];
   const order = (id: string) => top.indexOf(id);
-  const sorted = [...rig.parts].sort((a, b) => (order(a.id) - order(b.id)) || a.z - b.z);
+  let sorted = zOrder.get(rig);
+  if (!sorted) zOrder.set(rig, (sorted = [...rig.parts].sort((a, b) => a.z - b.z)));
+  if (top.length) sorted = [...sorted].sort((a, b) => order(a.id) - order(b.id)); // stable: z order kept within each group
   for (const p of sorted) {
     const img = images.get(p.id);
     const bone = bones.get(p.id);
