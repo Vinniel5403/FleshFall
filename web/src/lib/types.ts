@@ -60,7 +60,7 @@ export interface Item {
   id: string;
   name: string;
   emoji: string;
-  type: "consumable" | "weapon" | "armor" | "material" | "vintage";
+  type: "consumable" | "weapon" | "armor" | "material" | "vintage" | "furniture";
   value: number;
   description: string;
 }
@@ -125,6 +125,8 @@ export interface AccountView {
   sprite: (import("./rig").Rig & { base: string; at: number; url?: string }) | null;
   /** private room layout (bot CharRoom); catalog in src/data/rooms.json */
   room: import("./room").RoomLayout | null;
+  /** spare furniture items in the inventory by room catalog id (placed pieces are not counted); absent on an older bot */
+  furniture?: Record<string, number>;
 }
 
 /** GET /api/me response (website route handler). */

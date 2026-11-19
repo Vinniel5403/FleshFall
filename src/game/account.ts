@@ -6,6 +6,8 @@ import { createHmac, randomBytes } from 'node:crypto';
 import type { CharImage, CharRoom, CharSprite, Character, RoomItem, ImageSlot, SpritePart } from './types.js';
 import { currentZone, getZone, zoneLabel } from './zones.js';
 import { balance } from '../config.js';
+import { addItem, itemCount } from './character.js';
+import { FURNITURE_ITEM, itemLabel } from './items.js';
 
 export interface ImageSlotDef {
   id: ImageSlot;
@@ -158,6 +160,43 @@ export function cleanRoom(raw: unknown): CharRoom | null {
   return { template: r.template, items, at: Date.now() };
 }
 
+const placedCounts = (room?: CharRoom | null) => {
+  const n = new Map<string, number>();
+  for (const it of room?.items ?? []) n.set(it.id, (n.get(it.id) ?? 0) + 1);
+  return n;
+};
+
+/**
+ * Swap the room layout. Furniture is an item: placing a piece takes it out of the inventory, taking it down
+ * (or `null` = reset) puts it back — so placed pieces can't be sold or traded, and spare ones can.
+ * Returns an error text when the player doesn't own enough of something (nothing is changed then).
+ */
+export function applyRoom(char: Character, room: CharRoom | null): string | null {
+  const before = placedCounts(char.room), after = placedCounts(room);
+  for (const [id, n] of after) {
+    const need = n - (before.get(id) ?? 0);
+    if (need <= 0) continue;
+    const item = FURNITURE_ITEM[id];
+    if (!item) return 'มีของตกแต่งที่ไม่รู้จักอยู่ในห้อง';
+    if (itemCount(char, item) < need) return `${itemLabel(item)} ไม่พอ — ต้องมีอีก ${need - itemCount(char, item)} ชิ้น`;
+  }
+  for (const id of new Set([...before.keys(), ...after.keys()])) {
+    const item = FURNITURE_ITEM[id];
+    const back = (before.get(id) ?? 0) - (after.get(id) ?? 0);
+    if (item && back) addItem(char, item, back);
+  }
+  if (room) char.room = room;
+  else delete char.room;
+  return null;
+}
+
+/** Spare furniture in the inventory, by room catalog id (what the room editor may still place). */
+export function spareFurniture(char: Character): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [id, item] of Object.entries(FURNITURE_ITEM)) if (itemCount(char, item) > 0) out[id] = itemCount(char, item);
+  return out;
+}
+
 /**
  * Opaque public id for a character's profile page (never the Discord id).
  * HMAC of the user id with PROFILE_SECRET (else API_SECRET). Without either, a per-process random
@@ -280,6 +319,7 @@ export function accountView(char: Character) {
     images: (char.images ?? []).map(({ slot, key, at }: CharImage) => ({ slot, key, at })),
     sprite: char.sprite ?? null,
     room: char.room ?? null,
+    furniture: spareFurniture(char),
   };
 }
 export type AccountView = ReturnType<typeof accountView>;

@@ -1231,6 +1231,15 @@
    "description": "เพลงที่ไม่มีใครในเกาะจำได้"
   },
   {
+   "id": "steel_shelf",
+   "name": "ชั้นวางเหล็ก",
+   "emoji": "🗄️",
+   "type": "furniture",
+   "value": 60,
+   "furniture": "concrete-shelf",
+   "description": "ชั้นเหล็กขึ้นสนิมจากโกดังร้าง ของตกแต่งห้องส่วนตัว — จัดวางได้ที่หน้าโปรไฟล์บนเว็บ"
+  },
+  {
    "id": "bone",
    "name": "กระดูก",
    "emoji": "🦴",

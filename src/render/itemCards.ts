@@ -7,13 +7,14 @@ import { art, background, box, C, canvas, diamond, fitText, font, logo, noEmoji,
 const W = 1200;
 const PAD = 48;
 
-const TYPE_ORDER: ItemType[] = ['weapon', 'armor', 'consumable', 'material', 'vintage'];
+const TYPE_ORDER: ItemType[] = ['weapon', 'armor', 'consumable', 'material', 'vintage', 'furniture'];
 const TYPE_TITLE: Record<ItemType, string> = {
   weapon: 'อาวุธ',
   armor: 'เกราะ',
   consumable: 'ของกิน / ยา',
   material: 'วัตถุดิบ',
   vintage: 'ของวินเทจจากโลกจริง',
+  furniture: 'ของตกแต่งห้อง',
 };
 
 function groupHead(ctx: Ctx, label: string, y: number): void {

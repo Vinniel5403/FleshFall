@@ -1,6 +1,7 @@
 /**
  * Private rooms: a side-view template background + furniture stickers + the player's paper doll (grab + throw, puppet physics).
  * Catalog = src/data/rooms.json (built by `npm run web:rooms` from assets/rooms-src). Layout = bot CharRoom.
+ * Furniture is a game item (bot ItemDef.furniture = catalog id): a room holds as many of one as the player owns.
  * All positions are fractions of the room image (x of width, y of height), so art resolution can change freely.
  */
 import catalog from "@/data/rooms.json";
@@ -56,6 +57,13 @@ export const template = (id?: string) => ROOM_TEMPLATES.find((t) => t.id === id)
 
 /** Empty room for players who never decorated. */
 export const defaultRoom = (): RoomLayout => ({ template: ROOM_TEMPLATES[0]?.id ?? "", items: [] });
+
+/** How many of each furniture id a layout uses. */
+export function placedCounts(items: { id: string }[]): Map<string, number> {
+  const n = new Map<string, number>();
+  for (const it of items) n.set(it.id, (n.get(it.id) ?? 0) + 1);
+  return n;
+}
 
 /** New sticker at the spot it was painted on in the template. */
 export const placeNew = (f: RoomFurniture): PlacedItem => ({ id: f.id, x: f.x, y: f.y });

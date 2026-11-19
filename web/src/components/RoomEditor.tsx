@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import templateRig from "@/data/sprite-template.json";
-import { defaultRoom, furniture, furnitureSrc, FURNITURE, placeNew, ROOM_MAX_ITEMS, ROOM_TEMPLATES, type RoomLayout } from "@/lib/room";
+import { defaultRoom, furniture, furnitureSrc, FURNITURE, placedCounts, placeNew, ROOM_MAX_ITEMS, ROOM_TEMPLATES, type RoomLayout } from "@/lib/room";
 import type { Rig } from "@/lib/rig";
 import { ownProfilePath, type AccountView } from "@/lib/types";
 import { RoomStage } from "./RoomStage";
@@ -40,10 +40,15 @@ export function RoomEditor(props: { character: AccountView; onChange: (c: Accoun
     [sel],
   );
 
+  const placed = useMemo(() => placedCounts(room.items), [room.items]);
+  // furniture is a game item: owned = spare in the inventory + pieces already in the saved room (those left the inventory)
+  const spare = props.character.furniture;
+  const savedPlaced = useMemo(() => placedCounts(saved.items), [saved]);
+  const owned = (id: string) => (spare ? (spare[id] ?? 0) + (savedPlaced.get(id) ?? 0) : Infinity);
   const patch = (fn: (items: RoomLayout["items"]) => RoomLayout["items"]) => setRoom((r) => ({ ...r, items: fn(r.items) }));
   const add = (id: string) => {
     const f = furniture(id);
-    if (!f || room.items.length >= ROOM_MAX_ITEMS) return;
+    if (!f || room.items.length >= ROOM_MAX_ITEMS || (placed.get(id) ?? 0) >= owned(id)) return;
     patch((items) => [...items, placeNew(f)]);
     setSel(room.items.length);
   };
@@ -128,13 +133,21 @@ export function RoomEditor(props: { character: AccountView; onChange: (c: Accoun
           )}
 
           <div className="room-palette" role="list" aria-label="ของตกแต่ง — กดเพื่อเพิ่มลงห้อง">
-            {FURNITURE.map((f) => (
-              <button key={f.id} type="button" role="listitem" onClick={() => add(f.id)} disabled={room.items.length >= ROOM_MAX_ITEMS} title={`เพิ่ม ${f.name}`}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={furnitureSrc(f)} alt="" loading="lazy" />
-                <span>{f.name}</span>
-              </button>
-            ))}
+            {FURNITURE.map((f) => {
+              const used = placed.get(f.id) ?? 0;
+              const have = owned(f.id);
+              const out = used >= have;
+              return (
+                <button key={f.id} type="button" role="listitem" onClick={() => add(f.id)} disabled={out || room.items.length >= ROOM_MAX_ITEMS} title={have === 0 ? `ยังไม่มี ${f.name} — ซื้อได้ที่ร้านใน Rouge Land หรือตลาดผู้เล่น` : out ? `${f.name} — วางครบทุกชิ้นที่มีแล้ว` : `เพิ่ม ${f.name}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={furnitureSrc(f)} alt="" loading="lazy" />
+                  <span>{f.name}</span>
+                  {Number.isFinite(have) && (
+                    <span className={`room-stock${used > have ? " over" : ""}`}>{have === 0 ? "ยังไม่มี" : `วางแล้ว ${used}/${have}`}</span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           <div className="room-actions">

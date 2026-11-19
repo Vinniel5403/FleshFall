@@ -2,7 +2,7 @@ import { bot } from "@/lib/server/bot";
 import { BOT_DOWN, jsonError, NEED_LOGIN, withUrls } from "@/lib/server/me";
 import { getSession, sameOrigin } from "@/lib/server/session";
 
-/** Save the private room layout (json: { room: { template, items } | null }). The bot validates the shape. */
+/** Save the private room layout (json: { room: { template, items } | null }). The bot validates the shape and that the player owns the furniture. */
 export async function PUT(req: Request) {
   if (!sameOrigin(req)) return jsonError(403, "forbidden");
   const s = await getSession();

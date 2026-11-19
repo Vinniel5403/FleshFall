@@ -5,7 +5,7 @@ export type Location = 'old_realm' | 'cypress' | 'rouge_land';
 /** Door colors of the Old Realm. Icon doors + red (to Cypress Isle) + black (exit). */
 export type DoorColor = 'green' | 'yellow' | 'gray' | 'orange' | 'white' | 'blue' | 'purple' | 'red' | 'black';
 export type IconDoor = Exclude<DoorColor, 'red' | 'black'>;
-export type ItemType = 'consumable' | 'weapon' | 'armor' | 'material' | 'vintage';
+export type ItemType = 'consumable' | 'weapon' | 'armor' | 'material' | 'vintage' | 'furniture';
 
 export interface Stats {
   str: number;
@@ -95,7 +95,7 @@ export interface CharSprite {
 
 /** One piece of furniture in the private room. x/y = top-left as fractions of the room size. */
 export interface RoomItem {
-  /** catalog id (web/src/data/rooms.json) — unknown ids are skipped when drawing */
+  /** catalog id (web/src/data/rooms.json) — unknown ids are skipped when drawing. A placed piece is out of the inventory (see applyRoom) */
   id: string;
   x: number;
   y: number;
@@ -235,6 +235,8 @@ export interface ItemDef {
   def?: number;
   /** eating it grants a timed meal buff */
   buff?: BuffDef;
+  /** type 'furniture': the room catalog id it places (web/src/data/rooms.json) */
+  furniture?: string;
 }
 
 export interface Outcome {

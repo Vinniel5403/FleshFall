@@ -152,6 +152,9 @@
 }
 .room-palette button:hover { border-color: var(--crimson); }
 .room-palette img { width: 100%; height: 48px; object-fit: contain; }
+.room-palette button:disabled { opacity: .45; cursor: not-allowed; }
+.room-stock { color: var(--muted); font-size: 11.5px; }
+.room-stock.over { color: var(--crimson); }
 .room-actions, .room-save { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .room-actions .sub { margin-right: auto; color: var(--muted); font-size: 13px; }
 .room-actions button, .room-save button, .room-save a { border-radius: 0; padding: 6px 14px; font-size: 14px; }

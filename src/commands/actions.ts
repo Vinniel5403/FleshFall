@@ -47,6 +47,7 @@ const TYPE_TITLES: Record<ItemType, string> = {
   armor: '🛡️ เกราะ',
   material: '⚙️ วัตถุดิบ',
   vintage: '📻 ของวินเทจจากโลกจริง',
+  furniture: '🪑 ของตกแต่งห้อง',
 };
 
 export function inventoryEmbed(char: Character): EmbedBuilder {
@@ -119,7 +120,7 @@ export function equipItem(char: Character, id: string): ActionResult {
 // ---------- shop ----------
 
 /** Branch butchery stock (Rouge Land only). */
-export const STOCK = ['bandage', 'alchemy_salve', 'blood_wine', 'fetal_flesh', 'fresh_cut', 'wild_flour', 'lighter', 'leather_coat', 'bone_saw', 'rusted_armor', 'sigil', 'placenta'];
+export const STOCK = ['bandage', 'alchemy_salve', 'blood_wine', 'fetal_flesh', 'fresh_cut', 'wild_flour', 'lighter', 'leather_coat', 'bone_saw', 'rusted_armor', 'sigil', 'placenta', 'steel_shelf'];
 
 export const buyPrice = (c: Character, id: string) => Math.ceil((getItem(id)?.value ?? 0) * (c.role === 'patron' ? 0.75 : 1));
 /** Field merchants lowball: selling out in the Old Realm pays 70%. Bring it home for the full price. */

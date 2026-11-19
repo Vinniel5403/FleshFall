@@ -90,6 +90,7 @@ const BUY_CATS: { id: string; label: string; emoji: string; types: ItemType[] }[
   { id: 'material', label: 'วัตถุดิบ', emoji: '⚙️', types: ['material'] },
   { id: 'gear', label: 'อาวุธ / เกราะ', emoji: '🗡️', types: ['weapon', 'armor'] },
   { id: 'vintage', label: 'ของวินเทจจากโลกจริง', emoji: '📻', types: ['vintage'] },
+  { id: 'furniture', label: 'ของตกแต่งห้อง', emoji: '🪑', types: ['furniture'] },
 ];
 
 function qtyPriceModal(kind: 'sell' | 'buy', item: string, have?: number) {

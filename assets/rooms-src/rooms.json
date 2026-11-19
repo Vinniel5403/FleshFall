@@ -1,5 +1,5 @@
 {
-  "_doc": "Room art config for `npm run web:rooms`. <Template>.png = background, <Template>-<item>.png = furniture drawn on the same canvas (its position on that canvas = default placement). Coordinates are fractions of the room size. heightCm = real height of the whole image so sprites stand at their real heights. Concrete: ceiling (image top) → floor where feet stand (≈0.969) = 300 cm → 300 / 0.969 ≈ 310.",
+  "_doc": "Room art config for `npm run web:rooms`. <Template>.png = background, <Template>-<item>.png = furniture drawn on the same canvas (its position on that canvas = default placement). Every furniture also needs a game item in src/game/items.ts (type 'furniture', furniture: '<catalog id>') — players place as many as they own. Coordinates are fractions of the room size. heightCm = real height of the whole image so sprites stand at their real heights. Concrete: ceiling (image top) → floor where feet stand (≈0.969) = 300 cm → 300 / 0.969 ≈ 310.",
   "templates": {
     "Concrete": {
       "name": "ห้องคอนกรีต",

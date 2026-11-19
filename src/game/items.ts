@@ -78,6 +78,9 @@ const list: ItemDef[] = [
   { id: 'family_photo', name: 'รูปถ่ายครอบครัว', emoji: '🖼️', type: 'vintage', value: 45, description: 'หน้าคนในรูปเริ่มเลือนลาง' },
   { id: 'pocket_watch', name: 'นาฬิกาพก', emoji: '⌚', type: 'vintage', value: 55, description: 'เข็มเดินถอยหลัง' },
   { id: 'vinyl_record', name: 'แผ่นเสียงไวนิล', emoji: '💿', type: 'vintage', value: 70, description: 'เพลงที่ไม่มีใครในเกาะจำได้' },
+  // --- ของตกแต่งห้องส่วนตัว (จัดห้องบนเว็บ — วางได้เท่าจำนวนที่มี) ---
+  { id: 'steel_shelf', name: 'ชั้นวางเหล็ก', emoji: '🗄️', type: 'furniture', value: 60, furniture: 'concrete-shelf',
+    description: 'ชั้นเหล็กขึ้นสนิมจากโกดังร้าง ของตกแต่งห้องส่วนตัว — จัดวางได้ที่หน้าโปรไฟล์บนเว็บ' },
   // --- วัตถุดิบ/ของแปลก ---
   { id: 'bone', name: 'กระดูก', emoji: '🦴', type: 'material', value: 3, description: 'ไม่ใช่ของคุณ... หวังว่านะ' },
   { id: 'sophia_rite', name: 'พิธีชุบชีวิตของ Sophia', emoji: '🥚', type: 'material', value: 0,
@@ -101,5 +104,8 @@ export function itemLabel(id: string, qty?: number): string {
 
 /** Items players can trade on the market (not quest relics). */
 export const TRADEABLE_IDS = list.filter((i) => i.value > 0).map((i) => i.id);
+
+/** room catalog id → the furniture item that places it */
+export const FURNITURE_ITEM: Record<string, string> = Object.fromEntries(list.filter((i) => i.furniture).map((i) => [i.furniture!, i.id]));
 
 export const VINTAGE_IDS =list.filter((i) => i.type === 'vintage').map((i) => i.id);
