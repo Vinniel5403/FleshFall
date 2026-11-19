@@ -13,7 +13,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // game modules open the player store on import — point it at a throwaway file
-process.env.DATA_FILE = join(tmpdir(), 'fleshfall-export-sandbox.json');
+process.env.DATA_FILE = join(tmpdir(), 'fleshfall-export-sandbox.sqlite');
 const api = await import('./api.js');
 
 const out = fileURLToPath(new URL('../../web/src/data/game.json', import.meta.url));

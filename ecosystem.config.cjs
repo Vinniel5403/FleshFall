@@ -15,7 +15,7 @@ module.exports = {
       script: 'bash',
       args: ['-c', 'npm run build && exec node dist/index.js'],
       interpreter: 'none',
-      kill_timeout: 8000, // time to flush db.json on shutdown
+      kill_timeout: 8000, // time to checkpoint the SQLite WAL on shutdown
       restart_delay: 5000, // don't hammer a failing build
       max_restarts: 10,
     },

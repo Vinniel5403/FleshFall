@@ -10,7 +10,7 @@ export const config = {
   token: () => required('DISCORD_TOKEN'),
   clientId: () => required('CLIENT_ID'),
   guildId: process.env.GUILD_ID || undefined,
-  dataFile: process.env.DATA_FILE || 'data/db.json',
+  dataFile: process.env.DATA_FILE || 'data/db.sqlite',
 };
 
 export const balance = {

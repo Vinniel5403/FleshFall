@@ -1,13 +1,13 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import Database from 'better-sqlite3';
+import { existsSync, mkdirSync, readFileSync, renameSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { Character, MarketOrder } from '../game/types.js';
 
-interface DbShape {
+/** The old single-JSON-file shape (imported once into SQLite). */
+interface LegacyDb {
   version: 1;
   characters: Record<string, Character>;
-  /** Player market orders (sell listings + buy requests), escrowed. */
   market?: Record<string, MarketOrder>;
-  /** RP proxy: webhook message id → who wrote it (for ❌ delete / ✏️ edit). Capped, oldest dropped. */
   proxied?: Record<string, ProxiedMessage>;
 }
 
@@ -21,89 +21,167 @@ export interface ProxiedMessage {
 
 const PROXIED_MAX = 5000;
 
+/** `DATA_FILE` may still name the old `db.json`: the database lives next to it as `db.sqlite`. */
+export const sqlitePath = (file: string) => file.replace(/\.json$/, '.sqlite');
+
+const SCHEMA = `
+  CREATE TABLE IF NOT EXISTS characters (
+    user_id TEXT PRIMARY KEY,
+    data TEXT NOT NULL,
+    name TEXT GENERATED ALWAYS AS (json_extract(data, '$.name')) VIRTUAL,
+    updated_at INTEGER NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS market (id TEXT PRIMARY KEY, data TEXT NOT NULL);
+  CREATE TABLE IF NOT EXISTS proxied (message_id TEXT PRIMARY KEY, data TEXT NOT NULL);
+`;
+
 /**
- * Tiny JSON-file store. Reads/writes are synchronous in memory, so a
- * load -> mutate -> save sequence with no `await` in between can't race.
- * Disk writes are debounced and atomic (tmp file + rename).
- * To move to SQLite/Postgres later, reimplement this class with the same API.
+ * SQLite store (better-sqlite3, synchronous). Characters + market orders are cached in memory and every save
+ * writes its row straight through, so a load -> mutate -> save sequence with no `await` in between can't race,
+ * and loaded objects behave exactly like the old JSON store's. Edits made from outside while the bot runs
+ * (sqlite3 CLI, DB Browser, `npm run db`) bump `PRAGMA data_version` → the cache reloads on the next access.
+ * Character data stays a JSON column (no migrations when the shape changes); query it with json_extract.
  */
 export class Store {
-  private data: DbShape;
-  private timer: NodeJS.Timeout | null = null;
+  private sql: Database.Database;
+  private chars = new Map<string, Character>();
+  private orders = new Map<string, MarketOrder>();
+  private version = -1;
+  private proxiedWrites = 0;
+  private q;
 
-  constructor(private file: string) {
-    mkdirSync(dirname(file), { recursive: true });
-    this.data = existsSync(file)
-      ? (JSON.parse(readFileSync(file, 'utf8')) as DbShape)
-      : { version: 1, characters: {} };
+  constructor(file: string) {
+    const path = sqlitePath(file);
+    mkdirSync(dirname(path), { recursive: true });
+    const fresh = !existsSync(path);
+    this.sql = new Database(path);
+    this.sql.pragma('journal_mode = WAL'); // readers (web API, editors) never block the bot
+    this.sql.pragma('synchronous = NORMAL');
+    this.sql.pragma('busy_timeout = 3000');
+    this.sql.exec(SCHEMA);
+    this.q = {
+      chars: this.sql.prepare<[], { data: string }>('SELECT data FROM characters'),
+      putChar: this.sql.prepare<[string, string, number]>(
+        'INSERT INTO characters (user_id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at',
+      ),
+      delChar: this.sql.prepare<[string]>('DELETE FROM characters WHERE user_id = ?'),
+      orders: this.sql.prepare<[], { data: string }>('SELECT data FROM market'),
+      putOrder: this.sql.prepare<[string, string]>('INSERT OR REPLACE INTO market (id, data) VALUES (?, ?)'),
+      delOrder: this.sql.prepare<[string]>('DELETE FROM market WHERE id = ?'),
+      getProxied: this.sql.prepare<[string], { data: string }>('SELECT data FROM proxied WHERE message_id = ?'),
+      putProxied: this.sql.prepare<[string, string]>('INSERT OR REPLACE INTO proxied (message_id, data) VALUES (?, ?)'),
+      delProxied: this.sql.prepare<[string]>('DELETE FROM proxied WHERE message_id = ?'),
+      trimProxied: this.sql.prepare<[number]>(
+        'DELETE FROM proxied WHERE rowid NOT IN (SELECT rowid FROM proxied ORDER BY rowid DESC LIMIT ?)',
+      ),
+    };
+    if (fresh && file !== path && existsSync(file)) this.importJson(file);
+    this.refresh();
+  }
+
+  /** One-time move from the old db.json; the file is kept, renamed, as a backup. */
+  private importJson(file: string): void {
+    const old = JSON.parse(readFileSync(file, 'utf8')) as LegacyDb;
+    const now = Date.now();
+    this.sql.transaction(() => {
+      for (const c of Object.values(old.characters ?? {})) this.q.putChar.run(c.userId, JSON.stringify(c), now);
+      for (const o of Object.values(old.market ?? {})) this.q.putOrder.run(o.id, JSON.stringify(o));
+      for (const [id, p] of Object.entries(old.proxied ?? {})) this.q.putProxied.run(id, JSON.stringify(p)); // insertion order = age
+    })();
+    renameSync(file, `${file}.migrated`);
+    console.log(`imported ${file} into SQLite (${Object.keys(old.characters ?? {}).length} characters); old file kept as ${file}.migrated`);
+  }
+
+  /** Reload the cache when another connection changed the database. */
+  private refresh(): void {
+    const v = this.sql.pragma('data_version', { simple: true }) as number;
+    if (v === this.version) return;
+    this.version = v;
+    this.chars = new Map(this.q.chars.all().map((r) => JSON.parse(r.data) as Character).map((c) => [c.userId, c]));
+    this.orders = new Map(this.q.orders.all().map((r) => JSON.parse(r.data) as MarketOrder).map((o) => [o.id, o]));
   }
 
   getCharacter(userId: string): Character | undefined {
-    return this.data.characters[userId];
+    this.refresh();
+    return this.chars.get(userId);
   }
 
   saveCharacter(char: Character): void {
-    this.data.characters[char.userId] = char;
-    this.scheduleFlush();
+    this.refresh();
+    this.chars.set(char.userId, char);
+    this.q.putChar.run(char.userId, JSON.stringify(char), Date.now());
   }
 
   deleteCharacter(userId: string): void {
-    delete this.data.characters[userId];
-    this.scheduleFlush();
+    this.refresh();
+    this.chars.delete(userId);
+    this.q.delChar.run(userId);
   }
 
   allCharacters(): Character[] {
-    return Object.values(this.data.characters);
+    this.refresh();
+    return [...this.chars.values()];
   }
 
   allOrders(): MarketOrder[] {
-    return Object.values(this.data.market ?? {});
+    this.refresh();
+    return [...this.orders.values()];
   }
 
   getOrder(id: string): MarketOrder | undefined {
-    return this.data.market?.[id];
+    this.refresh();
+    return this.orders.get(id);
   }
 
   saveOrder(o: MarketOrder): void {
-    (this.data.market ??= {})[o.id] = o;
-    this.scheduleFlush();
+    this.refresh();
+    this.orders.set(o.id, o);
+    this.q.putOrder.run(o.id, JSON.stringify(o));
   }
 
   deleteOrder(id: string): void {
-    if (this.data.market) delete this.data.market[id];
-    this.scheduleFlush();
+    this.refresh();
+    this.orders.delete(id);
+    this.q.delOrder.run(id);
   }
 
   getProxied(messageId: string): ProxiedMessage | undefined {
-    return this.data.proxied?.[messageId];
+    const row = this.q.getProxied.get(messageId);
+    return row ? (JSON.parse(row.data) as ProxiedMessage) : undefined;
   }
 
   saveProxied(messageId: string, p: ProxiedMessage): void {
-    const all = (this.data.proxied ??= {});
-    all[messageId] = p;
-    const ids = Object.keys(all);
-    if (ids.length > PROXIED_MAX) {
-      // insertion order ≈ age; drop the oldest overflow
-      for (const id of ids.slice(0, ids.length - PROXIED_MAX)) delete all[id];
-    }
-    this.scheduleFlush();
+    this.q.putProxied.run(messageId, JSON.stringify(p));
+    if (++this.proxiedWrites % 100 === 0) this.q.trimProxied.run(PROXIED_MAX); // rowid order ≈ age; drop the oldest overflow
   }
 
   deleteProxied(messageId: string): void {
-    if (this.data.proxied) delete this.data.proxied[messageId];
-    this.scheduleFlush();
+    this.q.delProxied.run(messageId);
   }
 
-  private scheduleFlush(): void {
-    if (this.timer) return;
-    this.timer = setTimeout(() => this.flush(), 500);
-  }
-
+  /** Writes are already on disk; fold the WAL back into the main file before exit. */
   flush(): void {
-    if (this.timer) clearTimeout(this.timer);
-    this.timer = null;
-    const tmp = `${this.file}.tmp`;
-    writeFileSync(tmp, JSON.stringify(this.data, null, 2));
-    renameSync(tmp, this.file);
+    this.sql.pragma('wal_checkpoint(TRUNCATE)');
+  }
+
+  close(): void {
+    this.flush();
+    this.sql.close();
+  }
+}
+
+/** Read-only snapshot of every character, for a separate process (web API) — never writes. */
+export function readCharacters(file: string): Character[] {
+  const path = sqlitePath(file);
+  if (!existsSync(path)) {
+    // bot not migrated yet: fall back to the old JSON file
+    if (file === path || !existsSync(file)) return [];
+    return Object.values((JSON.parse(readFileSync(file, 'utf8')) as LegacyDb).characters ?? {});
+  }
+  const sql = new Database(path, { readonly: true, fileMustExist: true });
+  try {
+    return sql.prepare<[], { data: string }>('SELECT data FROM characters').all().map((r) => JSON.parse(r.data) as Character);
+  } finally {
+    sql.close();
   }
 }

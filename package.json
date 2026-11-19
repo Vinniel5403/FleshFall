@@ -9,6 +9,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "deploy": "tsx src/deploy-commands.ts",
+    "db": "tsx src/db/sql.ts",
     "web": "tsx watch src/web/standalone.ts",
     "api": "tsx watch src/web/standalone.ts",
     "web:dev": "npm run dev -w web",
@@ -23,11 +24,13 @@
   },
   "dependencies": {
     "@napi-rs/canvas": "^1.1.0",
+    "better-sqlite3": "^12.11.1",
     "discord.js": "^14.28.1",
     "dotenv": "^18.0.9",
     "gifenc": "^1.0.3"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^26.6.6",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
