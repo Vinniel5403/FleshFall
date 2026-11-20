@@ -31,7 +31,7 @@ export const balance = {
   /** Passive sanity regen per stamina tick (5 min) while safe in Rouge Land. */
   homeSanityRegen: 1,
   /** Chance a hunt reveals a dungeon door after victory. */
-  huntDoorChance: 0.2,
+  huntDoorChance: 0.001,
   /** Chance one explore in the Old Realm turns up a door — any Icon colour or red, all equally likely (rolled apart from the other events). */
   exploreDoorChance: 0.001,
   /** Chance an explore (outside dungeons) turns up nothing — stamina spent, no event. Doors stay at `exploreDoorChance`, the rest are ordinary events (80/1/19 in the Old Realm). */
