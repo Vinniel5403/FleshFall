@@ -3,7 +3,8 @@ import { VINTAGE_IDS } from '../items.js';
 import type { GameEventDef, IconDoor } from '../types.js';
 import { DOORS, DUNGEON_RULES } from '../world.js';
 
-const DOOR_WEIGHTS: Record<IconDoor, number> = { green: 7, yellow: 4, gray: 4, orange: 5, white: 2, blue: 2, purple: 2 };
+/** Doors share one rare roll (`balance.exploreDoorChance`); once it hits every colour — red included — is as likely as any other. */
+const ICON_DOORS: IconDoor[] = ['green', 'yellow', 'gray', 'orange', 'white', 'blue', 'purple'];
 
 const DOOR_FLAVOR: Record<IconDoor, string> = {
   green: 'กลิ่นน้ำคร่ำลอยออกมาจากรอยแยก มีเสียงทารกร้องแว่ว ๆ',
@@ -16,7 +17,7 @@ const DOOR_FLAVOR: Record<IconDoor, string> = {
 };
 
 /** One discovery event per icon door color. */
-const doorEvents: GameEventDef[] = (Object.keys(DOOR_WEIGHTS) as IconDoor[]).map((door) => {
+const doorEvents: GameEventDef[] = ICON_DOORS.map((door) => {
   const icon = ICON_BY_DOOR[door];
   const d = DOORS[door];
   return {
@@ -24,7 +25,8 @@ const doorEvents: GameEventDef[] = (Object.keys(DOOR_WEIGHTS) as IconDoor[]).map
     title: `${d.emoji} พบ${d.name}`,
     description: `ระหว่างตึกแถวที่ถูกยืดออก มีสิ่งก่อสร้างหนึ่งดึงดูดสายตาอย่างประหลาด\n${DOOR_FLAVOR[door]}\n-# ${DUNGEON_RULES[door].note}`,
     where: 'old_realm',
-    weight: DOOR_WEIGHTS[door],
+    finds: door,
+    weight: 1,
     minLevel: door === 'white' || door === 'blue' || door === 'purple' ? 3 : 1,
     choices: [
       {
@@ -65,7 +67,8 @@ export const OLD_REALM_EVENTS: GameEventDef[] = [
     title: '🟥 ประตูสีแดง',
     description: 'ประตูสีแดงสดตั้งอยู่โดด ๆ กลางถนนที่ไร้ไฟส่อง ลมเค็มคาวเลือดพัดลอดช่องประตู',
     where: 'old_realm',
-    weight: 3,
+    finds: 'red',
+    weight: 1,
     choices: [
       {
         id: 'enter',

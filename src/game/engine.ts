@@ -1,3 +1,4 @@
+import { balance } from '../config.js';
 import { applyOutcome, changeHumanity, itemCount, removeItem, statMod, statParts, stopped, type AppliedOutcome } from './character.js';
 import { EVENTS, EVENTS_BY_ID } from './events/index.js';
 import { rollIconDungeon, receiveBlessing } from './blessings.js';
@@ -63,7 +64,10 @@ function eventPool(char: Character): GameEventDef[] {
 }
 
 export function pickEvent(char: Character): GameEventDef {
-  const pool = eventPool(char);
+  let pool = eventPool(char);
+  // doors (red included) are rolled on their own so stumbling on one stays rare
+  const doors = pool.filter((e) => e.finds);
+  if (doors.length) pool = chance(balance.exploreDoorChance) ? doors : pool.filter((e) => !e.finds);
   const total = pool.reduce((s, e) => s + e.weight, 0);
   let r = Math.random() * total;
   for (const e of pool) {

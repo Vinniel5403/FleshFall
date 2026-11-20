@@ -32,6 +32,8 @@ export const balance = {
   homeSanityRegen: 1,
   /** Chance a hunt reveals a dungeon door after victory. */
   huntDoorChance: 0.2,
+  /** Chance one explore in the Old Realm turns up a door — any Icon colour or red, all equally likely (rolled apart from the other events). */
+  exploreDoorChance: 0.08,
   /** Chance a dungeon is an Icon dungeon (shrine at the end): continent's main color / elsewhere. */
   iconDungeonHome: 0.015,
   iconDungeonAway: 0.003,

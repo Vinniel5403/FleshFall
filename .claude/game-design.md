@@ -20,7 +20,7 @@ Stats: `str` พละ, `agi` ว่องไว, `int` สัมผัส. Chec
 - Old Realm explore costs +1 hp (body mass drains). Rest in Old Realm: no HP.
 
 ## Dungeons
-Door discovery events in Old Realm → `run {door, depth, maxDepth, stage}`. Each room: 1 stamina (or 3 hp if exhausted); white door +3 hp/room. Last room = boss event. Then exit: black (→Old Realm), red (→Cypress), own-Icon colored door (shrine: big humanity/sanity/xp).
+Door discovery events in Old Realm → `run {door, depth, maxDepth, stage}`. Doors are rare: an explore finds a door 8% of the time (`balance.exploreDoorChance`, own roll — was ~45% when doors shared the event weights); the red door counts as one of them and every colour is equally likely (≈1% each at Lv 3+, 1.6% at Lv 1–2 where white/blue/purple are still hidden). A hunt win shows an Icon door 20% (`huntDoorChance`). Each room: 1 stamina (or 3 hp if exhausted); white door +3 hp/room. Last room = boss event. Then exit: black (→Old Realm), red (→Cypress), own-Icon colored door (shrine: big humanity/sanity/xp).
 Retreat rules per door (`DUNGEON_RULES` in `src/game/world.ts`): yellow/white locked, orange must feed flesh, gray time loss, others free.
 
 ## Icons → mods (`src/game/icons.ts`)

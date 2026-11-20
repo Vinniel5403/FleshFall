@@ -296,6 +296,8 @@ export interface GameEventDef {
   where?: Location;
   /** Dungeon events: which door color. */
   door?: IconDoor;
+  /** Explore event that discovers this door (Icon colours + red) — rolled on its own (`balance.exploreDoorChance`); `weight` only picks the colour. */
+  finds?: DoorColor;
   /** Final-chamber guardian of a dungeon. */
   boss?: boolean;
   minLevel?: number;
