@@ -8,12 +8,12 @@ import { loadCharacter, saveCharacter } from '../game/character.js';
 import { attack, enterHuntDoor, getMonster, huntUsable, leaveHunt, startHunt, useInHunt, type RoundResult } from '../game/hunt.js';
 import { fallRow } from './fallRow.js';
 import { inField, streakOf, streakText, tripSize } from '../game/expedition.js';
-import { getItem, itemLabel } from '../game/items.js';
+import { getItem, itemEffects, itemLabel } from '../game/items.js';
 import type { Character } from '../game/types.js';
 import { DOORS } from '../game/world.js';
-import { currentZone, getZone, tierLabel } from '../game/zones.js';
+import { currentZone, getZone, tierLabel, travelNotice } from '../game/zones.js';
 import { toUpdate, travelAction } from '../commands/actions.js';
-import { idleError, requireActive, travelingText } from '../commands/guard.js';
+import { idleError, requireActive } from '../commands/guard.js';
 import { renderHuntCard } from '../render/sceneCards.js';
 import { playDice } from './dice.js';
 import { imagePayload, type ImagePayload } from '../render/view.js';
@@ -111,9 +111,7 @@ function bagRows(char: Character): ActionRowBuilder<StringSelectMenuBuilder | Bu
     .slice(0, 25)
     .map(({ id, qty }) => {
       const d = getItem(id)!;
-      const fx = [d.heal && `🩸+${d.heal}`, d.stamina && `⚡+${d.stamina}`, d.sanity && `🧠+${d.sanity}`, d.humanity && `🫀${d.humanity > 0 ? '+' : ''}${d.humanity}`, d.buff && '🍽️ บัฟ']
-        .filter(Boolean)
-        .join(' ');
+      const fx = itemEffects(id, true);
       return { label: `${d.name} ×${qty}`.slice(0, 100), value: id, emoji: d.emoji, description: (fx || d.description || '').slice(0, 100) || undefined };
     });
   return [
@@ -153,7 +151,7 @@ export async function openHunt(i: RepliableInteraction, zoneId: string): Promise
     await i.deferReply({ flags: MessageFlags.Ephemeral });
     return i.editReply({ ...(await huntPayload(char, ['-# กลับมาสู้ต่อ'])), components: huntButtons(char) });
   }
-  const road = travelingText(char);
+  const road = travelNotice(char);
   if (road) return i.reply({ content: road, flags: MessageFlags.Ephemeral });
   const zone = getZone(zoneId);
   if (currentZone(char).id !== zoneId) {
@@ -174,6 +172,10 @@ export async function handleHuntButton(i: ButtonInteraction): Promise<unknown> {
   const char = loadCharacter(i.user.id);
   if (!char || char.fiend) return i.update({ components: [] });
 
+  // already on the road (this is an old hunt card): leave only the plain travel notice, no buttons
+  const road = travelNotice(char);
+  if (road) return i.update({ content: road, embeds: [], files: [], components: [] });
+
   if (action === 'home') {
     const r = travelAction(char, 'rouge_land');
     if (!r.ok) return i.reply({ content: r.content, flags: MessageFlags.Ephemeral });
@@ -181,7 +183,7 @@ export async function handleHuntButton(i: ButtonInteraction): Promise<unknown> {
   }
 
   if (action === 'again') {
-    const busy = travelingText(char) ?? idleError(char);
+    const busy = idleError(char);
     if (busy) return i.reply({ content: busy, flags: MessageFlags.Ephemeral });
     const r = startHunt(char);
     saveCharacter(char);

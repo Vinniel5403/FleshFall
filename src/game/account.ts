@@ -4,7 +4,7 @@
  */
 import { createHmac, randomBytes } from 'node:crypto';
 import type { CharImage, CharRoom, CharSprite, Character, RoomItem, ImageSlot, SpritePart } from './types.js';
-import { currentZone, getZone, zoneLabel } from './zones.js';
+import { currentZone, getZone, travelVerb, zoneLabel } from './zones.js';
 import { balance } from '../config.js';
 import { addItem, itemCount } from './character.js';
 import { FURNITURE_ITEM, itemLabel } from './items.js';
@@ -336,7 +336,7 @@ export function accountView(char: Character) {
       sanity: char.sanity,
       flesh: char.flesh,
       stats: { ...char.stats },
-      where: char.traveling ? `🧭 กำลังเดินทางไป ${getZone(char.traveling.to)?.name ?? char.traveling.to}` : zoneLabel(currentZone(char)),
+      where: char.traveling ? `🧭 ${travelVerb(char.traveling.to)} ${getZone(char.traveling.to)?.name ?? char.traveling.to}` : zoneLabel(currentZone(char)),
     },
     renameAt: char.cooldowns.rename ?? 0,
     bio: char.bio ?? '',

@@ -1,7 +1,9 @@
 /**
  * Location roles: each zone with a channel gets a role ("📍 Paris").
- * A member holds exactly the role of the zone they stand in (none while traveling / Fiend),
+ * A member holds exactly the role of the zone they stand in (none as a Fiend),
  * so zone channels can be hidden from everyone else.
+ * On the road they keep the role of the city they left until they arrive: stripping it on departure
+ * closed the channel under them, together with the ephemeral "กำลังเดินทาง…" reply they had just got.
  *
  * A background tick resolves finished travel and syncs roles; interactions also trigger a sync.
  */
@@ -31,8 +33,8 @@ export async function ensureZoneRoles(g: Guild): Promise<void> {
 }
 
 function desiredZone(char: Character | undefined): ZoneId | null {
-  if (!char || char.fiend || char.traveling) return null;
-  const z = currentZone(char).id;
+  if (!char || char.fiend) return null;
+  const z = currentZone(char).id; // still the departure zone while traveling — it only moves on arrival
   return roleIds.has(z) ? z : null;
 }
 

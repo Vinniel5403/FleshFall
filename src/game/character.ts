@@ -9,7 +9,7 @@ import { getItem, itemLabel } from './items.js';
 import { ROLES } from './roles.js';
 import { CHAR_VERSION, type BuffDef, type Character, type IconId, type Outcome, type RoleId, type StatKey } from './types.js';
 import { isCrimsonMoon, LOCATIONS } from './world.js';
-import { currentZone, resolveTravel, startTravel, travelLeft } from './zones.js';
+import { arrivalText, currentZone, resolveTravel, startTravel } from './zones.js';
 
 /** Build a fresh character without saving it (web demo, sims). */
 export function newCharacter(userId: string, name: string, role: RoleId, icon: IconId): Character {
@@ -463,7 +463,7 @@ export function wakeUp(target: Character, by: Character, now = Date.now()): Wake
   if (helper.length) lines.push(`-# ${by.name}: ${helper.join(' ')}`);
   if (target.reachedRougeLand) {
     const t = startTravel(target, 'rouge_land', now);
-    lines.push(t.ok ? `🏠 ${target.name} พยุงตัวกลับ Rouge Land พร้อมของรอบนี้ — ถึงในอีก ${travelLeft(target, now)}` : `-# ${t.error}`);
+    lines.push(t.ok ? `🏠 ${target.name} พยุงตัวกลับ Rouge Land พร้อมของรอบนี้ — ถึง ${arrivalText(t.arriveAt)}` : `-# ${t.error}`);
   }
   return { ok: true, lines };
 }
@@ -552,7 +552,8 @@ export function setCooldown(char: Character, key: string, ms: number, now = Date
 /** Eat/use a consumable. Returns result lines, or null if not usable. */
 export function consume(char: Character, id: string, servedBy?: string): string[] | null {
   const def = getItem(id);
-  if (!def || def.type !== 'consumable' || !removeItem(char, id)) return null;
+  // thrown items only do something mid-hunt (`useInHunt`) — never swallow one here
+  if (!def || def.type !== 'consumable' || def.blast || !removeItem(char, id)) return null;
   const m = mods(char.icon);
   const lines: string[] = [];
   const mult = m.healItemMult ?? 1;

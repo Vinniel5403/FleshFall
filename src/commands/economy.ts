@@ -1,6 +1,6 @@
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { loadCharacter } from '../game/character.js';
-import { getItem } from '../game/items.js';
+import { getItem, itemEffects } from '../game/items.js';
 import { autoSrc, buyItem, buyPrice, cookRecipe, RECIPES, sellItem, shopError, shopPayload, shopStock, STOCK, toReply } from './actions.js';
 import { requireActive } from './guard.js';
 import { inventoryAutocomplete } from './inventory.js';
@@ -65,7 +65,8 @@ export const cook: Command = {
         .setRequired(true)
         .addChoices(
           ...RECIPES.map((r) => ({
-            name: `${getItem(r.makes)!.emoji} ${r.name} = ${Object.entries(r.needs).map(([id, n]) => `${getItem(id)!.name}×${n}`).join(' + ')}`.slice(0, 100),
+            // what it does goes first — Discord cuts a choice name at 100 characters
+            name: `${getItem(r.makes)!.emoji} ${r.name} (${itemEffects(r.makes, true)}) = ${Object.entries(r.needs).map(([id, n]) => `${getItem(id)!.name}×${n}`).join(' + ')}`.slice(0, 100),
             value: r.id,
           })),
         ),

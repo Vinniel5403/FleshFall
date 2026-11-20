@@ -9,7 +9,7 @@ import { ITEMS } from '../game/items.js';
 import { ROLES } from '../game/roles.js';
 import type { Character } from '../game/types.js';
 import { DOORS, DUNGEON_RULES, isCrimsonMoon, LOCATIONS, nextCrimsonMoon } from '../game/world.js';
-import { CONTINENTS, citiesByContinent, currentZone, getZone, mapCities, TIERS, zoneLabel, zoneLevel } from '../game/zones.js';
+import { CONTINENTS, citiesByContinent, currentZone, getZone, mapCities, TIERS, travelVerb, zoneLabel, zoneLevel } from '../game/zones.js';
 import { CONTINENT_STOCK } from '../commands/actions.js';
 
 export type PlayerSource = () => Character[];
@@ -70,7 +70,7 @@ export function leaderboard(src: PlayerSource) {
 
 /** Where a character is, as display text (same wording as the website dossier). */
 const whereText = (c: Character) =>
-  c.traveling ? `🧭 กำลังเดินทางไป ${getZone(c.traveling.to)?.name ?? c.traveling.to}` : zoneLabel(currentZone(c));
+  c.traveling ? `🧭 ${travelVerb(c.traveling.to)} ${getZone(c.traveling.to)?.name ?? c.traveling.to}` : zoneLabel(currentZone(c));
 
 /** Public portrait — never a legacy key (those carry the Discord id in the path). */
 const portraitKey = (c: Character) => pickImage({ ...c, images: publicMedia(c).images }, ['portrait', 'art', 'gallery'])?.key ?? null;

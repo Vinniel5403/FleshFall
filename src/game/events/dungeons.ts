@@ -1,6 +1,9 @@
 import { itemCount } from '../character.js';
 import type { GameEventDef } from '../types.js';
 
+/** Food a traveller can give up at the white door's empty table (first one held is taken). */
+const WHITE_RATIONS = ['instant_noodle', 'canned_beans', 'spice_jerky', 'grilled_meat'];
+
 export const DUNGEON_EVENTS: GameEventDef[] = [
   // ================= GREEN — Sophia / Birth =================
   {
@@ -47,6 +50,107 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         },
       },
       { id: 'leave', label: 'อย่ามอง', emoji: '🙈', style: 'secondary', resolve: () => ({ text: 'คุณเบือนหน้าแล้วเดินต่อ', xp: 3 }) },
+    ],
+  },
+  {
+    id: 'g_cord_garden',
+    door: 'green',
+    title: '🟩 สวนสายรก',
+    description: 'สายรกนับพันห้อยลงมาจากเพดานเหมือนเถาวัลย์ ปลายแต่ละเส้นมีบางอย่างกำลังโต บางเส้นขยับตามคุณ',
+    weight: 8,
+    choices: [
+      {
+        id: 'cut_through',
+        label: 'ฟันเปิดทาง',
+        emoji: '🔪',
+        style: 'danger',
+        hint: 'พละ DC 12',
+        resolve: ({ check, rand }) => {
+          const r = check('str', 12);
+          return r.success
+            ? { text: `สายรกขาดร่วงเป็นกอง ของที่มันเลี้ยงไว้ตกลงมาแทบเท้าคุณ ${r.tag}`, items: { fetal_flesh: rand(1, 2), bone: 1 }, xp: 14 }
+            : { text: `สายรกเส้นหนึ่งรัดคอคุณแล้วเริ่มสูบเลือด ${r.tag}`, hp: -rand(5, 9), sanity: -4, xp: 7 };
+        },
+      },
+      {
+        id: 'weave',
+        label: 'ลัดเลาะระหว่างสาย',
+        emoji: '🤸',
+        style: 'primary',
+        hint: 'ว่องไว DC 12',
+        resolve: ({ check, rand }) => {
+          const r = check('agi', 12);
+          return r.success
+            ? { text: `คุณผ่านไปโดยไม่แตะสักเส้น ${r.tag}`, xp: 13 }
+            : { text: `ปลายสายเส้นหนึ่งแตะต้นคอคุณ มันอุ่น และมันพยายามเชื่อมต่อ ${r.tag}`, hp: -rand(4, 6), mutation: 'รอยสะดือเล็ก ๆ ที่ต้นคอ', xp: 6 };
+        },
+      },
+    ],
+  },
+  {
+    id: 'g_nursery',
+    door: 'green',
+    title: '🟩 ห้องเด็กอ่อน',
+    description: 'เปลที่สานจากซี่โครงเรียงเป็นแถว ทุกใบไกวเองช้า ๆ มีเสียงร้องไห้ดังมาจากใบเดียว',
+    weight: 7,
+    choices: [
+      {
+        id: 'soothe',
+        label: 'ปลอบสิ่งที่ร้อง',
+        emoji: '🤱',
+        style: 'primary',
+        hint: 'สัมผัส DC 12',
+        resolve: ({ check }) => {
+          const r = check('int', 12);
+          return r.success
+            ? { text: `มันเงียบลงในอ้อมแขนคุณ ชั่วขณะหนึ่งคุณจำได้ว่าการเป็นมนุษย์รู้สึกอย่างไร ${r.tag}`, humanity: 3, sanity: 4, xp: 16 }
+            : { text: `สิ่งที่อยู่ในเปลไม่ใช่เด็ก และมันไม่ได้ร้องไห้ — มันกำลังเลียนเสียง ${r.tag}`, sanity: -10, xp: 6 };
+        },
+      },
+      {
+        id: 'search',
+        label: 'ค้นเปลใบอื่น',
+        emoji: '🖐️',
+        style: 'danger',
+        hint: 'ว่องไว DC 13',
+        resolve: ({ check, rand }) => {
+          const r = check('agi', 13);
+          return r.success
+            ? { text: `ใต้ผ้าห่มมีของที่แม่ของใครบางคนทิ้งไว้ ${r.tag}`, items: { family_photo: 1 }, flesh: rand(8, 15), xp: 14 }
+            : { text: `มือเล็ก ๆ หลายสิบข้างคว้าแขนคุณไว้พร้อมกัน ${r.tag}`, hp: -rand(5, 8), xp: 5 };
+        },
+      },
+      { id: 'tiptoe', label: 'ย่องผ่านเงียบ ๆ', emoji: '🤫', style: 'secondary', resolve: () => ({ text: 'เสียงร้องตามหลังคุณไปจนสุดห้อง', sanity: -2, xp: 4 }) },
+    ],
+  },
+  {
+    id: 'g_milk_pool',
+    door: 'green',
+    title: '🟩 บ่อน้ำนมอุ่น',
+    description: 'บ่อของเหลวสีขาวขุ่นอุ่นเท่าอุณหภูมิร่างกาย ผนังรอบบ่อหยดลงมาไม่ขาดสาย กลิ่นของมันเหมือนบ้าน',
+    weight: 7,
+    choices: [
+      {
+        id: 'drink',
+        label: 'ดื่ม',
+        emoji: '🥛',
+        style: 'danger',
+        hint: 'ฟื้นเนื้อกาย — แต่มันไม่ใช่นมของมนุษย์',
+        resolve: () => ({ text: 'แผลของคุณปิดสนิท และคุณเผลอเรียกผนังว่าแม่', hp: 12, humanity: -3, xp: 8 }),
+      },
+      {
+        id: 'wade',
+        label: 'ลุยข้ามบ่อ',
+        emoji: '🚶',
+        style: 'primary',
+        hint: 'ว่องไว DC 11',
+        resolve: ({ check, rand }) => {
+          const r = check('agi', 11);
+          return r.success
+            ? { text: `คุณถึงอีกฝั่งก่อนที่ผิวบ่อจะปิดเหนือหัว ${r.tag}`, xp: 12 }
+            : { text: `บางอย่างใต้ผิวบ่อกอดขาคุณไว้เหมือนเด็กไม่ยอมให้ไป ${r.tag}`, hp: -rand(4, 8), sanity: -5, xp: 6 };
+        },
+      },
     ],
   },
   {
@@ -142,6 +246,120 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
     ],
   },
   {
+    id: 'y_candle_altar',
+    door: 'yellow',
+    title: '🟨 แท่นเทียนที่เพิ่งดับ',
+    description: 'ตอเทียนนับร้อยล้อมแท่นขี้เถ้า ไส้เทียนทุกเล่มยังอุ่น เหมือนมีคนเป่าดับทั้งหมดหนึ่งวินาทีก่อนคุณเข้ามา',
+    weight: 8,
+    choices: [
+      {
+        id: 'light',
+        label: 'จุดเทียน',
+        emoji: '🔥',
+        style: 'success',
+        visible: (c) => itemCount(c, 'lighter') > 0,
+        hint: 'มีไฟแช็ก — บางครั้งมีของถวายเหลืออยู่บนแท่น',
+        resolve: ({ chance }) =>
+          chance(0.35)
+            ? { text: 'แสงเทียนนับร้อยไล่ความมืดออกไปชั่วครู่ บนแท่นมีตราที่ใครบางคนถวายไว้แล้วไม่ได้กลับมาเอา', items: { sigil: 1 }, sanity: 6, xp: 16 }
+            : { text: 'แสงเทียนนับร้อยไล่ความมืดออกไปชั่วครู่ แท่นว่างเปล่า แต่คุณหายใจได้เต็มปอดเป็นครั้งแรก', sanity: 8, xp: 14 },
+      },
+      {
+        id: 'grope',
+        label: 'คลำหาของบนแท่น',
+        emoji: '🖐️',
+        style: 'primary',
+        hint: 'สัมผัส DC 13 (ไม่มีแสง)',
+        resolve: ({ check, rand }) => {
+          const r = check('int', 13);
+          return r.success
+            ? { text: `นิ้วคุณเจอถุงผ้าใบเล็กใต้กองขี้เถ้า ${r.tag}`, flesh: rand(10, 18), xp: 14 }
+            : { text: `มือคุณแตะโดนมืออีกข้าง ที่กำลังคลำหาอยู่เหมือนกัน ${r.tag}`, sanity: -11, xp: 6 };
+        },
+      },
+      { id: 'leave', label: 'อย่าแตะอะไรทั้งนั้น', emoji: '🚶', style: 'secondary', resolve: () => ({ text: 'ข้างหลังคุณ มีเสียงไม้ขีดถูกจุด', sanity: -2, xp: 3 }) },
+    ],
+  },
+  {
+    id: 'y_breathing',
+    door: 'yellow',
+    title: '🟨 ลมหายใจข้างหู',
+    description: 'ทางเดินแคบจนต้องตะแคงตัว มีลมหายใจอุ่น ๆ รดต้นคอคุณ ทั้งที่ข้างหลังคุณคือผนัง',
+    weight: 7,
+    choices: [
+      {
+        id: 'turn',
+        label: 'หันไปมอง',
+        emoji: '👁️',
+        style: 'danger',
+        hint: 'สัมผัส DC 13',
+        resolve: ({ check }) => {
+          const r = check('int', 13);
+          return r.success
+            ? { text: `ไม่มีอะไรอยู่ตรงนั้น — และการรู้อย่างนั้นทำให้ความกลัวคลายมือออก ${r.tag}`, sanity: 6, xp: 18 }
+            : { text: `มีบางอย่างอยู่ตรงนั้น และมันกำลังยิ้ม ${r.tag}`, sanity: -14, xp: 6 };
+        },
+      },
+      {
+        id: 'squeeze',
+        label: 'เบียดตัวไปให้เร็วที่สุด',
+        emoji: '🏃',
+        style: 'primary',
+        hint: 'ว่องไว DC 12',
+        resolve: ({ check, rand }) => {
+          const r = check('agi', 12);
+          return r.success
+            ? { text: `คุณหลุดออกมาอีกฝั่ง ลมหายใจนั้นหยุดตามแค่ปากทาง ${r.tag}`, stamina: -1, xp: 13 }
+            : { text: `ผนังขูดไหล่คุณจนถลอก ลมหายใจนั้นเร่งจังหวะตามคุณ ${r.tag}`, hp: -rand(4, 7), sanity: -6, xp: 6 };
+        },
+      },
+    ],
+  },
+  {
+    id: 'y_stair_down',
+    door: 'yellow',
+    title: '🟨 บันไดที่ไม่มีขั้นสุดท้าย',
+    description: 'บันไดวนลงไปในความมืด คุณนับขั้นได้เกินร้อยแล้ว เศษหินที่เตะตกลงไปยังไม่มีเสียงกระทบพื้น',
+    weight: 7,
+    choices: [
+      {
+        id: 'light',
+        label: 'ส่องไฟแช็กหาทาง',
+        emoji: '🔥',
+        style: 'success',
+        visible: (c) => itemCount(c, 'lighter') > 0,
+        hint: 'มีไฟแช็ก — ปลอดภัย',
+        resolve: ({ rand }) => ({ text: 'เปลวไฟเผยให้เห็นประตูบานเล็กบนผนัง ที่คุณเดินผ่านมาแล้วสามรอบ', flesh: rand(6, 12), xp: 15 }),
+      },
+      {
+        id: 'count',
+        label: 'นับขั้นต่อไปอย่างมีสติ',
+        emoji: '🔢',
+        style: 'primary',
+        hint: 'สัมผัส DC 12',
+        resolve: ({ check }) => {
+          const r = check('int', 12);
+          return r.success
+            ? { text: `ขั้นที่สองร้อยสิบเจ็ดคือพื้น คุณไม่เคยดีใจกับพื้นขนาดนี้ ${r.tag}`, sanity: -2, xp: 16 }
+            : { text: `คุณลืมไปแล้วว่านับถึงเท่าไร แต่มีเสียงหนึ่งนับต่อจากคุณ ${r.tag}`, stamina: -2, sanity: -10, xp: 6 };
+        },
+      },
+      {
+        id: 'jump',
+        label: 'กระโดดลงไป',
+        emoji: '🕳️',
+        style: 'danger',
+        hint: 'ว่องไว DC 14 — เสี่ยง',
+        resolve: ({ check, rand }) => {
+          const r = check('agi', 14);
+          return r.success
+            ? { text: `พื้นอยู่ใกล้กว่าที่ความมืดหลอกไว้ ข้างเท้าคุณมีของของคนที่กระโดดก่อนหน้า ${r.tag}`, items: { pocket_watch: 1 }, xp: 16 }
+            : { text: `คุณตกลงไปนานพอจะมีเวลาเสียใจ ${r.tag}`, hp: -rand(7, 12), xp: 6 };
+        },
+      },
+    ],
+  },
+  {
     id: 'y_boss_dread',
     door: 'yellow',
     boss: true,
@@ -228,6 +446,107 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
             : { text: `คุณยื่นมือออกไป... มันแทบจะกลืนคุณเป็นทรัพยากรของดันเจียน ${r.tag}`, humanity: -6, hp: -6, xp: 6 };
         },
       },
+    ],
+  },
+  {
+    id: 'gr_apartment',
+    door: 'gray',
+    title: '⬜ ห้องของคุณเอง',
+    description: 'ประตูเปิดออกสู่ห้องพักของคุณในโลกจริง ทุกอย่างอยู่ที่เดิม แม้แต่แก้วกาแฟที่ยังอุ่น มีเพียงนาฬิกาที่เดินถอยหลัง',
+    weight: 8,
+    choices: [
+      {
+        id: 'sleep',
+        label: 'ล้มตัวลงบนเตียงตัวเอง',
+        emoji: '🛏️',
+        style: 'danger',
+        hint: 'สัมผัส DC 14 — ระวังไม่ได้ตื่น',
+        resolve: ({ check }) => {
+          const r = check('int', 14);
+          return r.success
+            ? { text: `คุณหลับไปสิบนาทีที่ดีที่สุดในรอบหลายเดือน แล้วบังคับตัวเองให้ลุก ${r.tag}`, hp: 10, sanity: 10, xp: 12 }
+            : { text: `คุณตื่นขึ้นในห้องเดิม แต่ผ้าปูที่นอนมีฝุ่นจับหนาเป็นนิ้ว ${r.tag}`, stamina: -3, humanity: -4, xp: 4 };
+        },
+      },
+      {
+        id: 'take',
+        label: 'หยิบของติดมือไป',
+        emoji: '🖼️',
+        style: 'primary',
+        resolve: () => ({ text: 'ของในมือคุณดูเก่าลงสิบปีทันทีที่พ้นประตู', items: { family_photo: 1 }, sanity: -6, xp: 10 }),
+      },
+      { id: 'close', label: 'ปิดประตู มันไม่ใช่ของจริง', emoji: '🚪', style: 'secondary', resolve: () => ({ text: 'คุณปิดประตูทั้งที่มือสั่น', humanity: 2, xp: 6 }) },
+    ],
+  },
+  {
+    id: 'gr_office',
+    door: 'gray',
+    title: '⬜ ออฟฟิศที่ไม่มีวันเลิกงาน',
+    description: 'ออฟฟิศเปิดโล่ง ไฟนีออนกะพริบ นาฬิกาทุกเรือนค้างที่ 16:59 พนักงานไร้หน้าพิมพ์งานไม่หยุด มีโต๊ะว่างตัวหนึ่งติดป้ายชื่อคุณ',
+    weight: 7,
+    choices: [
+      {
+        id: 'work',
+        label: 'นั่งทำงาน',
+        emoji: '⌨️',
+        style: 'danger',
+        hint: 'สัมผัส DC 13 — ได้เงินเดือน ถ้าลุกออกมาได้',
+        resolve: ({ check, rand }) => {
+          const r = check('int', 13);
+          return r.success
+            ? { text: `คุณส่งงานแล้วลุกออกมาได้ทัน พร้อมซองเงินเดือน ${r.tag}`, stamina: -2, flesh: rand(15, 25), xp: 14 }
+            : { text: `นาฬิกายังคง 16:59 คุณพิมพ์มากี่ปีแล้ว? ${r.tag}`, stamina: -4, sanity: -8, humanity: -3, xp: 5 };
+        },
+      },
+      {
+        id: 'drawers',
+        label: 'รื้อลิ้นชัก',
+        emoji: '🗄️',
+        style: 'primary',
+        hint: 'ว่องไว DC 12',
+        resolve: ({ check, rand }) => {
+          const r = check('agi', 12);
+          return r.success
+            ? { text: `ไม่มีใครละสายตาจากจอ ${r.tag}`, items: { lighter: 1 }, flesh: rand(5, 10), xp: 13 }
+            : { text: `เสียงพิมพ์หยุดลงพร้อมกันทั้งชั้น ทุกคนหันมา ${r.tag}`, hp: -rand(3, 6), sanity: -9, xp: 5 };
+        },
+      },
+      { id: 'pass', label: 'เดินผ่านไปเฉย ๆ', emoji: '🚶', style: 'secondary', resolve: () => ({ text: 'ป้ายชื่อบนโต๊ะว่างเปลี่ยนเป็นชื่อคนอื่น', xp: 4 }) },
+    ],
+  },
+  {
+    id: 'gr_vending',
+    door: 'gray',
+    title: '⬜ ตู้กดน้ำกลางทางเดิน',
+    description: 'ตู้กดอัตโนมัติส่องแสงอยู่กลางทางเดินว่างเปล่า สินค้าข้างในไม่มีฉลาก ช่องหยอดเหรียญกว้างพอจะสอดนิ้วเข้าไป',
+    weight: 7,
+    choices: [
+      {
+        id: 'pay',
+        label: 'หยอดเนื้อสด 10',
+        emoji: '🪙',
+        style: 'success',
+        visible: (c) => c.flesh >= 10,
+        hint: 'ได้ของกิน 1 ชิ้น (สุ่ม)',
+        resolve: ({ rand }) => {
+          const id = ['canned_beans', 'absinthe', 'instant_noodle'][rand(0, 2)]!;
+          return { text: 'ตู้กลืนเนื้อลงไปพร้อมเสียงเคี้ยว แล้วคายของออกมาหนึ่งชิ้น', flesh: -10, items: { [id]: 1 }, xp: 10 };
+        },
+      },
+      {
+        id: 'shake',
+        label: 'เขย่าตู้',
+        emoji: '💢',
+        style: 'danger',
+        hint: 'พละ DC 12',
+        resolve: ({ check, rand }) => {
+          const r = check('str', 12);
+          return r.success
+            ? { text: `ของร่วงลงมาสองชิ้น ตู้ส่งเสียงครางอย่างไม่พอใจ ${r.tag}`, items: { canned_beans: 2 }, xp: 13 }
+            : { text: `ตู้ล้มทับคุณ ข้างในมันอุ่นและเต้นเป็นจังหวะ ${r.tag}`, hp: -rand(6, 10), xp: 5 };
+        },
+      },
+      { id: 'ignore', label: 'ไม่ไว้ใจมัน', emoji: '🙅', style: 'secondary', resolve: () => ({ text: 'แสงตู้ดับลงทันทีที่คุณหันหลัง', xp: 3 }) },
     ],
   },
   {
@@ -338,6 +657,107 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
     ],
   },
   {
+    id: 'o_larder',
+    door: 'orange',
+    title: '🟧 ห้องเก็บเสบียงมีชีวิต',
+    description: 'เนื้อชิ้นมหึมาแขวนเป็นแถวจากตะขอ ทุกชิ้นยังหายใจ บางชิ้นมีปากและกำลังแทะชิ้นข้าง ๆ',
+    weight: 8,
+    choices: [
+      {
+        id: 'carve',
+        label: 'แล่เนื้อจากตะขอ',
+        emoji: '🔪',
+        style: 'danger',
+        hint: 'พละ DC 12',
+        resolve: ({ check, rand }) => {
+          const r = check('str', 12);
+          return r.success
+            ? { text: `คุณแล่ได้ก่อนที่มันจะหันมา ${r.tag}`, items: { raw_meat: rand(2, 4) }, flesh: rand(6, 12), xp: 15 }
+            : { text: `ชิ้นเนื้อหันมากัดแขนคุณก่อน ${r.tag}`, hp: -rand(6, 10), xp: 6 };
+        },
+      },
+      {
+        id: 'duck',
+        label: 'ลอดใต้ตะขอ',
+        emoji: '🤸',
+        style: 'primary',
+        hint: 'ว่องไว DC 12',
+        resolve: ({ check, rand }) => {
+          const r = check('agi', 12);
+          return r.success
+            ? { text: `น้ำลายหยดใส่หลังคุณ แต่ไม่มีปากไหนงับทัน ${r.tag}`, xp: 13 }
+            : { text: `ตะขอเกี่ยวไหล่คุณไว้ ชั่วครู่หนึ่งคุณเป็นเสบียงชิ้นหนึ่งในแถว ${r.tag}`, hp: -rand(4, 8), sanity: -3, xp: 6 };
+        },
+      },
+    ],
+  },
+  {
+    id: 'o_tongue_bridge',
+    door: 'orange',
+    title: '🟧 สะพานลิ้น',
+    description: 'ลิ้นยาวสิบเมตรทอดข้ามเหวน้ำย่อย มันเปียก อุ่น และกระตุกทุกครั้งที่ได้กลิ่นเนื้อ',
+    weight: 7,
+    choices: [
+      {
+        id: 'pay',
+        label: 'วางเนื้อสด 15 ไว้ปลายลิ้น',
+        emoji: '🥩',
+        style: 'success',
+        visible: (c) => c.flesh >= 15,
+        hint: 'ข้ามได้อย่างปลอดภัย',
+        resolve: () => ({ text: 'ลิ้นม้วนเอาเนื้อไป แล้วนิ่งสนิทจนคุณข้ามเสร็จ', flesh: -15, xp: 14 }),
+      },
+      {
+        id: 'run',
+        label: 'วิ่งข้าม',
+        emoji: '🏃',
+        style: 'primary',
+        hint: 'ว่องไว DC 13',
+        resolve: ({ check, rand }) => {
+          const r = check('agi', 13);
+          return r.success
+            ? { text: `คุณถึงอีกฝั่งก่อนที่มันจะรู้ตัวว่ามีอะไรเหยียบ ${r.tag}`, xp: 15 }
+            : { text: `ลิ้นม้วนรัดคุณแล้วชิม ก่อนจะคายออกเพราะยังไม่อ้วนพอ ${r.tag}`, hp: -rand(7, 12), humanity: -2, xp: 6 };
+        },
+      },
+    ],
+  },
+  {
+    id: 'o_stomach',
+    door: 'orange',
+    title: '🟧 ห้องกระเพาะ',
+    description: 'พื้นนุ่มหยุ่นเท้า ผนังหลั่งน้ำย่อยช้า ๆ ข้าวของของคนที่มาก่อนลอยอยู่ครึ่งละลาย',
+    weight: 7,
+    choices: [
+      {
+        id: 'fish',
+        label: 'ช้อนของในน้ำย่อย',
+        emoji: '🫳',
+        style: 'danger',
+        hint: 'ว่องไว DC 13',
+        resolve: ({ check, rand }) => {
+          const r = check('agi', 13);
+          return r.success
+            ? { text: `คุณคว้าถุงเนื้อของใครบางคนขึ้นมาได้ก่อนมันละลายหมด ${r.tag}`, flesh: rand(12, 22), items: { bone: rand(1, 2) }, xp: 15 }
+            : { text: `น้ำย่อยกัดมือคุณจนเห็นขาว ${r.tag}`, hp: -rand(6, 10), xp: 6 };
+        },
+      },
+      {
+        id: 'force',
+        label: 'แหวกผนังออกไปก่อนมันบีบ',
+        emoji: '💪',
+        style: 'primary',
+        hint: 'พละ DC 12',
+        resolve: ({ check, rand }) => {
+          const r = check('str', 12);
+          return r.success
+            ? { text: `กล้ามเนื้อหูรูดยอมคลายให้คุณลอดออกไป ${r.tag}`, xp: 13 }
+            : { text: `ห้องบีบตัวหนึ่งครั้งก่อนคุณจะหลุดออกมา ${r.tag}`, hp: -rand(5, 8), stamina: -1, xp: 6 };
+        },
+      },
+    ],
+  },
+  {
     id: 'o_boss_maw',
     door: 'orange',
     boss: true,
@@ -422,6 +842,152 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
     ],
   },
   {
+    id: 'w_frost_mirror',
+    door: 'white',
+    title: '🤍 เงาในน้ำแข็ง',
+    description: 'ผนังน้ำแข็งใสสะท้อนเงาของคุณ — ผอมกว่า ซีดกว่า และกำลังเคี้ยวอะไรบางอย่าง',
+    weight: 8,
+    choices: [
+      {
+        id: 'stare',
+        label: 'จ้องมันกลับ',
+        emoji: '👁️',
+        style: 'primary',
+        hint: 'สัมผัส DC 13',
+        resolve: ({ check }) => {
+          const r = check('int', 13);
+          return r.success
+            ? { text: `เงาหยุดเคี้ยวแล้วก้มหน้า คุณยังเป็นคุณ ${r.tag}`, humanity: 4, sanity: 3, xp: 20 }
+            : { text: `คุณเผลอเคี้ยวตามมัน ในปากมีรสเลือด ${r.tag}`, humanity: -5, sanity: -8, xp: 8 };
+        },
+      },
+      {
+        id: 'smash',
+        label: 'ทุบน้ำแข็ง',
+        emoji: '🧊',
+        style: 'danger',
+        hint: 'พละ DC 12',
+        resolve: ({ check, rand }) => {
+          const r = check('str', 12);
+          return r.success
+            ? { text: `หลังน้ำแข็งมีศพนักเดินทางกับเป้ที่ยังไม่ถูกเปิด ${r.tag}`, items: { bandage: 1 }, flesh: rand(8, 15), xp: 15 }
+            : { text: `น้ำแข็งแตกเป็นคมมีดใส่หน้าคุณ เงายังอยู่ที่เดิมในทุกเศษ ${r.tag}`, hp: -rand(5, 9), xp: 6 };
+        },
+      },
+    ],
+  },
+  {
+    id: 'w_snow_tracks',
+    door: 'white',
+    title: '🤍 รอยเท้าในหิมะ',
+    description: 'รอยเท้าเปล่าคู่หนึ่งนำหน้าคุณไปในหิมะ ทุกสิบก้าวรอยจะยาวขึ้น และนิ้วจะน้อยลง',
+    weight: 7,
+    choices: [
+      {
+        id: 'follow',
+        label: 'ตามรอยไป',
+        emoji: '👣',
+        style: 'primary',
+        hint: 'สัมผัส DC 12',
+        resolve: ({ check }) => {
+          const r = check('int', 12);
+          return r.success
+            ? { text: `รอยสิ้นสุดที่ซากกองไฟเก่า ใครบางคนทิ้งของไว้ให้คนที่มาทีหลัง ${r.tag}`, items: { whale_blubber: 1 }, xp: 16 }
+            : { text: `รอยเท้าวนกลับมาอยู่ข้างหลังคุณ ${r.tag}`, stamina: -1, sanity: -10, xp: 6 };
+        },
+      },
+      {
+        id: 'own_path',
+        label: 'ฝ่าหิมะไปทางของตัวเอง',
+        emoji: '🌨️',
+        style: 'secondary',
+        hint: 'พละ DC 12',
+        resolve: ({ check, rand }) => {
+          const r = check('str', 12);
+          return r.success
+            ? { text: `หิมะสูงถึงเอว แต่ขาคุณยังไม่ยอมแพ้ ${r.tag}`, stamina: -1, xp: 14 }
+            : { text: `นิ้วเท้าคุณหมดความรู้สึกไปสองนิ้ว ${r.tag}`, hp: -rand(4, 8), stamina: -2, xp: 6 };
+        },
+      },
+    ],
+  },
+  {
+    id: 'w_empty_table',
+    door: 'white',
+    title: '🤍 โต๊ะอาหารว่างเปล่า',
+    description: 'โต๊ะยาวปูผ้าขาว จานเปล่าเรียงเป็นระเบียบ คนผอมแห้งนั่งประจำที่ ยกช้อนเปล่าเข้าปากช้า ๆ มีเก้าอี้ว่างอยู่หนึ่งตัว',
+    weight: 7,
+    choices: [
+      {
+        id: 'sit',
+        label: 'นั่งร่วมโต๊ะ',
+        emoji: '🪑',
+        style: 'primary',
+        resolve: () => ({ text: 'คุณเคี้ยวความว่างเปล่าไปพร้อมกับพวกเขา ความหิวไม่ได้หายไป แต่มันเงียบลง', stamina: -1, sanity: 8, humanity: 2, xp: 18 }),
+      },
+      {
+        id: 'share',
+        label: 'แบ่งเสบียงให้ทั้งโต๊ะ',
+        emoji: '🍜',
+        style: 'success',
+        visible: (c) => WHITE_RATIONS.some((id) => itemCount(c, id) > 0),
+        hint: 'เสียของกิน 1 ชิ้น — ความเป็นมนุษย์เพิ่มมาก',
+        resolve: ({ char }) => {
+          const id = WHITE_RATIONS.find((x) => itemCount(char, x) > 0)!;
+          return { text: 'ทุกคนได้คนละคำเดียว ไม่มีใครพูดอะไร แล้วทุกคนก็ร้องไห้', items: { [id]: -1 }, humanity: 8, sanity: 5, xp: 24 };
+        },
+      },
+      {
+        id: 'steal',
+        label: 'ขโมยช้อนเงิน',
+        emoji: '🥄',
+        style: 'danger',
+        hint: 'ว่องไว DC 13',
+        resolve: ({ check, rand }) => {
+          const r = check('agi', 13);
+          return r.success
+            ? { text: `ไม่มีใครเงยหน้าจากจานเปล่า ${r.tag}`, flesh: rand(12, 20), humanity: -2, xp: 12 }
+            : { text: `ทุกคนวางช้อนพร้อมกัน แล้วมองคุณเหมือนมองอาหาร ${r.tag}`, hp: -rand(6, 10), sanity: -6, xp: 5 };
+        },
+      },
+    ],
+  },
+  {
+    id: 'w_frozen_pilgrims',
+    door: 'white',
+    title: '🤍 ขบวนผู้แสวงบุญ',
+    description: 'ผู้แสวงบุญนับสิบแข็งตายในท่าคุกเข่า หันหน้าไปทางเดียวกัน มือทุกคู่ประคองอะไรบางอย่างไว้แนบอก',
+    weight: 6,
+    choices: [
+      {
+        id: 'kneel',
+        label: 'คุกเข่าสวดร่วมกับพวกเขา',
+        emoji: '🙏',
+        style: 'primary',
+        hint: 'สัมผัส DC 12',
+        resolve: ({ check, rand }) => {
+          const r = check('int', 12);
+          return r.success
+            ? { text: `ความหนาวกัดลึก แต่ใจคุณนิ่งอย่างที่ไม่ได้เป็นมานาน ${r.tag}`, hp: -3, sanity: 6, humanity: 3, xp: 20 }
+            : { text: `เข่าของคุณเริ่มติดกับพื้นน้ำแข็ง เหมือนของพวกเขา ${r.tag}`, hp: -rand(6, 9), stamina: -2, xp: 8 };
+        },
+      },
+      {
+        id: 'pry',
+        label: 'งัดมือศพ',
+        emoji: '🫳',
+        style: 'danger',
+        hint: 'พละ DC 13 — ลบหลู่',
+        resolve: ({ check }) => {
+          const r = check('str', 13);
+          return r.success
+            ? { text: `นิ้วแข็งหักดังเป๊าะ ในมือนั้นคือตราที่เขากำไว้จนลมหายใจสุดท้าย ${r.tag}`, items: { sigil: 1 }, humanity: -4, xp: 14 }
+            : { text: `นิ้วหักคามือคุณ แล้วศพทั้งขบวนก็หันหน้ามา ${r.tag}`, sanity: -9, humanity: -3, xp: 5 };
+        },
+      },
+    ],
+  },
+  {
     id: 'w_boss_famished',
     door: 'white',
     boss: true,
@@ -490,6 +1056,112 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
     choices: [
       { id: 'mercy', label: 'ปลดปล่อยพวกเขา', emoji: '🗡️', style: 'primary', resolve: () => ({ text: 'ทีละคน จนเงียบสนิท', humanity: 4, sanity: -8, xp: 18 }) },
       { id: 'loot', label: 'ค้นของจากร่างพวกเขา', emoji: '🖐️', style: 'danger', resolve: ({ rand }) => ({ text: 'พวกเขามองคุณค้นกระเป๋า', flesh: rand(15, 25), items: { family_photo: 1 }, humanity: -5, xp: 12 }) },
+    ],
+  },
+  {
+    id: 'b_confession',
+    door: 'blue',
+    title: '🟦 ตู้สารภาพบาป',
+    description: 'ตู้สารภาพบาปไม้ผุตั้งอยู่กลางห้องว่าง หลังตะแกรงมีเสียงหายใจ และมันรู้ชื่อคุณ',
+    weight: 8,
+    choices: [
+      {
+        id: 'confess',
+        label: 'สารภาพ',
+        emoji: '🙏',
+        style: 'primary',
+        hint: 'สัมผัส DC 13',
+        resolve: ({ check }) => {
+          const r = check('int', 13);
+          return r.success
+            ? { text: `คุณพูดสิ่งที่ไม่เคยบอกใคร เสียงหลังตะแกรงตอบเพียง "ดีแล้ว" ${r.tag}`, humanity: 5, sanity: -4, xp: 22 }
+            : { text: `มันสารภาพบาปของคุณกลับมาให้ฟัง ทีละข้อ ไม่ตกสักข้อ ${r.tag}`, sanity: -14, xp: 8 };
+        },
+      },
+      {
+        id: 'open',
+        label: 'กระชากประตูอีกฝั่ง',
+        emoji: '🚪',
+        style: 'danger',
+        hint: 'พละ DC 12',
+        resolve: ({ check, rand }) => {
+          const r = check('str', 12);
+          return r.success
+            ? { text: `ไม่มีใครอยู่ มีเพียงกล่องบริจาคที่ไม่มีใครมาเก็บ ${r.tag}`, flesh: rand(12, 22), xp: 14 }
+            : { text: `มีคนอยู่ข้างใน และเขาคือคุณ ${r.tag}`, hp: -rand(3, 6), sanity: -10, xp: 6 };
+        },
+      },
+    ],
+  },
+  {
+    id: 'b_weeping_pool',
+    door: 'blue',
+    title: '🟦 สระน้ำตา',
+    description: 'ห้องจมอยู่ใต้น้ำเค็มสูงถึงเอว เพดานร้องไห้ไม่หยุด ใต้ผิวน้ำมีมือที่ไม่ได้พยายามดึงคุณลงไป — แค่อยากให้ใครสักคนจับ',
+    weight: 7,
+    choices: [
+      { id: 'hold', label: 'จับมือพวกเขา', emoji: '🤝', style: 'primary', resolve: () => ({ text: 'คุณยืนจับมือเย็นเฉียบนั้นไว้ จนมันคลายออกเอง', humanity: 4, sanity: -7, xp: 18 }) },
+      {
+        id: 'wade',
+        label: 'ลุยไปให้เร็ว',
+        emoji: '🏃',
+        style: 'secondary',
+        hint: 'ว่องไว DC 12',
+        resolve: ({ check, rand }) => {
+          const r = check('agi', 12);
+          return r.success
+            ? { text: `คุณไม่ก้มมองลงไปเลยสักครั้ง ${r.tag}`, xp: 13 }
+            : { text: `คุณลื่นจมลงไป ใต้น้ำมีเสียงสะอื้นของทุกคนที่เคยอยู่ที่นี่ ${r.tag}`, hp: -rand(4, 7), sanity: -9, xp: 6 };
+        },
+      },
+      {
+        id: 'dive',
+        label: 'ดำลงไปค้นก้นสระ',
+        emoji: '🤿',
+        style: 'danger',
+        hint: 'พละ DC 13',
+        resolve: ({ check, rand }) => {
+          const r = check('str', 13);
+          return r.success
+            ? { text: `ก้นสระเต็มไปด้วยของที่ผู้คนปล่อยมือ ${r.tag}`, items: { pocket_watch: 1 }, flesh: rand(8, 15), xp: 15 }
+            : { text: `มือพวกนั้นไม่ได้ดึงคุณไว้ คุณเองที่ไม่อยากขึ้น ${r.tag}`, hp: -rand(6, 10), sanity: -5, xp: 6 };
+        },
+      },
+    ],
+  },
+  {
+    id: 'b_wall_face',
+    door: 'blue',
+    title: '🟦 ใบหน้าบนผนัง',
+    description: 'ใบหน้าขนาดเท่าประตูนูนออกมาจากผนัง ตาปิดสนิท ริมฝีปากขยับเป็นคำเดียวซ้ำ ๆ: "พอแล้ว"',
+    weight: 7,
+    choices: [
+      {
+        id: 'comfort',
+        label: 'ปลอบมัน',
+        emoji: '🫂',
+        style: 'primary',
+        hint: 'สัมผัส DC 13',
+        resolve: ({ check }) => {
+          const r = check('int', 13);
+          return r.success
+            ? { text: `มันลืมตาขึ้นครั้งหนึ่ง แล้วคายสิ่งที่อมไว้นานออกมาให้คุณ ${r.tag}`, items: { alchemy_salve: 1 }, humanity: 2, xp: 18 }
+            : { text: `"พอแล้ว" ดังขึ้นในหัวคุณ ด้วยเสียงของคุณเอง ${r.tag}`, sanity: -13, xp: 7 };
+        },
+      },
+      {
+        id: 'teeth',
+        label: 'ถอนฟันมัน',
+        emoji: '🦷',
+        style: 'danger',
+        hint: 'พละ DC 13',
+        resolve: ({ check, rand }) => {
+          const r = check('str', 13);
+          return r.success
+            ? { text: `มันไม่ขัดขืน และนั่นทำให้รู้สึกแย่กว่าเดิม ${r.tag}`, items: { fiend_fang: rand(1, 2) }, humanity: -3, xp: 14 }
+            : { text: `ปากงับแขนคุณไว้ ไม่แรง แต่ไม่ยอมปล่อย ${r.tag}`, hp: -rand(7, 11), xp: 6 };
+        },
+      },
     ],
   },
   {
@@ -568,6 +1240,116 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
           return r.success
             ? { text: `ไม่มีใครหันมา ${r.tag}`, flesh: rand(15, 25), items: { pocket_watch: 1 }, xp: 15 }
             : { text: `ศพลุกขึ้นมาจับข้อมือคุณ ลมหายใจมันคือ Miasma ล้วน ๆ ${r.tag}`, miasma: rand(14, 20), hp: -6, xp: 6 };
+        },
+      },
+    ],
+  },
+  {
+    id: 'p_spore_garden',
+    door: 'purple',
+    title: '🟪 สวนเห็ดบนซากศพ',
+    description: 'เห็ดสีม่วงเรืองแสงงอกเป็นทุ่งบนซากศพที่เรียงเป็นแปลง สปอร์ลอยขึ้นทุกครั้งที่คุณก้าว',
+    weight: 8,
+    choices: [
+      {
+        id: 'harvest',
+        label: 'เก็บของจากแปลง',
+        emoji: '🍄',
+        style: 'primary',
+        hint: 'ว่องไว DC 12 — พลาดคือสูด Miasma เต็มปอด',
+        resolve: ({ check, rand }) => {
+          const r = check('agi', 12);
+          return r.success
+            ? { text: `คุณเด็ดได้โดยไม่ทำดอกไหนแตก ${r.tag}`, items: { eye_fruit: 2, rotten_flesh: 1 }, miasma: rand(3, 6), xp: 14 }
+            : { text: `เห็ดดอกหนึ่งระเบิดใส่หน้าคุณ ${r.tag}`, miasma: rand(12, 18), xp: 6 };
+        },
+      },
+      {
+        id: 'tend',
+        label: 'ดูแลแปลงตามพิธี',
+        emoji: '💀',
+        style: 'secondary',
+        visible: (c) => c.icon === 'thanatos',
+        hint: 'ผู้ศรัทธา Thanatos',
+        resolve: () => ({ text: 'คุณรู้ว่าแปลงไหนสุกแล้ว และศพไหนยินดีให้', items: { alchemy_salve: 1, eye_fruit: 2 }, xp: 20 }),
+      },
+      { id: 'rush', label: 'กลั้นหายใจวิ่งผ่าน', emoji: '😷', style: 'secondary', resolve: ({ rand }) => ({ text: 'ปอดคุณแสบไปอีกนานหลังพ้นห้อง', stamina: -1, miasma: rand(5, 9), xp: 8 }) },
+    ],
+  },
+  {
+    id: 'p_embalmer',
+    door: 'purple',
+    title: '🟪 โต๊ะช่างดองศพ',
+    description: 'ช่างดองศพหน้ากากนกกำลังเย็บศพบนโต๊ะหิน ขวดยาเรียงเป็นแถว เขาเงยหน้าขึ้น ชี้ที่ขวด แล้วชี้ที่ถุงเนื้อของคุณ',
+    weight: 7,
+    choices: [
+      {
+        id: 'buy',
+        label: 'จ่ายเนื้อสด 15 แลกยา',
+        emoji: '⚗️',
+        style: 'success',
+        visible: (c) => c.flesh >= 15,
+        resolve: () => ({ text: 'เขาชั่งเนื้ออย่างพิถีพิถัน แล้วเลื่อนขวดมาให้', flesh: -15, items: { alchemy_salve: 1 }, xp: 10 }),
+      },
+      {
+        id: 'assist',
+        label: 'ช่วยเขาเย็บศพ',
+        emoji: '🪡',
+        style: 'primary',
+        hint: 'สัมผัส DC 12',
+        resolve: ({ check, rand }) => {
+          const r = check('int', 12);
+          return r.success
+            ? { text: `ฝีเข็มของคุณเรียบพอให้เขาพยักหน้า แล้วยื่นขี้ผึ้งให้เป็นค่าแรง ${r.tag}`, items: { myrrh_balm: 1 }, humanity: 2, miasma: rand(3, 6), xp: 16 }
+            : { text: `ศพบนโต๊ะลืมตาตอนเข็มแทงลง ${r.tag}`, sanity: -9, miasma: rand(6, 10), xp: 6 };
+        },
+      },
+      {
+        id: 'steal',
+        label: 'ฉกขวดยา',
+        emoji: '🤏',
+        style: 'danger',
+        hint: 'ว่องไว DC 14',
+        resolve: ({ check, rand }) => {
+          const r = check('agi', 14);
+          return r.success
+            ? { text: `เขาไม่เงยหน้าจากศพ ${r.tag}`, items: { alchemy_salve: 2 }, xp: 15 }
+            : { text: `เข็มเย็บศพปักทะลุหลังมือคุณ ${r.tag}`, hp: -rand(6, 10), miasma: rand(6, 10), xp: 5 };
+        },
+      },
+    ],
+  },
+  {
+    id: 'p_ossuary',
+    door: 'purple',
+    title: '🟪 สุสานกระดูก',
+    description: 'ผนังก่อด้วยกะโหลกนับหมื่นเรียงเป็นลวดลาย เบ้าตาทุกคู่มีเชื้อราสีม่วงเรืองแสงเหมือนกำลังมอง',
+    weight: 7,
+    choices: [
+      {
+        id: 'pry',
+        label: 'แงะกระดูกดี ๆ ออกมา',
+        emoji: '🦴',
+        style: 'danger',
+        hint: 'พละ DC 12',
+        resolve: ({ check, rand }) => {
+          const r = check('str', 12);
+          return r.success
+            ? { text: `คุณเลือกชิ้นที่ยังไม่ผุ ผนังครางเบา ๆ แต่ไม่ถล่ม ${r.tag}`, items: { bone: rand(2, 4), fiend_fang: 1 }, xp: 14 }
+            : { text: `ผนังทั้งแถบถล่มลงมาทับคุณ พร้อมฝุ่นสปอร์ ${r.tag}`, hp: -rand(6, 10), miasma: rand(6, 10), xp: 6 };
+        },
+      },
+      {
+        id: 'read',
+        label: 'อ่านลวดลาย',
+        emoji: '🧩',
+        style: 'primary',
+        hint: 'สัมผัส DC 13',
+        resolve: ({ check, rand }) => {
+          const r = check('int', 13);
+          return r.success
+            ? { text: `ลวดลายคือแผนที่ ชี้ไปยังช่องลับหลังกะโหลกใบหนึ่ง ${r.tag}`, flesh: rand(15, 25), xp: 18 }
+            : { text: `ลวดลายคือรายชื่อ และช่องสุดท้ายยังว่างอยู่ ${r.tag}`, sanity: -11, xp: 6 };
         },
       },
     ],

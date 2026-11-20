@@ -48,9 +48,13 @@ export function visibleChoices(char: Character, event: GameEventDef): EventChoic
 
 function eventPool(char: Character): GameEventDef[] {
   const crimson = isCrimsonMoon();
-  if (char.run) {
-    const boss = char.run.depth >= char.run.maxDepth;
-    return EVENTS.filter((e) => e.door === char.run!.door && !!e.boss === boss);
+  const run = char.run;
+  if (run) {
+    // the guardian waits at the end of only some runs (rolled on entry) — otherwise the last room is one more ordinary room
+    const boss = run.depth >= run.maxDepth && run.boss !== false;
+    const rooms = EVENTS.filter((e) => e.door === run.door && !!e.boss === boss);
+    const fresh = rooms.filter((e) => !run.seen?.includes(e.id));
+    return fresh.length ? fresh : rooms;
   }
   return EVENTS.filter(
     (e) =>
@@ -85,6 +89,7 @@ export function getEvent(id: string): GameEventDef | undefined {
 export function startEvent(char: Character): GameEventDef {
   const ev = pickEvent(char);
   char.pendingEvent = { eventId: ev.id, expiresAt: 0 };
+  if (char.run) char.run.seen = [...(char.run.seen ?? []), ev.id];
   return ev;
 }
 
@@ -119,17 +124,18 @@ export function resolveChoice(char: Character, eventId: string, choiceId: string
     startRun(char, outcome.enterDungeon);
   } else if (!fell && char.run && event.door) {
     // dying keeps the run: after a placenta revive the room counts as cleared
-    char.run.stage = event.boss ? 'exit' : 'between';
+    // the last room opens the exit whether or not the guardian was there
+    char.run.stage = char.run.depth >= char.run.maxDepth ? 'exit' : 'between';
   }
   return { event, choice, outcome, applied, notes, dice };
 }
 
 // ---------- dungeon navigation ----------
 
-/** Enter a dungeon: random depth for the door, and roll whether its Icon is present. */
+/** Enter a dungeon: random depth for the door, and roll whether its Icon is present and whether its guardian waits at the end. */
 export function startRun(char: Character, door: IconDoor): void {
   const [lo, hi] = DUNGEON_RULES[door].depth;
-  char.run = { door, depth: 0, maxDepth: rand(lo, hi), stage: 'between', icon: rollIconDungeon(char, door) };
+  char.run = { door, depth: 0, maxDepth: rand(lo, hi), stage: 'between', icon: rollIconDungeon(char, door), boss: chance(balance.dungeonBossChance) };
 }
 
 export interface DungeonStep {

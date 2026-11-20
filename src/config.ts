@@ -25,7 +25,7 @@ export const balance = {
   huntHpPerLevel: 0.2,
   huntDmgPerLevel: 0.15,
   huntXpPerLevel: 0.25,
-  huntLootPerLevel: 0.1,
+  huntLootPerLevel: 0.15,
   /** Monster hits: sanity / Miasma per hit is multiplied by this (min 1). Was 1 — playtesters found sanity draining too fast. */
   huntSanityMult: 0.5,
   /** Passive sanity regen per stamina tick (5 min) while safe in Rouge Land. */
@@ -37,6 +37,10 @@ export const balance = {
   /** Chance a dungeon is an Icon dungeon (shrine at the end): continent's main color / elsewhere. */
   iconDungeonHome: 0.015,
   iconDungeonAway: 0.003,
+  /** Chance the door's guardian (boss room) waits at the end of a dungeon; otherwise the last room is one more ordinary room. Was always. */
+  dungeonBossChance: 0.2,
+  /** Sigils offered at an Icon shrine to raise that Icon's blessing: this × the tier you already hold (the first blessing is free). */
+  shrineSigilPerTier: 1,
   deathGoldLossPct: 0.25,
   /** Knocked out in an easy/normal city: wait this long for a friend's /wake, then wake up alone back home (trip lost). Env DOWNED_MINUTES. */
   downedMs: Number(process.env.DOWNED_MINUTES ?? 120) * 60_000,

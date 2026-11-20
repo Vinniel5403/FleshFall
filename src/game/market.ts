@@ -14,7 +14,7 @@ import { isDev } from './dev.js';
 import { getItem, itemLabel, TRADEABLE_IDS } from './items.js';
 import { ROLES } from './roles.js';
 import type { Character, MarketOrder } from './types.js';
-import { travelLine } from './zones.js';
+import { travelNotice } from './zones.js';
 
 export const ORDER_TTL_MS = 3 * 86_400_000;
 export const PATRON_TIP = 0.2;
@@ -29,7 +29,7 @@ const fail = (error: string): MarketResult => ({ ok: false, error });
 /** Trading needs you standing in Rouge Land. */
 export function marketError(char: Character): string | undefined {
   if (isDev(char)) return undefined;
-  if (char.traveling) return `${travelLine(char)}\n-# 🏛️ ตลาดอยู่หลังบาร์ใน Rouge Land — ใช้ได้เมื่อถึงบ้านแล้ว`;
+  if (char.traveling) return travelNotice(char)!;
   if (char.location !== 'rouge_land') {
     return '🏛️ ตลาดอยู่หลังบาร์ใน **Rouge Land** — ต้องกลับบ้านก่อน';
   }

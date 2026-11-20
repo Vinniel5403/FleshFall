@@ -5,7 +5,7 @@ import { feed } from './feed.js';
  * Lucky hunts reveal a dungeon door after victory.
  */
 import { balance } from '../config.js';
-import { applyOutcome, consume, evadeMod, gainItem, gearAtk, hitMod, hitParts, mergeDmg, stopped, type AppliedOutcome } from './character.js';
+import { applyOutcome, consume, evadeMod, gainItem, gearAtk, hitMod, hitParts, mergeDmg, removeItem, stopped, type AppliedOutcome } from './character.js';
 import { bumpStreak, lootMult, rareBonus, streakDmg, streakMiasma, streakOf } from './expedition.js';
 import { chance, rand, startRun } from './engine.js';
 import { d20Success, levelDC, rollTag, type DiceRoll } from './dice.js';
@@ -319,11 +319,34 @@ export function huntUsable(char: Character): { id: string; qty: number }[] {
     .map(([id, qty]) => ({ id, qty }));
 }
 
-/** Spend the turn on an item instead of attacking (heal / stamina / sanity / meal buff), then survivors strike back. */
+/** Thrown item (`ItemDef.blast`): hits every monster still standing — no roll, it can't miss. Kills pay out like any other. */
+function throwBomb(char: Character, h: Hunt, itemId: string, [lo, hi]: [number, number]): RoundResult {
+  if (!removeItem(char, itemId)) return { lines: ['ใช้ไม่ได้ หรือไม่มีของชิ้นนี้ในกระเป๋า'] };
+  const lines = [`💥 ขว้าง ${itemLabel(itemId)} แทนการโจมตี!`];
+  for (const m of alive(h)) {
+    const dmg = rand(lo, hi) + Math.floor(char.level / 2);
+    m.hp = Math.max(0, m.hp - dmg);
+    if (m.hp > 0) {
+      lines.push(`💥 ${nameOf(m)} **-${dmg}**`);
+      continue;
+    }
+    const got = rollLoot(char, h, m);
+    lines.push(`💀 ${nameOf(m)} **-${dmg}** ล้มลง${got.length ? ` — ได้ ${got.join(', ')}` : ''}`);
+  }
+  const won = finishIfWon(char, h, lines);
+  if (won) return { lines, ended: won };
+  const back = monstersAttack(char, h);
+  lines.push(...back.lines);
+  return { lines, applied: back.applied, ended: endIfFallen(char, back.applied) };
+}
+
+/** Spend the turn on an item instead of attacking (heal / stamina / sanity / timed buff, or a thrown bomb), then survivors strike back. */
 export function useInHunt(char: Character, itemId: string): RoundResult {
   const h = char.hunt;
   if (char.dying) return { lines: ['🩸 คุณกำลังจะตาย — เลือก 🥚 ใช้รกคืนชีพ หรือ ☠️ ยอมตาย ก่อน'], ended: 'dying' };
   if (!h || h.won || alive(h).length === 0) return { lines: ['การต่อสู้จบไปแล้ว'] };
+  const blast = getItem(itemId)?.blast;
+  if (blast) return throwBomb(char, h, itemId, blast);
   const got = consume(char, itemId);
   if (!got) return { lines: ['ใช้ไม่ได้ หรือไม่มีของชิ้นนี้ในกระเป๋า'] };
   const lines = [`🎒 ใช้ ${itemLabel(itemId)} แทนการโจมตี${got.length ? ` — ${got.join(' ')}` : ''}`];

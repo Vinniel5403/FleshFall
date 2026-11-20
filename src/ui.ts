@@ -8,7 +8,7 @@ import { activeBuff, buffLabel, gearAtk, gearDef, humanityTier, mergeDmg, seesHi
 import { streakText } from './game/expedition.js';
 import { exitOptions, visibleChoices } from './game/engine.js';
 import { ICON_BY_DOOR, ICONS } from './game/icons.js';
-import { blessingsText } from './game/blessings.js';
+import { blessingsText, shrineNote } from './game/blessings.js';
 import { itemLabel } from './game/items.js';
 import { maidGrade, ROLES } from './game/roles.js';
 import type { Character, GameEventDef } from './game/types.js';
@@ -57,7 +57,7 @@ export function profileEmbed(char: Character): EmbedBuilder {
         `${icon.emoji} สาวกของ **${icon.name}** — ${icon.title}`,
         char.role === 'maid' ? `🎖️ M.A.I.D.S ${maidGrade(char.level)}` : null,
         char.traveling
-          ? `${travelLine(char)} (ถึง <t:${Math.ceil(char.traveling.arriveAt / 1000)}:t>)`
+          ? travelLine(char)
           : `${loc.emoji} อยู่ที่ **${zoneLabel(currentZone(char))}**${char.run ? ` · ${DOORS[char.run.door].emoji} ในดันเจียน ห้อง ${char.run.depth}/${char.run.maxDepth}` : ''}${char.hunt && !char.hunt.won ? ' · ⚔️ กำลังล่า' : ''}`,
         isCrimsonMoon() ? '🌕 **Crimson Moon กำลังส่องแสง**' : null,
       ]
@@ -113,9 +113,7 @@ function bioText(char: Character): string | null {
  */
 export function profilePayload(char: Character): Promise<ImagePayload> {
   const lines = [
-    char.traveling
-      ? `${travelLine(char)} (ถึง <t:${Math.ceil(char.traveling.arriveAt / 1000)}:t>)`
-      : null,
+    travelLine(char),
     isCrimsonMoon() ? '🌕 **Crimson Moon กำลังส่องแสง**' : null,
     activeBuff(char) ? `🍽️ ${buffLabel(char)} — หมด <t:${Math.ceil(activeBuff(char)!.until / 1000)}:R>` : null,
     streakText(char),
@@ -176,8 +174,14 @@ export function dungeonPayload(char: Character): Promise<ImagePayload> {
         ),
       }),
     () => [dungeonStatusEmbed(char)],
-    run.stage === 'exit' && exits.includes('icon') ? `คุณมองเห็น**${d.name}** ที่คนอื่นมองไม่เห็น...` : undefined,
+    exits.includes('icon') ? shrineText(char) : undefined,
   );
+}
+
+/** Exit screen of an Icon dungeon: the hidden door, and what its shrine will ask for. */
+function shrineText(char: Character): string {
+  const run = char.run!;
+  return [`คุณมองเห็น**${DOORS[run.door].name}** ที่คนอื่นมองไม่เห็น...`, shrineNote(char, run.door)].filter(Boolean).join('\n');
 }
 
 const STYLE: Record<string, ButtonStyle> = {
@@ -254,7 +258,7 @@ export function dungeonStatusEmbed(char: Character): EmbedBuilder {
   const d = DOORS[run.door];
   const desc =
     run.stage === 'exit'
-      ? 'ห้องสุดท้าย — ประตูหลายสีปรากฏขึ้นตรงหน้า' + (exitOptions(char).includes('icon') ? `\nคุณมองเห็น**${d.name}** ที่คนอื่นมองไม่เห็น...` : '')
+      ? 'ห้องสุดท้าย — ประตูหลายสีปรากฏขึ้นตรงหน้า' + (exitOptions(char).includes('icon') ? `\n${shrineText(char)}` : '')
       : `${DUNGEON_RULES[run.door].note}\nผ่านมาแล้ว ${run.depth}/${run.maxDepth} ห้อง`;
   return new EmbedBuilder()
     .setColor(COLORS.rot)

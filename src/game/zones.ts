@@ -269,7 +269,7 @@ export function startTravel(char: Character, to: ZoneId, now = Date.now()): Trav
   const god = isDev(char);
   const home = to === 'rouge_land';
   if (!z || (!home && (!z.channel || !z.travel))) return { ok: false, error: 'ไปที่นั่นไม่ได้' };
-  if (char.traveling) return { ok: false, error: `${travelLine(char, now)}\n-# เดินทางซ้อนไม่ได้ รอให้ถึงก่อน` };
+  if (char.traveling) return { ok: false, error: travelNotice(char)! };
   if (home && !god && !char.reachedRougeLand) {
     // Outsiders: Rouge Land stays shut until the ferryman takes them or they're strong enough
     if (char.level < balance.rougeLandUnlockLevel) {
@@ -280,7 +280,7 @@ export function startTravel(char: Character, to: ZoneId, now = Date.now()): Trav
     }
     char.reachedRougeLand = true;
   }
-  if (home ? char.location === 'rouge_land' : currentZone(char).id === to) return { ok: false, error: 'คุณอยู่ที่นั่นแล้ว' };
+  if (home ? char.location === 'rouge_land' : currentZone(char).id === to) return { ok: false, error: `📍 คุณอยู่ที่ ${z.emoji} **${z.name}** อยู่แล้ว` };
   // Leaving Rouge Land through the butchery door is instant; coming back (or city → city) takes time.
   const instant = god || char.location === 'rouge_land';
   const arriveAt = instant ? now : now + balance.travelMs;
@@ -302,21 +302,30 @@ export function resolveTravel(char: Character, now = Date.now()): boolean {
   return true;
 }
 
-/** Time left on the road in Thai ("30 นาที", "1 ชม. 5 นาที"), rounded up to the minute. */
-export function travelLeft(char: Character, now = Date.now()): string {
-  const ms = (char.traveling?.arriveAt ?? now) - now;
-  if (ms <= 0) return 'ไม่กี่วินาที';
-  const m = Math.ceil(ms / 60_000);
-  const h = Math.floor(m / 60);
-  return h > 0 ? `${h} ชม.${m % 60 ? ` ${m % 60} นาที` : ''}` : `${m} นาที`;
+/** "กำลังเดินทางกลับ" when heading home, "กำลังเดินทางไป" anywhere else. */
+export const travelVerb = (to: ZoneId): string => (to === 'rouge_land' ? 'กำลังเดินทางกลับ' : 'กำลังเดินทางไป');
+
+/** Arrival as Discord timestamps: live countdown + clock time ("ในอีก 30 นาที (14:35)") — never goes stale on an old message. */
+export function arrivalText(arriveAt: number): string {
+  const s = Math.ceil(arriveAt / 1000);
+  return `<t:${s}:R> (<t:${s}:t>)`;
 }
 
-/** "🧭 กำลังเดินทางกลับ 🏠 Rouge Land — เหลือเวลาอีก 30 นาที" (null when not traveling). */
-export function travelLine(char: Character, now = Date.now()): string | null {
+/** "🏠 **กำลังเดินทางกลับ Rouge Land** — ถึง ในอีก 30 นาที (14:35)" / "🧭 **กำลังเดินทางไป 🗼 Paris** — …" (null when not traveling). */
+export function travelLine(char: Character): string | null {
   const t = char.traveling;
   if (!t) return null;
   const z = getZone(t.to);
-  const where = `${z?.emoji ?? ''} **${z?.name ?? t.to}**`.trim();
-  const verb = t.to === 'rouge_land' ? 'กำลังเดินทางกลับ' : 'กำลังเดินทางไป';
-  return `🧭 ${verb} ${where} — เหลือเวลาอีก **${travelLeft(char, now)}**`;
+  const where = t.to === 'rouge_land' ? (z?.name ?? t.to) : `${z?.emoji ?? ''} ${z?.name ?? t.to}`.trim();
+  return `${t.to === 'rouge_land' ? '🏠' : '🧭'} **${travelVerb(t.to)} ${where}** — ถึง ${arrivalText(t.arriveAt)}`;
+}
+
+/**
+ * The one plain message for "you're on the road" (null when not traveling): shown when you set off
+ * and by everything that's blocked until you arrive — same words everywhere, no map, no buttons.
+ * `extra` lines (e.g. the risk warning at departure) go between the headline and the footnote.
+ */
+export function travelNotice(char: Character, ...extra: string[]): string | null {
+  const line = travelLine(char);
+  return line && [line, ...extra, '-# ระหว่างทาง ล่า · สำรวจ · ซื้อขาย · เดินทางต่อ ยังทำไม่ได้ — รอให้ถึงก่อน'].join('\n');
 }

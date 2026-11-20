@@ -1,4 +1,4 @@
-import type { ItemDef } from './types.js';
+import type { ItemDef, StatKey } from './types.js';
 
 const list: ItemDef[] = [
   // --- เนื้อ & ของกิน ---
@@ -60,6 +60,18 @@ const list: ItemDef[] = [
     description: 'ห้ามเลือดได้ (+10 เนื้อกาย)' },
   { id: 'alchemy_salve', name: 'ยาเล่นแร่แปรธาตุ', emoji: '⚗️', type: 'consumable', value: 25, heal: 22,
     description: 'ยาที่สาวก Thanatos พึ่งพา (+22 เนื้อกาย)' },
+  // --- ยาบัฟชั่วคราว (อ่อนกว่าอาหารสูตรลับบาร์ แต่ซื้อได้เลย) ---
+  { id: 'rage_tonic', name: 'ยาดองเลือดเดือด', emoji: '🍶', type: 'consumable', value: 28, buff: { stat: 'str', amount: 1, minutes: 20 },
+    description: 'เหล้าดองเขี้ยว Fiend กระดกแล้วเลือดสูบฉีดจนมือสั่น (บัฟ พละ +1 นาน 20 นาที)' },
+  { id: 'hide_tonic', name: 'ขี้ผึ้งหนังด้าน', emoji: '🧴', type: 'consumable', value: 28, buff: { def: 1, amount: 1, minutes: 20 },
+    description: 'ทาแล้วผิวแข็งกระด้างเหมือนหนังตากแห้ง (บัฟ ลดดาเมจ +1 นาน 20 นาที)' },
+  { id: 'fiend_adrenal', name: 'ต่อมคลั่งของ Fiend', emoji: '💉', type: 'consumable', value: 80, humanity: -2, buff: { stat: 'str', amount: 3, minutes: 30 },
+    description: 'ต่อมสด ๆ จาก Fiend ในเมืองอันตราย กลืนแล้วกล้ามเนื้อกระตุกไม่หยุด (บัฟ พละ +3 นาน 30 นาที, -2 ความเป็นมนุษย์) · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป' },
+  // --- ระเบิด (ขว้างได้เฉพาะตอนล่า — โดนมอนสเตอร์ทุกตัว ไม่มีวันพลาด) ---
+  { id: 'bone_bomb', name: 'ระเบิดเศษกระดูก', emoji: '💣', type: 'consumable', value: 35, blast: [6, 10],
+    description: 'กระป๋องอัดดินปืนกับเศษกระดูก ขว้างตอนล่า — มอนสเตอร์ทุกตัวโดน 6–10 (+ครึ่งเลเวลของคุณ)' },
+  { id: 'flesh_grenade', name: 'ระเบิดก้อนเนื้อ', emoji: '🧨', type: 'consumable', value: 90, blast: [14, 20],
+    description: 'ก้อนเนื้อบวมก๊าซที่ยังเต้นอยู่ ขว้างตอนล่า — มอนสเตอร์ทุกตัวโดน 14–20 (+ครึ่งเลเวลของคุณ) · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป' },
   // --- อาวุธ ---
   { id: 'pipe', name: 'ท่อเหล็ก', emoji: '🔧', type: 'weapon', value: 4, atk: 1, description: '+1 พละ' },
   { id: 'walking_cane', name: 'ไม้เท้าหัวกะโหลก', emoji: '🦯', type: 'weapon', value: 15, atk: 1, description: '+1 พละ ดูดีสำหรับคนมีฐานะ' },
@@ -68,10 +80,14 @@ const list: ItemDef[] = [
   { id: 'bone_club', name: 'กระบองกระดูกปีศาจ', emoji: '🦴', type: 'weapon', value: 20, atk: 2, description: '+2 พละ' },
   { id: 'bone_saw', name: 'เลื่อยกระดูก', emoji: '🪚', type: 'weapon', value: 70, atk: 4, description: '+4 พละ' },
   { id: 'old_shotgun', name: 'ลูกซองยุค 1920', emoji: '🔫', type: 'weapon', value: 120, atk: 5, description: '+5 พละ ของวินเทจที่ยังยิงได้' },
+  // ไม่มีขาย — ดรอปจากเมืองระดับสูงเท่านั้น (TIER_GEAR ใน drops.ts)
+  { id: 'butcher_cleaver', name: 'ปังตอเพชฌฆาต', emoji: '🪓', type: 'weapon', value: 180, atk: 6, description: '+6 พละ หนักจนต้องจับสองมือ · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป' },
+  { id: 'knight_sword', name: 'ดาบอัศวินขึ้นสนิม', emoji: '⚔️', type: 'weapon', value: 260, atk: 7, description: '+7 พละ คู่กับเกราะของเจ้าของเดิม คมกว่าที่สนิมบอก · ดรอปเฉพาะเมืองระดับ Epic' },
   // --- เกราะ ---
   { id: 'blood_apron', name: 'ผ้ากันเปื้อนคราบเลือด', emoji: '🦺', type: 'armor', value: 12, def: 1, description: 'ลดดาเมจ 1' },
   { id: 'leather_coat', name: 'โค้ทหนังเก่า', emoji: '🧥', type: 'armor', value: 25, def: 2, description: 'ลดดาเมจ 2' },
   { id: 'rusted_armor', name: 'เกราะอัศวินขึ้นสนิม', emoji: '🛡️', type: 'armor', value: 90, def: 4, description: 'ลดดาเมจ 4 ยังมีคราบของเจ้าของเดิม' },
+  { id: 'fiend_hide', name: 'เสื้อหนัง Fiend', emoji: '🥋', type: 'armor', value: 200, def: 5, description: 'ลดดาเมจ 5 หนังฟอกที่ยังอุ่นเหมือนมีชีวิต · ดรอปเฉพาะเมืองระดับ Epic' },
   // --- ของวินเทจจากโลกจริง (ขายให้ Patron / ใช้เป็นค่าโดยสารเรือ) ---
   { id: 'lighter', name: 'ไฟแช็ก', emoji: '🔥', type: 'vintage', value: 35, description: 'แสงสว่างที่ช่วยชีวิตในดันเจียนเหลือง' },
   { id: 'dead_phone', name: 'มือถือไร้สัญญาณ', emoji: '📱', type: 'vintage', value: 60, description: 'ใช้ไม่ได้ แต่ Patron ยอมจ่ายแพง' },
@@ -110,7 +126,8 @@ const list: ItemDef[] = [
     description: 'ไข่เนื้อสีชมพูที่ยังเต้นตุบ จากศาลของ Sophia — ใช้ /revive นำเพื่อนที่กลายเป็น Fiend กลับมา' },
   { id: 'placenta', name: 'รกคืนชีพ', emoji: '🥚', type: 'material', value: 120,
     description: 'รกที่ยังอุ่นและเต้นตุบ ใช้ได้ตอนล้มตายในเมืองระดับ Hard/Epic — ฟื้นขึ้นมาสู้ต่อทันที (ต้องอยู่ในกระเป๋า ไม่ใช่ของรอรับ)' },
-  { id: 'sigil', name: 'ตราสัญลักษณ์ Icon', emoji: '🔯', type: 'material', value: 50, description: 'ใช้ในพิธีติดต่อ Icon' },
+  { id: 'sigil', name: 'ตราสัญลักษณ์ Icon', emoji: '🔯', type: 'consumable', value: 50, sanity: 6, humanity: 4,
+    description: 'ตราของรูปบูชา — ถวายที่ศาล Icon ท้ายดันเจียนเพื่อเลื่อนขั้นพร · หรือกำไว้ท่อง First Verses ได้ทุกที่ (+6 สติ, +4 ความเป็นมนุษย์)' },
 ];
 
 export const ITEMS: Record<string, ItemDef> = Object.fromEntries(list.map((i) => [i.id, i]));
@@ -123,6 +140,32 @@ export function itemLabel(id: string, qty?: number): string {
   const it = ITEMS[id];
   const base = it ? `${it.emoji} ${it.name}` : id;
   return qty !== undefined ? `${base} ×${qty}` : base;
+}
+
+const STAT_LABEL: Record<StatKey, string> = { str: 'พละ', agi: 'ว่องไว', int: 'สัมผัส' };
+
+/**
+ * What using an item does, read off its numbers — menus show this so they can't drift from the data.
+ * `short` = the icon-only form for select menus (100-char descriptions).
+ */
+export function itemEffects(id: string, short = false): string {
+  const d = ITEMS[id];
+  if (!d) return '';
+  const signed = (v: number) => (v > 0 ? `+${v}` : `${v}`);
+  const out: string[] = [];
+  const add = (v: number | undefined, emoji: string, name: string) => {
+    if (v) out.push(short ? `${emoji}${signed(v)}` : `${emoji} ${name} ${signed(v)}`);
+  };
+  add(d.heal, '🩸', 'เนื้อกาย');
+  add(d.stamina, '⚡', 'แรง');
+  add(d.sanity, '🧠', 'สติ');
+  add(d.humanity, '🫀', 'ความเป็นมนุษย์');
+  if (d.buff) {
+    const what = d.buff.def ? 'ลดดาเมจ' : STAT_LABEL[d.buff.stat!];
+    out.push(short ? `บัฟ ${what}+${d.buff.amount} ${d.buff.minutes}นาที` : `บัฟ ${what} +${d.buff.amount} (${d.buff.minutes} นาที)`);
+  }
+  if (d.blast) out.push(short ? `💥 ทุกตัว ${d.blast[0]}–${d.blast[1]}` : `💥 มอนสเตอร์ทุกตัว ${d.blast[0]}–${d.blast[1]} (ขว้างตอนล่า)`);
+  return out.join(short ? ' ' : ' · ');
 }
 
 /** Items players can trade on the market (not quest relics). */

@@ -23,10 +23,11 @@ import {
   type StringSelectMenuInteraction,
 } from 'discord.js';
 import { itemCount, saveCharacter } from '../game/character.js';
-import { getItem, itemLabel } from '../game/items.js';
+import { getItem, itemEffects, itemLabel } from '../game/items.js';
 import type { Character } from '../game/types.js';
-import { CONTINENTS, citiesByContinent, currentZone, riskLabel, tierLabel, ZONES, type Continent } from '../game/zones.js';
+import { CONTINENTS, citiesByContinent, currentZone, riskLabel, tierLabel, travelNotice, ZONES, type Continent } from '../game/zones.js';
 import {
+  autoSrc,
   buyItem,
   buyPrice,
   cookRecipe,
@@ -57,7 +58,7 @@ import {
   useItem,
   type ActionResult,
 } from '../commands/actions.js';
-import { requireActive, requireCharacter } from '../commands/guard.js';
+import { fallenText, requireActive, requireCharacter } from '../commands/guard.js';
 import { COLORS, profilePayload } from '../ui.js';
 import { exploreStart, exploreView } from '../commands/explore.js';
 import { openHunt } from './hunt.js';
@@ -261,9 +262,27 @@ function cookPicker() {
       label: r.barOnly ? `${r.name} (สูตรลับบาร์)` : r.name,
       value: r.id,
       emoji: getItem(r.makes)!.emoji,
-      description: Object.entries(r.needs).map(([id, n]) => `${getItem(id)!.name}×${n}`).join(' + '),
+      // what it does first — the 100-char cap cuts the tail
+      description: [itemEffects(r.makes, true), Object.entries(r.needs).map(([id, n]) => `${getItem(id)!.name}×${n}`).join(' + ')].filter(Boolean).join(' ← '),
     })),
   );
+}
+
+/** Under the inventory: the counter that buys things, when one is in reach (Rouge Land shop / the city's merchant). */
+function inventoryRows(char: Character) {
+  const src = autoSrc(char);
+  if (char.fiend || char.traveling || fallenText(char) || shopError(char, src) || ownedItems(char).length === 0) return [];
+  const home = src === 'home';
+  return [
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(home ? 'pn:sell' : 'pn:sell:field')
+        .setLabel(home ? 'ขายให้ร้าน' : 'ขายให้พ่อค้าเงา (70%)')
+        .setEmoji('⚖️')
+        .setStyle(ButtonStyle.Secondary),
+      ...(home ? [new ButtonBuilder().setCustomId('pn:mktsell').setLabel('ตั้งขายในตลาดผู้เล่น').setEmoji('🏷️').setStyle(ButtonStyle.Secondary)] : []),
+    ),
+  ];
 }
 
 function qtyRow(kind: 'buyq' | 'sellq', id: string, qtys: (number | 'all')[], src: ShopSrc) {
@@ -328,6 +347,13 @@ function upgradeRow(char: Character) {
 const lastView = new Map<string, ButtonInteraction>();
 /** Buttons inside an already-open view: they edit it in place instead of opening a new one. */
 const IN_PLACE = new Set(['upg', 'go', 'buyq', 'sellq']);
+/** Still usable on the road: looking at yourself, and what you carry. */
+const ON_ROAD = new Set(['profile', 'inv', 'use', 'equip', 'rest', 'pray']);
+
+/** On the road every other panel action answers with the same plain notice — no map, no pickers (null = go ahead). */
+const roadBlock = (char: Character, action = '') => (ON_ROAD.has(action) ? null : travelNotice(char));
+/** An open view turned into just that notice. */
+const noticeOnly = (content: string) => ({ content, embeds: [], files: [], components: [] });
 
 /** Panel buttons: open an ephemeral view for the clicker (replacing their previous one). */
 export async function handlePanelButton(i: ButtonInteraction): Promise<unknown> {
@@ -352,11 +378,15 @@ async function openPanelView(i: ButtonInteraction): Promise<unknown> {
     if (!char) return;
     saveCharacter(char); // persist regen
     await i.deferReply({ flags: ephemeral }); // card render can exceed the 3s window on small hosts
-    return i.editReply(await (action === 'inv' ? inventoryPayload(char) : profilePayload(char)));
+    if (action === 'inv') return i.editReply({ ...(await inventoryPayload(char)), components: inventoryRows(char) });
+    return i.editReply(await profilePayload(char));
   }
 
   const char = await requireActive(i);
   if (!char) return;
+
+  const road = roadBlock(char, action);
+  if (road) return IN_PLACE.has(action!) ? i.update(noticeOnly(road)) : i.reply({ content: road, flags: ephemeral });
 
   if (action?.startsWith('mkt')) return marketButton(i, char, action);
 
@@ -421,7 +451,9 @@ async function openPanelView(i: ButtonInteraction): Promise<unknown> {
           new EmbedBuilder()
             .setColor(COLORS.rot)
             .setTitle('🍳 ครัวหลังบาร์')
-            .setDescription(RECIPES.map((r) => `**${itemLabel(r.makes)}**${r.barOnly ? ' 🍷 *สูตรลับบาร์*' : ''}\n-# ${needsText(r)}`).join('\n'))
+            .setDescription(
+              RECIPES.map((r) => `**${itemLabel(r.makes)}**${r.barOnly ? ' 🍷 *สูตรลับบาร์*' : ''}\n-# ได้: ${itemEffects(r.makes) || '—'}\n-# ใช้: ${needsText(r)}`).join('\n'),
+            )
             .setFooter({
               text:
                 char.role === 'bar'
@@ -458,6 +490,8 @@ export async function handlePanelSelect(i: StringSelectMenuInteraction): Promise
   const value = i.values[0]!;
   const active = await requireActive(i);
   if (!active) return;
+  const road = roadBlock(active, action);
+  if (road) return i.update(noticeOnly(road));
   if (action?.startsWith('mkt')) return marketSelect(i, active, action);
 
   switch (action) {

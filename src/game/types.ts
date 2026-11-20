@@ -26,6 +26,10 @@ export interface DungeonRun {
   stage: 'between' | 'exit';
   /** Rolled on entry: the door's Icon is present → shrine exit at the end. */
   icon?: boolean;
+  /** Rolled on entry (`balance.dungeonBossChance`): the guardian waits in the last room. Absent (runs from before the roll) = it does. */
+  boss?: boolean;
+  /** Rooms already met this run — a room never comes up twice. */
+  seen?: string[];
 }
 
 /** Zone = a city/area inside a region (Location). e.g. paris ⊂ old_realm. */
@@ -235,6 +239,8 @@ export interface ItemDef {
   def?: number;
   /** eating it grants a timed meal buff */
   buff?: BuffDef;
+  /** Thrown in a hunt: [min, max] damage to every monster still standing (+ half the thrower's level). Only usable mid-hunt. */
+  blast?: [number, number];
   /** The room catalog id it places (web/src/data/rooms.json) — what makes an item placeable in the private room. */
   furniture?: string;
   /** Room-decoration collectible found on hunts (drops.ts). Placeable once its art exists and `furniture` is set. */

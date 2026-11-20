@@ -10,14 +10,14 @@ import { activeBuff, addItem, applyOutcome, buffLabel, consume, cooldownLeft, it
 import { inField, streakText, tripLines, tripSize } from '../game/expedition.js';
 import { chance } from '../game/engine.js';
 import { mods } from '../game/icons.js';
-import { getItem, itemLabel } from '../game/items.js';
+import { getItem, itemEffects, itemLabel } from '../game/items.js';
 import type { Character, ItemType, Outcome } from '../game/types.js';
-import { CONTINENTS, cityRisk, citiesByContinent, currentZone, getZone, startTravel, tierLegend, travelLeft, zoneLabel, zoneLevel, zoneTier, type Continent } from '../game/zones.js';
+import { CONTINENTS, cityRisk, citiesByContinent, currentZone, getZone, startTravel, tierLegend, travelNotice, zoneLabel, zoneLevel, zoneTier, type Continent } from '../game/zones.js';
 import { renderInventoryCard, renderShopCard, renderUpgradeCard } from '../render/itemCards.js';
 import { renderMapCard } from '../render/mapCard.js';
 import { imagePayload, type ImagePayload } from '../render/view.js';
 import { COLORS, fmtDuration, resultEmbed } from '../ui.js';
-import { idleError, travelingText } from './guard.js';
+import { idleError } from './guard.js';
 
 export interface ActionResult {
   ok: boolean;
@@ -101,6 +101,7 @@ export function ownedItems(char: Character, types?: ItemType[]) {
 }
 
 export function useItem(char: Character, id: string): ActionResult {
+  if (getItem(id)?.blast && itemCount(char, id) > 0) return fail(`${itemLabel(id)} ขว้างได้เฉพาะตอนล่า — กด 🎒 ในการ์ดการล่า`);
   const lines = consume(char, id);
   if (!lines) return fail('ใช้ไม่ได้ หรือไม่มีของชิ้นนี้');
   saveCharacter(char);
@@ -120,7 +121,7 @@ export function equipItem(char: Character, id: string): ActionResult {
 // ---------- shop ----------
 
 /** Branch butchery stock (Rouge Land only). */
-export const STOCK = ['bandage', 'alchemy_salve', 'blood_wine', 'fetal_flesh', 'fresh_cut', 'wild_flour', 'lighter', 'leather_coat', 'bone_saw', 'rusted_armor', 'sigil', 'placenta', 'steel_shelf'];
+export const STOCK = ['bandage', 'alchemy_salve', 'rage_tonic', 'hide_tonic', 'bone_bomb', 'blood_wine', 'fetal_flesh', 'fresh_cut', 'wild_flour', 'lighter', 'leather_coat', 'bone_saw', 'rusted_armor', 'sigil', 'placenta', 'steel_shelf'];
 
 export const buyPrice = (c: Character, id: string) => Math.ceil((getItem(id)?.value ?? 0) * (c.role === 'patron' ? 0.75 : 1));
 /** Field merchants lowball: selling out in the Old Realm pays 70%. Bring it home for the full price. */
@@ -136,13 +137,13 @@ export const sellPrice = (c: Character, id: string, src: ShopSrc = 'home') => {
 
 /** Old Realm continent shops — each city sells its continent's stock. */
 export const CONTINENT_STOCK: Record<Continent, string[]> = {
-  europe: ['bandage', 'absinthe', 'blood_wine', 'walking_cane', 'kris', 'leather_coat', 'lighter'],
-  asia: ['bandage', 'spice_jerky', 'instant_noodle', 'alchemy_salve', 'carving_knife', 'sigil'],
-  america: ['bandage', 'canned_beans', 'grilled_meat', 'leather_coat', 'old_shotgun', 'lighter'],
-  south_america: ['bandage', 'mate_tea', 'fetal_flesh', 'bone_club', 'blood_apron'],
-  africa: ['myrrh_balm', 'alchemy_salve', 'wild_flour', 'bone_saw', 'sigil', 'placenta'],
-  australia: ['eucalyptus_oil', 'alchemy_salve', 'fresh_cut', 'rusted_armor'],
-  antarctica: ['whale_blubber', 'fresh_cut', 'alchemy_salve', 'rusted_armor', 'old_shotgun'],
+  europe: ['bandage', 'absinthe', 'blood_wine', 'rage_tonic', 'walking_cane', 'kris', 'leather_coat', 'lighter'],
+  asia: ['bandage', 'spice_jerky', 'instant_noodle', 'alchemy_salve', 'bone_bomb', 'carving_knife', 'sigil'],
+  america: ['bandage', 'canned_beans', 'grilled_meat', 'bone_bomb', 'leather_coat', 'old_shotgun', 'lighter'],
+  south_america: ['bandage', 'mate_tea', 'fetal_flesh', 'rage_tonic', 'bone_club', 'blood_apron'],
+  africa: ['myrrh_balm', 'alchemy_salve', 'hide_tonic', 'wild_flour', 'bone_saw', 'sigil', 'placenta'],
+  australia: ['eucalyptus_oil', 'alchemy_salve', 'hide_tonic', 'bone_bomb', 'fresh_cut', 'rusted_armor'],
+  antarctica: ['whale_blubber', 'fresh_cut', 'alchemy_salve', 'hide_tonic', 'bone_bomb', 'rusted_armor', 'old_shotgun'],
 };
 
 /** home = Rouge Land shops (cafe/bar/butchery) · field = continent shop in an Old Realm city. */
@@ -152,9 +153,7 @@ export const autoSrc = (c: Character): ShopSrc => (c.location === 'rouge_land' ?
 /** Rouge Land facilities (shop, bar, upgrades, cooking) need you to be home. */
 export function homeError(char: Character): string | undefined {
   if (isDev(char)) return undefined;
-  if (char.traveling) {
-    return travelingText(char, char.traveling.to === 'rouge_land' ? 'ร้าน/บาร์/ครัวใน Rouge Land ใช้ได้เมื่อถึงบ้านแล้ว' : 'คุณอยู่ใน Old Realm — ร้านใน Rouge Land ใช้ไม่ได้')!;
-  }
+  if (char.traveling) return travelNotice(char)!;
   if (char.location === 'cypress') {
     return `🟥 คุณอยู่บน **Cypress Isle** (เข้ามาทางประตูสีแดง) — ร้านใน Rouge Land ใช้ไม่ได้
 สำรวจบนเกาะเพื่อหาคนพายเรือ หรือกด 🏠 กลับ Rouge Land`;
@@ -168,7 +167,7 @@ export function homeError(char: Character): string | undefined {
 
 /** Continent shop: must be standing in an Old Realm city. */
 export function fieldError(char: Character): string | undefined {
-  if (char.traveling) return travelingText(char, 'ร้านประจำทวีปอยู่ในเมือง รอให้ถึงก่อน')!;
+  if (char.traveling) return travelNotice(char)!;
   if (char.location === 'cypress') {
     return `🟥 คุณอยู่บน **Cypress Isle** (เข้ามาทางประตูสีแดง) — บนเกาะไม่มีร้าน
 กด ⚔️ สำรวจบนเกาะเพื่อหาคนพายเรือ / ประตูดำ หรือใช้ 🧭 เดินทางไปเมืองใน Old Realm`;
@@ -304,6 +303,7 @@ export function cookRecipe(char: Character, recipeId: string): ActionResult {
     resultEmbed(char, `🍳 ${char.name} ปรุง ${r.name}`, [
       isBar ? 'มือของคุณถักทอเศษเนื้อให้กลายเป็นอาหารที่บรรเทาคำสาป' : 'กลิ่นออกมาดีกว่าที่คิด',
       `📦 +${itemLabel(r.makes, qty)}`,
+      ...(itemEffects(r.makes) ? [`-# กินแล้ว: ${itemEffects(r.makes)}`] : []),
       ...xp.lines,
     ]),
   );
@@ -414,13 +414,15 @@ ${list}`;
     );
 }
 
-/** Travel picker as a world map (zoomed to `focus` once a continent is picked). City list lives in the dropdowns. */
+/**
+ * Travel picker as a world map (zoomed to `focus` once a continent is picked). City list lives in the dropdowns.
+ * Only for characters standing somewhere — on the road callers answer with `travelNotice` instead.
+ */
 export function travelPayload(char: Character, focus?: Continent): Promise<ImagePayload> {
   const mins = Math.round(balance.travelMs / 60_000);
   const home = char.location === 'rouge_land';
   const text = [
-    travelingText(char, 'เดินทางซ้อนไม่ได้ รอให้ถึงก่อน') ??
-      (home ? 'ประตูหลังร้านเนื้อเปิดสู่ Old Realm ได้ทุกเมือง — เลือกทวีป แล้วเลือกเมืองปลายทาง คุณจะไปถึงทันที' : `ตอนนี้อยู่ที่ **${zoneLabel(currentZone(char))}**`),
+    home ? 'ประตูหลังร้านเนื้อเปิดสู่ Old Realm ได้ทุกเมือง — เลือกทวีป แล้วเลือกเมืองปลายทาง คุณจะไปถึงทันที' : `ตอนนี้อยู่ที่ **${zoneLabel(currentZone(char))}**`,
     `-# ${tierLegend()} · มอนในเมือง = เลเวลเมือง`,
     home
       ? `-# ออกจาก Rouge Land ถึงทันที · กลับมาใช้เวลา ${mins} นาที · ข้างนอกใช้ร้านใน Rouge Land ไม่ได้ มีแต่ร้านประจำทวีป`
@@ -454,12 +456,8 @@ export function travelAction(char: Character, to: string): ActionResult {
     }
     return done(resultEmbed(char, `⚡ ${z.emoji} ${z.name}`, ['พลังของ God ฉีกมิติ — คุณมาถึงทันที'], COLORS.bone));
   }
-  const flavor =
-    z.region === 'old_realm'
-      ? 'คุณออกเดินบนถนนที่ยืดยาวกว่าโลกจริงสิบเท่า เมืองถัดไปยังอยู่อีกไกล'
-      : 'คุณหันหลังให้ Old Realm มุ่งหน้ากลับ — กลิ่นเนื้อสดหอมหวานของ Le Fontaine de Sang ลอยมาแต่ไกล';
-  const title = to === 'rouge_land' ? '🏠 เดินทางกลับ Rouge Land' : `🧭 ออกเดินทางไป ${z.emoji} ${z.name}`;
-  return done(resultEmbed(char, title, [flavor, ...warn, '', `⏳ เหลือเวลาอีก **${travelLeft(char)}** — ถึง <t:${Math.ceil(r.arriveAt / 1000)}:t>`, '-# ระหว่างทางล่า/สำรวจ/ซื้อของไม่ได้'], COLORS.bone));
+  // on the road: the same plain notice every blocked button repeats until arrival (risk line only here, at departure)
+  return { ok: true, content: travelNotice(char, ...warn)! };
 }
 
 // ---------- upgrades (bar) ----------
@@ -577,8 +575,11 @@ export function upgradeGear(char: Character, slot: GearSlot): ActionResult {
 /** Maid tip for serving a dish; Patrons tip double. */
 export const SERVE_TIP = 6;
 
+/** A cooked buff dish — tonics and other bottled buffs are drunk by their owner, not served. */
+const isDish = (id: string) => !!getItem(id)?.buff && RECIPES.some((r) => r.makes === id);
+
 /** Buff dishes the server holds (for pickers / autocomplete). */
-export const servableItems = (char: Character) => ownedItems(char, ['consumable']).filter((x) => !!x.def.buff);
+export const servableItems = (char: Character) => ownedItems(char, ['consumable']).filter((x) => isDish(x.id));
 
 /**
  * A Maid serves a buff dish to another player in Rouge Land: the buff is +1 stronger and lasts 1.5×.
@@ -592,8 +593,7 @@ export function serveFood(maid: Character, guest: Character, itemId: string): Ac
   const away = homeError(maid);
   if (away) return fail(away);
   if (!god && (guest.traveling || guest.location !== 'rouge_land')) return fail(`${guest.name} ไม่ได้อยู่ใน Rouge Land — เสิร์ฟได้เฉพาะแขกที่นั่งอยู่ในเกาะ`);
-  const def = getItem(itemId);
-  if (!def?.buff) return fail('เสิร์ฟได้เฉพาะอาหารบัฟจากสูตรลับบาร์');
+  if (!isDish(itemId)) return fail('เสิร์ฟได้เฉพาะอาหารบัฟจากสูตรลับบาร์');
   if (itemCount(maid, itemId) < 1) return fail(`คุณไม่มี ${itemLabel(itemId)}`);
   // consume() takes the dish from whoever eats it, so hand it over first
   removeItem(maid, itemId);

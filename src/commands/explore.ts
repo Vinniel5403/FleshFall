@@ -5,10 +5,10 @@ import { applyOutcome, saveCharacter, stopped } from '../game/character.js';
 import { getEvent, startEvent } from '../game/engine.js';
 import { isDev } from '../game/dev.js';
 import type { Character, GameEventDef } from '../game/types.js';
-import { currentZone, getZone, mapCities, tierLabel, ZONES, zoneLabel } from '../game/zones.js';
+import { currentZone, getZone, mapCities, tierLabel, travelNotice, ZONES, zoneLabel } from '../game/zones.js';
 import { COLORS, dungeonButtons, dungeonPayload, eventButtons, eventPayload, resultEmbed } from '../ui.js';
 import { prayAction, restAction, toReply, travelAction } from './actions.js';
-import { requireActive, travelingText } from './guard.js';
+import { requireActive } from './guard.js';
 import type { Command } from './types.js';
 
 export interface ExploreView {
@@ -31,7 +31,7 @@ export type ExploreStep =
  */
 export function exploreStart(char: Character, zoneId?: string): ExploreStep {
   const err = (content: string): ExploreStep => ({ kind: 'error', content });
-  const road = travelingText(char);
+  const road = travelNotice(char);
   if (road) return err(road);
   if (char.hunt && !char.hunt.won) return err('⚔️ คุณกำลังล่าอยู่ — กลับไปห้องของโซนแล้วกด 🎲 ออกล่า เพื่อสู้ต่อ');
 

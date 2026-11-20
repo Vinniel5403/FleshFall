@@ -29,12 +29,16 @@ export const LOCAL_DROPS: Record<Continent, Weighted[]> = {
   antarctica: [['whale_blubber', 4], ['alchemy_salve', 2], ['fresh_cut', 2], ['old_shotgun', 0.5], ['rusted_armor', 0.5]],
 };
 
-/** Gear that fits the city's difficulty: chance per kill, one of `items`. */
+/**
+ * Gear that fits the city's difficulty: chance per kill, one of `items`.
+ * The reason to hunt in dangerous cities: the chance climbs with the tier, and hard/epic carry pieces no shop sells
+ * (butcher_cleaver, knight_sword, fiend_hide, flesh_grenade, fiend_adrenal).
+ */
 export const TIER_GEAR: Record<Tier, { chance: number; items: string[] }> = {
   easy: { chance: 0.02, items: ['pipe', 'walking_cane', 'blood_apron'] },
-  normal: { chance: 0.025, items: ['kris', 'carving_knife', 'bone_club', 'leather_coat'] },
-  hard: { chance: 0.03, items: ['bone_saw', 'leather_coat', 'sigil'] },
-  epic: { chance: 0.03, items: ['old_shotgun', 'rusted_armor', 'placenta'] },
+  normal: { chance: 0.03, items: ['kris', 'carving_knife', 'bone_club', 'leather_coat', 'bone_bomb'] },
+  hard: { chance: 0.05, items: ['bone_saw', 'butcher_cleaver', 'rusted_armor', 'sigil', 'flesh_grenade', 'fiend_adrenal'] },
+  epic: { chance: 0.07, items: ['old_shotgun', 'knight_sword', 'fiend_hide', 'placenta', 'flesh_grenade', 'fiend_adrenal'] },
 };
 
 /** Chance per kill of the decoration piece that monster kind guards (`MonsterDef.keepsake`); × the streak loot bonus. */

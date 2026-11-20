@@ -3,7 +3,7 @@ import { MessageFlags, type RepliableInteraction } from 'discord.js';
 import { loadCharacter } from '../game/character.js';
 import type { Character } from '../game/types.js';
 import { closingShiftHour, inClosingShift } from '../game/world.js';
-import { getZone, travelLine } from '../game/zones.js';
+import { getZone } from '../game/zones.js';
 import { fallRow } from '../interactions/fallRow.js';
 
 /** Knocked out / dying: why the character can't act (null if fine). */
@@ -26,13 +26,6 @@ export async function requireCharacter(i: RepliableInteraction): Promise<Charact
   const char = loadCharacter(i.user.id);
   if (!char) return deny(i, 'คุณยังไม่มีตัวละคร ใช้ `/start` เพื่อคลานขึ้นจากหลุมเนื้อ');
   return char;
-}
-
-/** Traveling: where to + time left + arrival clock time, or null. `why` = what's blocked (shown below). */
-export function travelingText(char: Character, why = 'ระหว่างทางล่า/สำรวจ/ซื้อของไม่ได้ รอให้ถึงก่อน'): string | null {
-  const line = travelLine(char);
-  if (!line) return null;
-  return `${line} (ถึง <t:${Math.ceil(char.traveling!.arriveAt / 1000)}:t>)\n-# ${why}`;
 }
 
 /** Character that can act: not a Fiend, not in Closing Shift. (Menus work while traveling.) */

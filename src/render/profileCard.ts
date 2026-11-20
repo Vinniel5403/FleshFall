@@ -7,7 +7,7 @@ import { getItem } from '../game/items.js';
 import { maidGrade, ROLES } from '../game/roles.js';
 import type { Character, RoleId, StatKey } from '../game/types.js';
 import { STAT_NAMES } from '../game/world.js';
-import { currentZone, getZone } from '../game/zones.js';
+import { currentZone, getZone, travelVerb } from '../game/zones.js';
 import {
   art,
   cover,
@@ -66,7 +66,7 @@ function gearName(char: Character, slot: 'weapon' | 'armor'): string {
 }
 
 function statusText(char: Character): string {
-  if (char.traveling) return `กำลังเดินทางไป ${noEmoji(getZone(char.traveling.to)?.name ?? char.traveling.to)}`;
+  if (char.traveling) return `${travelVerb(char.traveling.to)} ${noEmoji(getZone(char.traveling.to)?.name ?? char.traveling.to)}`;
   const z = currentZone(char);
   const where = z.region === 'old_realm' ? `${noEmoji(z.name)} · Old Realm` : noEmoji(z.name);
   if (char.run) return `${where} · ในดันเจียน ห้อง ${char.run.depth}/${char.run.maxDepth}`;

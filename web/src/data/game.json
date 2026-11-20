@@ -146,6 +146,7 @@
      "bandage",
      "absinthe",
      "blood_wine",
+     "rage_tonic",
      "walking_cane",
      "kris",
      "leather_coat",
@@ -245,6 +246,7 @@
      "spice_jerky",
      "instant_noodle",
      "alchemy_salve",
+     "bone_bomb",
      "carving_knife",
      "sigil"
     ],
@@ -341,6 +343,7 @@
      "bandage",
      "canned_beans",
      "grilled_meat",
+     "bone_bomb",
      "leather_coat",
      "old_shotgun",
      "lighter"
@@ -438,6 +441,7 @@
      "bandage",
      "mate_tea",
      "fetal_flesh",
+     "rage_tonic",
      "bone_club",
      "blood_apron"
     ],
@@ -525,6 +529,7 @@
     "shop": [
      "myrrh_balm",
      "alchemy_salve",
+     "hide_tonic",
      "wild_flour",
      "bone_saw",
      "sigil",
@@ -614,6 +619,8 @@
     "shop": [
      "eucalyptus_oil",
      "alchemy_salve",
+     "hide_tonic",
+     "bone_bomb",
      "fresh_cut",
      "rusted_armor"
     ],
@@ -638,6 +645,8 @@
      "whale_blubber",
      "fresh_cut",
      "alchemy_salve",
+     "hide_tonic",
+     "bone_bomb",
      "rusted_armor",
      "old_shotgun"
     ],
@@ -1123,6 +1132,70 @@
    "description": "ยาที่สาวก Thanatos พึ่งพา (+22 เนื้อกาย)"
   },
   {
+   "id": "rage_tonic",
+   "name": "ยาดองเลือดเดือด",
+   "emoji": "🍶",
+   "type": "consumable",
+   "value": 28,
+   "buff": {
+    "stat": "str",
+    "amount": 1,
+    "minutes": 20
+   },
+   "description": "เหล้าดองเขี้ยว Fiend กระดกแล้วเลือดสูบฉีดจนมือสั่น (บัฟ พละ +1 นาน 20 นาที)"
+  },
+  {
+   "id": "hide_tonic",
+   "name": "ขี้ผึ้งหนังด้าน",
+   "emoji": "🧴",
+   "type": "consumable",
+   "value": 28,
+   "buff": {
+    "def": 1,
+    "amount": 1,
+    "minutes": 20
+   },
+   "description": "ทาแล้วผิวแข็งกระด้างเหมือนหนังตากแห้ง (บัฟ ลดดาเมจ +1 นาน 20 นาที)"
+  },
+  {
+   "id": "fiend_adrenal",
+   "name": "ต่อมคลั่งของ Fiend",
+   "emoji": "💉",
+   "type": "consumable",
+   "value": 80,
+   "humanity": -2,
+   "buff": {
+    "stat": "str",
+    "amount": 3,
+    "minutes": 30
+   },
+   "description": "ต่อมสด ๆ จาก Fiend ในเมืองอันตราย กลืนแล้วกล้ามเนื้อกระตุกไม่หยุด (บัฟ พละ +3 นาน 30 นาที, -2 ความเป็นมนุษย์) · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป"
+  },
+  {
+   "id": "bone_bomb",
+   "name": "ระเบิดเศษกระดูก",
+   "emoji": "💣",
+   "type": "consumable",
+   "value": 35,
+   "blast": [
+    6,
+    10
+   ],
+   "description": "กระป๋องอัดดินปืนกับเศษกระดูก ขว้างตอนล่า — มอนสเตอร์ทุกตัวโดน 6–10 (+ครึ่งเลเวลของคุณ)"
+  },
+  {
+   "id": "flesh_grenade",
+   "name": "ระเบิดก้อนเนื้อ",
+   "emoji": "🧨",
+   "type": "consumable",
+   "value": 90,
+   "blast": [
+    14,
+    20
+   ],
+   "description": "ก้อนเนื้อบวมก๊าซที่ยังเต้นอยู่ ขว้างตอนล่า — มอนสเตอร์ทุกตัวโดน 14–20 (+ครึ่งเลเวลของคุณ) · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป"
+  },
+  {
    "id": "pipe",
    "name": "ท่อเหล็ก",
    "emoji": "🔧",
@@ -1186,6 +1259,24 @@
    "description": "+5 พละ ของวินเทจที่ยังยิงได้"
   },
   {
+   "id": "butcher_cleaver",
+   "name": "ปังตอเพชฌฆาต",
+   "emoji": "🪓",
+   "type": "weapon",
+   "value": 180,
+   "atk": 6,
+   "description": "+6 พละ หนักจนต้องจับสองมือ · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป"
+  },
+  {
+   "id": "knight_sword",
+   "name": "ดาบอัศวินขึ้นสนิม",
+   "emoji": "⚔️",
+   "type": "weapon",
+   "value": 260,
+   "atk": 7,
+   "description": "+7 พละ คู่กับเกราะของเจ้าของเดิม คมกว่าที่สนิมบอก · ดรอปเฉพาะเมืองระดับ Epic"
+  },
+  {
    "id": "blood_apron",
    "name": "ผ้ากันเปื้อนคราบเลือด",
    "emoji": "🦺",
@@ -1211,6 +1302,15 @@
    "value": 90,
    "def": 4,
    "description": "ลดดาเมจ 4 ยังมีคราบของเจ้าของเดิม"
+  },
+  {
+   "id": "fiend_hide",
+   "name": "เสื้อหนัง Fiend",
+   "emoji": "🥋",
+   "type": "armor",
+   "value": 200,
+   "def": 5,
+   "description": "ลดดาเมจ 5 หนังฟอกที่ยังอุ่นเหมือนมีชีวิต · ดรอปเฉพาะเมืองระดับ Epic"
   },
   {
    "id": "lighter",
@@ -1469,9 +1569,11 @@
    "id": "sigil",
    "name": "ตราสัญลักษณ์ Icon",
    "emoji": "🔯",
-   "type": "material",
+   "type": "consumable",
    "value": 50,
-   "description": "ใช้ในพิธีติดต่อ Icon"
+   "sanity": 6,
+   "humanity": 4,
+   "description": "ตราของรูปบูชา — ถวายที่ศาล Icon ท้ายดันเจียนเพื่อเลื่อนขั้นพร · หรือกำไว้ท่อง First Verses ได้ทุกที่ (+6 สติ, +4 ความเป็นมนุษย์)"
   }
  ],
  "bestiary": [
