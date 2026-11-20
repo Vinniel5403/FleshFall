@@ -20,25 +20,25 @@ export const LOCAL_DROP_CHANCE = 0.1;
 
 /** Local goods by continent (same flavor as the continent shop), with pick weights. */
 export const LOCAL_DROPS: Record<Continent, Weighted[]> = {
-  europe: [['absinthe', 4], ['blood_wine', 3], ['walking_cane', 2], ['kris', 2], ['pocket_watch', 1], ['vinyl_record', 1]],
-  asia: [['spice_jerky', 4], ['instant_noodle', 4], ['carving_knife', 2], ['sigil', 1]],
-  america: [['canned_beans', 4], ['grilled_meat', 3], ['lighter', 2], ['dead_phone', 1], ['old_shotgun', 0.3]],
-  south_america: [['mate_tea', 4], ['fetal_flesh', 3], ['bone_club', 2], ['blood_apron', 2], ['family_photo', 1]],
-  africa: [['myrrh_balm', 4], ['wild_flour', 3], ['bone_saw', 1], ['sigil', 1], ['placenta', 0.3]],
-  australia: [['eucalyptus_oil', 4], ['alchemy_salve', 2], ['fresh_cut', 2], ['rusted_armor', 0.5]],
-  antarctica: [['whale_blubber', 4], ['alchemy_salve', 2], ['fresh_cut', 2], ['old_shotgun', 0.5], ['rusted_armor', 0.5]],
+  europe: [['absinthe', 4], ['blood_wine', 3], ['walking_cane', 2], ['kris', 2], ['meat_hook', 2], ['pocket_watch', 1], ['vinyl_record', 1], ['wedding_ring', 1], ['gold_glasses', 1], ['riot_vest', 0.5]],
+  asia: [['spice_jerky', 4], ['instant_noodle', 4], ['carving_knife', 2], ['sigil', 1], ['cassette_tape', 1], ['samurai_do', 0.5], ['katana', 0.3]],
+  america: [['canned_beans', 4], ['grilled_meat', 3], ['lighter', 2], ['claw_hammer', 2], ['dead_phone', 1], ['biker_jacket', 1], ['handheld_game', 0.5], ['film_camera', 0.5], ['old_shotgun', 0.3]],
+  south_america: [['mate_tea', 4], ['fetal_flesh', 3], ['bone_club', 2], ['blood_apron', 2], ['machete', 2], ['family_photo', 1], ['old_coin', 1], ['hunting_bow', 0.5]],
+  africa: [['myrrh_balm', 4], ['wild_flour', 3], ['rusty_chain', 1], ['bone_saw', 1], ['sigil', 1], ['old_coin', 1], ['hunting_bow', 0.5], ['rib_plate', 0.5], ['placenta', 0.3]],
+  australia: [['eucalyptus_oil', 4], ['alchemy_salve', 2], ['fresh_cut', 2], ['cricket_bat', 2], ['boomerang', 1], ['rusted_armor', 0.5]],
+  antarctica: [['whale_blubber', 4], ['alchemy_salve', 2], ['fresh_cut', 2], ['ice_pick', 2], ['fur_parka', 1], ['harpoon', 0.5], ['old_shotgun', 0.5], ['rusted_armor', 0.5]],
 };
 
 /**
  * Gear that fits the city's difficulty: chance per kill, one of `items`.
  * The reason to hunt in dangerous cities: the chance climbs with the tier, and hard/epic carry pieces no shop sells
- * (butcher_cleaver, knight_sword, fiend_hide, flesh_grenade, fiend_adrenal).
+ * (butcher_cleaver, revolver, spine_whip, hazmat_suit, knight_sword, chainsaw, fiend_hide, diving_suit, flesh_carapace, flesh_grenade, fiend_adrenal).
  */
 export const TIER_GEAR: Record<Tier, { chance: number; items: string[] }> = {
-  easy: { chance: 0.02, items: ['pipe', 'walking_cane', 'blood_apron'] },
-  normal: { chance: 0.03, items: ['kris', 'carving_knife', 'bone_club', 'leather_coat', 'bone_bomb'] },
-  hard: { chance: 0.05, items: ['bone_saw', 'butcher_cleaver', 'rusted_armor', 'sigil', 'flesh_grenade', 'fiend_adrenal'] },
-  epic: { chance: 0.07, items: ['old_shotgun', 'knight_sword', 'fiend_hide', 'placenta', 'flesh_grenade', 'fiend_adrenal'] },
+  easy: { chance: 0.02, items: ['pipe', 'walking_cane', 'broken_bottle', 'meat_hook', 'blood_apron', 'feed_sack', 'rain_poncho'] },
+  normal: { chance: 0.03, items: ['kris', 'carving_knife', 'bone_club', 'claw_hammer', 'rusty_chain', 'machete', 'leather_coat', 'biker_jacket', 'chainmail_apron', 'bone_bomb'] },
+  hard: { chance: 0.05, items: ['bone_saw', 'sledgehammer', 'butcher_cleaver', 'revolver', 'spine_whip', 'rusted_armor', 'rib_plate', 'hazmat_suit', 'sigil', 'flesh_grenade', 'fiend_adrenal'] },
+  epic: { chance: 0.07, items: ['old_shotgun', 'katana', 'knight_sword', 'chainsaw', 'fiend_hide', 'diving_suit', 'flesh_carapace', 'placenta', 'flesh_grenade', 'fiend_adrenal'] },
 };
 
 /** Chance per kill of the decoration piece that monster kind guards (`MonsterDef.keepsake`); × the streak loot bonus. */
@@ -50,23 +50,26 @@ export const RELIC_CHANCE = 0.08;
 export const DECOR_CHANCE: Record<Tier, number> = { easy: 0.02, normal: 0.03, hard: 0.04, epic: 0.06 };
 export const DECOR_STREAK_STEP = 0.01;
 
-/** Decoration found only on its own continent — three times as likely there as any single common piece. */
-export const DECOR_LOCAL: Record<Continent, string> = {
-  europe: 'grandfather_clock',
-  asia: 'paper_lantern',
-  america: 'jukebox',
-  south_america: 'carnival_mask',
-  africa: 'hide_drum',
-  australia: 'outback_sign',
-  antarctica: 'expedition_crate',
+/** Decoration found only on its own continent — each three times as likely there as any single common piece. */
+export const DECOR_LOCAL: Record<Continent, string[]> = {
+  europe: ['grandfather_clock', 'candelabra', 'manor_bookcase'],
+  asia: ['paper_lantern', 'maneki_neko', 'bonsai'],
+  america: ['jukebox', 'neon_sign', 'pinball'],
+  south_america: ['carnival_mask', 'llama_rug', 'clay_idol'],
+  africa: ['hide_drum', 'carved_stool', 'safari_trunk'],
+  australia: ['outback_sign', 'bitten_surfboard', 'croc_skull'],
+  antarctica: ['expedition_crate', 'ship_wheel', 'stuffed_penguin'],
 };
 
 /** Decoration pieces any city can turn up. */
-export const DECOR_COMMON = ['tube_radio', 'rotary_phone', 'crt_tv', 'typewriter', 'oil_lamp', 'cracked_mirror'];
+export const DECOR_COMMON = [
+  'tube_radio', 'rotary_phone', 'crt_tv', 'typewriter', 'oil_lamp', 'cracked_mirror',
+  'snow_globe', 'porcelain_doll', 'birdcage', 'music_box', 'rocking_chair', 'gramophone', 'sewing_machine', 'dollhouse', 'deer_trophy', 'clawfoot_tub',
+];
 
 export function pickDecor(continent: Continent | undefined): string {
   const pool: Weighted[] = DECOR_COMMON.map((id) => [id, 1]);
-  if (continent) pool.push([DECOR_LOCAL[continent], 3]);
+  if (continent) for (const id of DECOR_LOCAL[continent]) pool.push([id, 3]);
   return pickWeighted(pool);
 }
 
