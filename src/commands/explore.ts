@@ -2,7 +2,7 @@ import { fallOr } from '../interactions/fallRow.js';
 import { MessageFlags, SlashCommandBuilder, type ActionRowBuilder, type AttachmentBuilder, type ButtonBuilder, type EmbedBuilder } from 'discord.js';
 import { balance } from '../config.js';
 import { applyOutcome, saveCharacter, stopped } from '../game/character.js';
-import { getEvent, startEvent } from '../game/engine.js';
+import { getEvent, startExplore } from '../game/engine.js';
 import { isDev } from '../game/dev.js';
 import type { Character, GameEventDef } from '../game/types.js';
 import { currentZone, getZone, mapCities, tierLabel, travelNotice, ZONES, zoneLabel } from '../game/zones.js';
@@ -22,6 +22,7 @@ export type ExploreStep =
   | { kind: 'error'; content: string }
   | { kind: 'event'; event: GameEventDef; pre: string[] }
   | { kind: 'dungeon' }
+  | { kind: 'empty'; pre: string[] }
   | { kind: 'dead'; lines: string[] };
 
 /**
@@ -62,9 +63,9 @@ export function exploreStart(char: Character, zoneId?: string): ExploreStep {
       return { kind: 'dead', lines: a.lines };
     }
   }
-  const event = startEvent(char);
+  const event = startExplore(char);
   saveCharacter(char);
-  return { kind: 'event', event, pre };
+  return event ? { kind: 'event', event, pre } : { kind: 'empty', pre };
 }
 
 /** Render an explore step (event banner / dungeon banner / death / error). */
@@ -74,6 +75,8 @@ export async function exploreView(char: Character, s: ExploreStep): Promise<Expl
       return { content: s.content, embeds: [], files: [], components: [] };
     case 'dead':
       return { embeds: [resultEmbed(char, char.dying ? 'ร่างของคุณแหลกเหลว...' : 'ร่างของคุณสลายไป...', s.lines, COLORS.blood)], files: [], components: fallOr(char, []) };
+    case 'empty':
+      return { embeds: [resultEmbed(char, '🔦 สำรวจแล้วไม่เจออะไร', [...s.pre, 'เดินวนอยู่นาน แต่ไม่มีอะไรน่าสนใจ — แรงหายไปเปล่า ๆ'], COLORS.bone)], files: [], components: [] };
     case 'dungeon': {
       const row = dungeonButtons(char);
       return { ...(await dungeonPayload(char)), components: row ? [row] : [] };

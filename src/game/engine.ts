@@ -67,11 +67,14 @@ function eventPool(char: Character): GameEventDef[] {
   );
 }
 
-export function pickEvent(char: Character): GameEventDef {
+/** `emptyChance` = overall chance of finding nothing (undefined); doors keep their own rate. */
+export function pickEvent(char: Character, emptyChance = 0): GameEventDef | undefined {
   let pool = eventPool(char);
   // doors (red included) are rolled on their own so stumbling on one stays rare
   const doors = pool.filter((e) => e.finds);
-  if (doors.length) pool = chance(balance.exploreDoorChance) ? doors : pool.filter((e) => !e.finds);
+  const door = doors.length > 0 && chance(balance.exploreDoorChance);
+  if (!door && chance(doors.length ? emptyChance / (1 - balance.exploreDoorChance) : emptyChance)) return undefined;
+  if (doors.length) pool = door ? doors : pool.filter((e) => !e.finds);
   const total = pool.reduce((s, e) => s + e.weight, 0);
   let r = Math.random() * total;
   for (const e of pool) {
@@ -85,9 +88,14 @@ export function getEvent(id: string): GameEventDef | undefined {
   return EVENTS_BY_ID[id];
 }
 
+/** Explore outside a dungeon: usually finds nothing (`balance.exploreEmptyChance`), else starts an event. Caller saves. */
+export function startExplore(char: Character): GameEventDef | undefined {
+  const ev = pickEvent(char, balance.exploreEmptyChance);
+  return ev && startEvent(char, ev);
+}
+
 /** Start a new event for the character (sets pendingEvent). Caller saves. */
-export function startEvent(char: Character): GameEventDef {
-  const ev = pickEvent(char);
+export function startEvent(char: Character, ev: GameEventDef = pickEvent(char)!): GameEventDef {
   char.pendingEvent = { eventId: ev.id, expiresAt: 0 };
   if (char.run) char.run.seen = [...(char.run.seen ?? []), ev.id];
   return ev;
