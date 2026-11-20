@@ -33,9 +33,9 @@ export const balance = {
   /** Chance a hunt reveals a dungeon door after victory. */
   huntDoorChance: 0.2,
   /** Chance one explore in the Old Realm turns up a door — any Icon colour or red, all equally likely (rolled apart from the other events). */
-  exploreDoorChance: 0.08,
-  /** Chance an explore (outside dungeons) turns up nothing — stamina spent, no event. Doors stay at `exploreDoorChance`, the rest are ordinary events (80/8/12 in the Old Realm). */
-  exploreEmptyChance: 0.8,
+  exploreDoorChance: 0.01,
+  /** Chance an explore (outside dungeons) turns up nothing — stamina spent, no event. Doors stay at `exploreDoorChance`, the rest are ordinary events (80/1/19 in the Old Realm). */
+  exploreEmptyChance: 0.87,
   /** Chance a dungeon is an Icon dungeon (shrine at the end): continent's main color / elsewhere. */
   iconDungeonHome: 0.015,
   iconDungeonAway: 0.003,
