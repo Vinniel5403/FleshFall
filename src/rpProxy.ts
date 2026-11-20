@@ -7,6 +7,9 @@
  * (comma-separated channel or category names, default "ทั่วไป,Archive"). Bot needs Manage Webhooks +
  * Manage Messages there.
  *
+ * `@Name` of a character (its public handle, any case) becomes a real mention of the player behind it
+ * (`tagCharacters` in game/account.ts) — Discord's own @ picker only knows Discord names.
+ *
  * Not proxied: messages starting with `\` (escape), `//` or wrapped in `(( ))` (OOC), players
  * without a character, bots/webhooks, empty messages (stickers only).
  *
@@ -31,7 +34,7 @@ import {
 } from 'discord.js';
 import { config } from './config.js';
 import { db } from './db/index.js';
-import { imageUrl, pickImage } from './game/account.js';
+import { imageUrl, pickImage, tagCharacters } from './game/account.js';
 import { loadCharacter } from './game/character.js';
 import type { Character } from './game/types.js';
 import { ROLE_ART, ROLE_AVATAR } from './render/kit.js';
@@ -71,6 +74,9 @@ function avatarFor(char: Character): string | undefined {
   return WEB_URL ? `${WEB_URL.replace(/\/$/, '')}/${ROLE_AVATAR[char.role] ?? ROLE_ART[char.role]}` : undefined;
 }
 
+/** `@Name` of a character → a real mention of its player (test characters have no Discord account). */
+const tagged = (text: string) => tagCharacters(text, db.allCharacters().filter((c) => /^\d+$/.test(c.userId)));
+
 const isOoc = (t: string) => t.startsWith('\\') || t.startsWith('//') || /^\(\(.*\)\)$/s.test(t.trim());
 
 async function replyQuote(m: Message): Promise<string> {
@@ -94,7 +100,7 @@ async function proxy(m: Message, botId: string): Promise<void> {
   if (!char) return;
 
   const hook = await webhookFor(base as HookChannel, botId);
-  const content = ((await replyQuote(m)) + m.content).slice(0, 2000);
+  const content = ((await replyQuote(m)) + tagged(m.content)).slice(0, 2000);
   const sent = await hook.send({
     content: content || undefined,
     username: char.name.slice(0, 80),
@@ -177,7 +183,7 @@ async function onDirectMessage(m: Message, botId: string): Promise<void> {
   }
   const hook = await webhookFor(ch as HookChannel, botId);
   await hook.editMessage(p.messageId, {
-    content: (p.prefix + text).slice(0, 2000),
+    content: (p.prefix + tagged(text)).slice(0, 2000),
     threadId: p.threadId,
     allowedMentions: { parse: ['users'] },
   });

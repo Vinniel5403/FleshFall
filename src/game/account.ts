@@ -123,6 +123,31 @@ export function assignHandles(chars: readonly Pick<Character, 'userId' | 'name' 
   return out;
 }
 
+/** A letter/digit of a script that puts spaces between words — Thai runs on, so a Thai neighbour never blocks a tag. */
+const wordy = (ch: string | undefined) => !!ch && /[\p{L}\p{N}_]/u.test(ch) && !/\p{Script=Thai}/u.test(ch);
+
+/**
+ * RP text: `@Name` → `<@userId>`, a real mention of the player behind that character. Matches the unique handle
+ * (assignHandles), any case: `@Sternen`, `@mary ann` / `@mary-ann`, `@sonya-2` for a later namesake; the longest
+ * name wins. Left alone: `\@Name`, e-mail / URL `@`, and a name that runs on into more letters (`@Sternenx`).
+ * Pass every real player, like assignHandles.
+ */
+export function tagCharacters(text: string, chars: readonly Pick<Character, 'userId' | 'name' | 'createdAt' | 'nameAt'>[]): string {
+  if (!text.includes('@')) return text;
+  const handles = [...assignHandles(chars)].sort((a, b) => b[1].length - a[1].length);
+  const typed = (from: number, len: number) => text.slice(from, from + len).normalize('NFC').toLowerCase().replace(/\s/g, '-');
+  let out = '';
+  let i = 0;
+  for (let at = text.indexOf('@'); at >= 0; at = text.indexOf('@', i)) {
+    const prev = text[at - 1];
+    const free = prev === undefined || !(wordy(prev) || '<@/.:\\'.includes(prev));
+    const hit = free ? handles.find(([, h]) => typed(at + 1, h.length) === h && !wordy(text[at + 1 + h.length])) : undefined;
+    out += text.slice(i, at) + (hit ? `<@${hit[0]}>` : '@');
+    i = at + 1 + (hit ? hit[1].length : 0);
+  }
+  return out + text.slice(i);
+}
+
 
 /** Player notes / backstory (public on the profile). */
 export const BIO_MAX = 1500;
