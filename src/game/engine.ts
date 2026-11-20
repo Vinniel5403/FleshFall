@@ -1,8 +1,8 @@
-import { applyOutcome, changeHumanity, itemCount, removeItem, statMod, stopped, type AppliedOutcome } from './character.js';
+import { applyOutcome, changeHumanity, itemCount, removeItem, statMod, statParts, stopped, type AppliedOutcome } from './character.js';
 import { EVENTS, EVENTS_BY_ID } from './events/index.js';
 import { rollIconDungeon, receiveBlessing } from './blessings.js';
 import { feed } from './feed.js';
-import { d20Success, type DiceRoll } from './dice.js';
+import { d20Success, rollTag, type DiceRoll } from './dice.js';
 import { ICON_BY_DOOR, mods } from './icons.js';
 import type { Character, EventChoice, EventContext, GameEventDef, IconDoor, Outcome } from './types.js';
 import { DOORS, DUNGEON_RULES, isCrimsonMoon, STAT_NAMES } from './world.js';
@@ -35,8 +35,8 @@ export function makeContext(char: Character, notes: string[], dice: DiceRoll[] =
       }
       const total = roll + mod;
       const success = ok(roll);
-      dice.push({ label: `ทอยเช็ก ${STAT_NAMES[stat]}`, mod, target: dc, rolls, success });
-      return { success, roll, total, dc, tag: `\`🎲 ${STAT_NAMES[stat]} ${total}/${dc} ${success ? '✅' : '❌'}\`` };
+      dice.push({ label: `ทอยเช็ก ${STAT_NAMES[stat]}`, mod, modLabel: STAT_NAMES[stat], parts: statParts(char, stat), target: dc, targetNote: 'ความยากของเหตุการณ์', rolls, success });
+      return { success, roll, total, dc, tag: `\`${STAT_NAMES[stat]} ${rollTag(roll, mod, dc)} ${success ? '✅' : '❌'}\`` };
     },
   };
 }

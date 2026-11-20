@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { Character } from '../game/types.js';
-import { CONTINENTS, currentZone, ZONES, type Continent, type Tier } from '../game/zones.js';
+import { CONTINENTS, currentZone, zoneLevel, ZONES, type Continent, type Tier } from '../game/zones.js';
 import { background, C, canvas, DOOR_HEX, font, logo, png, spaced, type Ctx } from './kit.js';
 
 /** [lat, lon] per city id. */
@@ -222,7 +222,8 @@ export async function renderMapCard(char: Character, focus?: Continent): Promise
       const x0 = px(lon);
       const y0 = py(lat);
       const r = TIER_R[z.tier ?? 'easy'] + (z.id === here.id && !char.traveling ? 20 : 6); // clear the "you are here" ring
-      const w = ctx.measureText(z.name).width;
+      const name = `${z.name} · Lv ${zoneLevel(z)}`;
+      const w = ctx.measureText(name).width;
       const hgt = 16;
       // try right, left, above, below, then further out
       const tries: [number, number][] = [
@@ -240,9 +241,9 @@ export async function renderMapCard(char: Character, focus?: Continent): Promise
       placed.push([pos[0] - 2, pos[1] - hgt, pos[0] + w + 2, pos[1] + 4]);
       ctx.lineWidth = 4;
       ctx.strokeStyle = 'rgba(11,6,6,.92)';
-      ctx.strokeText(z.name, pos[0], pos[1]);
+      ctx.strokeText(name, pos[0], pos[1]);
       ctx.fillStyle = C.bone;
-      ctx.fillText(z.name, pos[0], pos[1]);
+      ctx.fillText(name, pos[0], pos[1]);
     }
   }
 

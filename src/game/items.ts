@@ -78,6 +78,29 @@ const list: ItemDef[] = [
   { id: 'family_photo', name: 'รูปถ่ายครอบครัว', emoji: '🖼️', type: 'vintage', value: 45, description: 'หน้าคนในรูปเริ่มเลือนลาง' },
   { id: 'pocket_watch', name: 'นาฬิกาพก', emoji: '⌚', type: 'vintage', value: 55, description: 'เข็มเดินถอยหลัง' },
   { id: 'vinyl_record', name: 'แผ่นเสียงไวนิล', emoji: '💿', type: 'vintage', value: 70, description: 'เพลงที่ไม่มีใครในเกาะจำได้' },
+  // --- ของเก่าแต่งห้อง (ดรอปจากการล่าเท่านั้น ดู drops.ts) — วางในห้องได้เมื่อมีภาพใน assets/rooms-src แล้วใส่ furniture ---
+  { id: 'tube_radio', name: 'วิทยุหลอด', emoji: '📻', type: 'vintage', decor: true, value: 110, description: 'เปิดแล้วมีแต่เสียงซ่า กับเสียงใครบางคนเรียกชื่อคุณ · ของเก่าแต่งห้อง' },
+  { id: 'rotary_phone', name: 'โทรศัพท์หมุน', emoji: '☎️', type: 'vintage', decor: true, value: 100, description: 'สายขาดไปนานแล้ว แต่บางคืนมันยังดัง · ของเก่าแต่งห้อง' },
+  { id: 'crt_tv', name: 'โทรทัศน์จอตู้', emoji: '📺', type: 'vintage', decor: true, value: 140, description: 'จอเป็นเม็ดหิมะ มองนานพอจะเห็นห้องของคุณเอง · ของเก่าแต่งห้อง' },
+  { id: 'typewriter', name: 'เครื่องพิมพ์ดีด', emoji: '⌨️', type: 'vintage', decor: true, value: 120, description: 'กระดาษที่ค้างอยู่พิมพ์คำเดียวซ้ำทั้งหน้า · ของเก่าแต่งห้อง' },
+  { id: 'oil_lamp', name: 'ตะเกียงน้ำมัน', emoji: '🪔', type: 'vintage', decor: true, value: 90, description: 'เปลวไฟเอนเข้าหาคนเสมอ · ของเก่าแต่งห้อง' },
+  { id: 'cracked_mirror', name: 'กระจกเงาบานร้าว', emoji: '🪞', type: 'vintage', decor: true, value: 100, description: 'เงาในกระจกขยับช้ากว่าคุณครึ่งจังหวะ · ของเก่าแต่งห้อง' },
+  // ของเก่าประจำทวีป
+  { id: 'grandfather_clock', name: 'นาฬิกาลูกตุ้ม', emoji: '🕰️', type: 'vintage', decor: true, value: 200, description: 'ตีบอกเวลาสิบสามครั้ง จากคฤหาสน์ร้างในยุโรป · ของเก่าแต่งห้อง' },
+  { id: 'paper_lantern', name: 'โคมกระดาษแดง', emoji: '🏮', type: 'vintage', decor: true, value: 160, description: 'จุดแล้วส่องเห็นแต่สิ่งที่ไม่ควรเห็น จากตลาดกลางคืนในเอเชีย · ของเก่าแต่งห้อง' },
+  { id: 'jukebox', name: 'ตู้เพลงหยอดเหรียญ', emoji: '🎶', type: 'vintage', decor: true, value: 220, description: 'เล่นเพลงเดียวซ้ำไปมา ทั้งที่ไม่มีใครหยอดเหรียญ จากร้านอาหารข้างทางในอเมริกา · ของเก่าแต่งห้อง' },
+  { id: 'carnival_mask', name: 'หน้ากากคาร์นิวัล', emoji: '🎭', type: 'vintage', decor: true, value: 160, description: 'แขวนผนังไว้ดีกว่าสวม เพราะมันถอดไม่ออก จากขบวนแห่ในอเมริกาใต้ · ของเก่าแต่งห้อง' },
+  { id: 'hide_drum', name: 'กลองหนังโบราณ', emoji: '🥁', type: 'vintage', decor: true, value: 170, description: 'วางเฉย ๆ ก็ยังได้ยินจังหวะเบา ๆ จากข้างใน จากแอฟริกา · ของเก่าแต่งห้อง' },
+  { id: 'outback_sign', name: 'ป้ายเตือนข้างทาง', emoji: '🪧', type: 'vintage', decor: true, value: 230, description: 'ป้ายสังกะสีรูปสัตว์ที่ไม่มีอยู่จริง จากถนนสายเปลี่ยวในออสเตรเลีย · ของเก่าแต่งห้อง' },
+  { id: 'expedition_crate', name: 'ลังไม้คณะสำรวจ', emoji: '📦', type: 'vintage', decor: true, value: 260, description: 'ตีตราปี 1912 ข้างในว่างเปล่า มีรอยเล็บขูดจากด้านใน จากแอนตาร์กติกา · ของเก่าแต่งห้อง' },
+  // ของที่มอนสเตอร์แต่ละชนิดหวงไว้
+  { id: 'empty_icebox', name: 'ตู้เย็นว่างเปล่า', emoji: '🧊', type: 'vintage', decor: true, value: 150, description: 'เศษเดนเนื้อเฝ้ามันไว้ ทั้งที่ข้างในไม่เหลืออะไรให้กิน · ของเก่าแต่งห้อง' },
+  { id: 'specimen_jar', name: 'โหลดองตัวอย่าง', emoji: '🧪', type: 'vintage', decor: true, value: 150, description: 'ของในโหลยังขยับเป็นบางครั้ง ซากคลานเน่าชอบขดอยู่รอบมัน · ของเก่าแต่งห้อง' },
+  { id: 'floor_lamp', name: 'โคมไฟตั้งพื้น', emoji: '💡', type: 'vintage', decor: true, value: 160, description: 'เปิดแล้วเงาที่ทอดลงพื้นไม่ใช่เงาของโคม · ของเก่าแต่งห้อง' },
+  { id: 'dog_house', name: 'บ้านสุนัขไม้', emoji: '🛖', type: 'vintage', decor: true, value: 160, description: 'ป้ายชื่อถูกกัดจนอ่านไม่ออก ข้างในยังอุ่น · ของเก่าแต่งห้อง' },
+  { id: 'church_pew', name: 'ม้านั่งโบสถ์', emoji: '⛪', type: 'vintage', decor: true, value: 180, description: 'พนักพิงสลักบทสวดที่ไม่มีในคัมภีร์ไหน · ของเก่าแต่งห้อง' },
+  { id: 'glass_terrarium', name: 'ตู้กระจกเพาะเห็ด', emoji: '🍄', type: 'vintage', decor: true, value: 180, description: 'เห็ดข้างในโตเองไม่ต้องรดน้ำ อย่าเปิดฝา · ของเก่าแต่งห้อง' },
+  { id: 'stained_glass', name: 'บานกระจกสี', emoji: '🪟', type: 'vintage', decor: true, value: 240, description: 'ลวดลายเรขาคณิตเปลี่ยนไปทุกครั้งที่กะพริบตา · ของเก่าแต่งห้อง' },
   // --- ของตกแต่งห้องส่วนตัว (จัดห้องบนเว็บ — วางได้เท่าจำนวนที่มี) ---
   { id: 'steel_shelf', name: 'ชั้นวางเหล็ก', emoji: '🗄️', type: 'furniture', value: 60, furniture: 'concrete-shelf',
     description: 'ชั้นเหล็กขึ้นสนิมจากโกดังร้าง ของตกแต่งห้องส่วนตัว — จัดวางได้ที่หน้าโปรไฟล์บนเว็บ' },
@@ -108,4 +131,8 @@ export const TRADEABLE_IDS = list.filter((i) => i.value > 0).map((i) => i.id);
 /** room catalog id → the furniture item that places it */
 export const FURNITURE_ITEM: Record<string, string> = Object.fromEntries(list.filter((i) => i.furniture).map((i) => [i.furniture!, i.id]));
 
-export const VINTAGE_IDS =list.filter((i) => i.type === 'vintage').map((i) => i.id);
+/** Small real-world relics: ferry fare, Patron commissions, event rewards. Decoration pieces are kept out so those never eat or hand out one. */
+export const VINTAGE_IDS = list.filter((i) => i.type === 'vintage' && !i.decor).map((i) => i.id);
+
+/** Room-decoration collectibles (hunt drops). */
+export const DECOR_IDS = list.filter((i) => i.decor).map((i) => i.id);

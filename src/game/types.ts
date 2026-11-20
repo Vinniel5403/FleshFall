@@ -235,8 +235,10 @@ export interface ItemDef {
   def?: number;
   /** eating it grants a timed meal buff */
   buff?: BuffDef;
-  /** type 'furniture': the room catalog id it places (web/src/data/rooms.json) */
+  /** The room catalog id it places (web/src/data/rooms.json) — what makes an item placeable in the private room. */
   furniture?: string;
+  /** Room-decoration collectible found on hunts (drops.ts). Placeable once its art exists and `furniture` is set. */
+  decor?: boolean;
 }
 
 export interface Outcome {
@@ -261,7 +263,7 @@ export interface CheckResult {
   roll: number;
   total: number;
   dc: number;
-  /** ready-to-print label, e.g. "🎲 พละ 14/12 ✅" */
+  /** ready-to-print label, e.g. "พละ 🎲 9 +5 = 14 · ต้อง 12 ✅" */
   tag: string;
 }
 

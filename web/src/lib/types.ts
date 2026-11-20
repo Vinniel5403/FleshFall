@@ -14,6 +14,8 @@ export interface City {
   name: string;
   emoji: string;
   tier: Tier;
+  /** City level — every monster hunted there is this level. */
+  level: number;
   desc: string;
 }
 
@@ -70,11 +72,12 @@ export interface Monster {
   name: string;
   emoji: string;
   desc: string;
+  /** hp / dmg / xp at Lv 1 — the city's level scales them. */
   hp: number;
-  ac: number;
   dmg: [number, number];
   xp: number;
-  minLevel?: number;
+  /** Item id of the room-decoration piece this kind guards. */
+  keepsake?: string;
 }
 
 

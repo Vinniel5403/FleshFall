@@ -178,7 +178,7 @@ export async function marketSelect(i: StringSelectMenuInteraction, char: Charact
       return i.showModal(qtyPriceModal('sell', value, itemCount(char, value)));
     case 'mktbuycat': {
       const cat = BUY_CATS.find((c) => c.id === value);
-      const ids = TRADEABLE_IDS.filter((id) => cat?.types.includes(getItem(id)!.type));
+      const ids = TRADEABLE_IDS.filter((id) => cat?.types.includes(getItem(id)!.decor ? 'furniture' : getItem(id)!.type)); // decoration pieces list with the furniture
       return i.update({
         content: `📜 ${cat?.emoji ?? ''} เลือกของที่ต้องการรับซื้อ`,
         components: [select('mktbuyitem', 'เลือกของ', ids.map((id) => ({ label: getItem(id)!.name, value: id, emoji: getItem(id)!.emoji, description: `ราคาร้าน ${getItem(id)!.value}` })))],

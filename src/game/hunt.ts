@@ -5,34 +5,34 @@ import { feed } from './feed.js';
  * Lucky hunts reveal a dungeon door after victory.
  */
 import { balance } from '../config.js';
-import { applyOutcome, consume, gainItem, gearAtk, mergeDmg, statMod, stopped, type AppliedOutcome } from './character.js';
-import { bumpStreak, lootMult, rareBonus, streakDmg, streakMiasma } from './expedition.js';
+import { applyOutcome, consume, evadeMod, gainItem, gearAtk, hitMod, hitParts, mergeDmg, stopped, type AppliedOutcome } from './character.js';
+import { bumpStreak, lootMult, rareBonus, streakDmg, streakMiasma, streakOf } from './expedition.js';
 import { chance, rand, startRun } from './engine.js';
-import { d20Success, levelDC, type DiceRoll } from './dice.js';
-import { getItem, itemLabel } from './items.js';
+import { d20Success, levelDC, rollTag, type DiceRoll } from './dice.js';
+import { DECOR_CHANCE, DECOR_STREAK_STEP, KEEPSAKE_CHANCE, LOCAL_DROP_CHANCE, LOCAL_DROPS, RELIC_CHANCE, TIER_GEAR, pickDecor, pickWeighted, prized } from './drops.js';
+import { getItem, itemLabel, VINTAGE_IDS } from './items.js';
 import type { Character, Hunt, IconDoor, MonsterState, Outcome } from './types.js';
 import { DOORS, DUNGEON_RULES, isCrimsonMoon } from './world.js';
-import { currentZone, getZone, zoneTier, type TierDef, type ZoneDef } from './zones.js';
+import { currentZone, getZone, zoneLevel, type ZoneDef } from './zones.js';
 
 export interface MonsterDef {
   id: string;
   name: string;
   emoji: string;
   desc: string;
+  /** hp / dmg / xp are the Lv 1 numbers — the city's level scales them (`balance.hunt*PerLevel`). */
   hp: number;
-  /** Armor class the player's d20 must meet. */
-  ac: number;
   /** Damage range per hit. */
   dmg: [number, number];
-  /** Monster's chance to hit per attack (before agility). */
-  hit: number;
   xp: number;
-  minLevel?: number;
   /** Miasma inflicted per hit. */
   miasma?: number;
   /** Sanity lost per hit. */
   sanity?: number;
+  /** What its body gives. */
   drops: { item: string; chance: number; qty?: [number, number] }[];
+  /** Room-decoration piece this kind guards (`KEEPSAKE_CHANCE` per kill). */
+  keepsake?: string;
 }
 
 export const MONSTERS: Record<string, MonsterDef> = {
@@ -41,7 +41,7 @@ export const MONSTERS: Record<string, MonsterDef> = {
     name: 'เศษเดนเนื้อหิวโหย',
     emoji: '🧟',
     desc: 'ผู้หลงมิติที่ทนความหิวไม่ไหว กัดกินแม้แต่เนื้อตัวเอง',
-    hp: 8, ac: 9, dmg: [2, 4], hit: 0.55, xp: 6,
+    hp: 8, dmg: [2, 4], xp: 6, keepsake: 'empty_icebox',
     drops: [{ item: 'raw_meat', chance: 0.9, qty: [1, 2] }, { item: 'bone', chance: 0.3 }, { item: 'pipe', chance: 0.05 }],
   },
   rot_crawler: {
@@ -49,7 +49,7 @@ export const MONSTERS: Record<string, MonsterDef> = {
     name: 'ซากคลานเน่า',
     emoji: '🦠',
     desc: 'ก้อนเนื้อเน่าคลานได้ ทิ้งรอย Miasma ไว้ตามทาง',
-    hp: 10, ac: 8, dmg: [1, 3], hit: 0.5, xp: 7, miasma: 3,
+    hp: 10, dmg: [1, 3], xp: 7, miasma: 3, keepsake: 'specimen_jar',
     drops: [{ item: 'rotten_flesh', chance: 0.8, qty: [1, 2] }, { item: 'raw_meat', chance: 0.3 }],
   },
   stretched_shade: {
@@ -57,7 +57,7 @@ export const MONSTERS: Record<string, MonsterDef> = {
     name: 'เงายืดยาว',
     emoji: '👤',
     desc: 'เงาของคนจริงที่ถูกยืดจนแขนยาวถึงพื้น มันไม่ควรขยับได้',
-    hp: 7, ac: 12, dmg: [2, 3], hit: 0.6, xp: 8, sanity: 3,
+    hp: 7, dmg: [2, 3], xp: 8, sanity: 3, keepsake: 'floor_lamp',
     drops: [{ item: 'eye_fruit', chance: 0.4 }, { item: 'raw_meat', chance: 0.4 }, { item: 'pocket_watch', chance: 0.06 }],
   },
   maw_hound: {
@@ -65,7 +65,7 @@ export const MONSTERS: Record<string, MonsterDef> = {
     name: 'หมาร้อยปาก',
     emoji: '🐕',
     desc: 'สุนัขที่ผิวหนังเต็มไปด้วยปาก — ผลงานของ Beelzebub',
-    hp: 12, ac: 10, dmg: [3, 5], hit: 0.6, xp: 10, minLevel: 2,
+    hp: 12, dmg: [3, 5], xp: 10, keepsake: 'dog_house',
     drops: [{ item: 'raw_meat', chance: 1, qty: [2, 3] }, { item: 'bone', chance: 0.5 }, { item: 'fiend_fang', chance: 0.15 }],
   },
   heretic: {
@@ -73,7 +73,7 @@ export const MONSTERS: Record<string, MonsterDef> = {
     name: 'สาวกนอกรีต',
     emoji: '🕯️',
     desc: 'ผู้บูชาสิ่งอื่นนอกจาก 7 Icon ท่องบทสวดผิดเพี้ยนไม่หยุด',
-    hp: 11, ac: 11, dmg: [2, 5], hit: 0.55, xp: 12, minLevel: 2, sanity: 2,
+    hp: 11, dmg: [2, 5], xp: 12, sanity: 2, keepsake: 'church_pew',
     drops: [{ item: 'raw_meat', chance: 0.6 }, { item: 'sigil', chance: 0.12 }, { item: 'bandage', chance: 0.3 }, { item: 'kris', chance: 0.05 }],
   },
   spore_husk: {
@@ -81,7 +81,7 @@ export const MONSTERS: Record<string, MonsterDef> = {
     name: 'เปลือกสปอร์แห้ง',
     emoji: '🍄',
     desc: 'Fiend ของ Thanatos ร่างแห้งกรังพ่นสปอร์ทุกครั้งที่ขยับ',
-    hp: 14, ac: 10, dmg: [2, 4], hit: 0.5, xp: 14, minLevel: 3, miasma: 5,
+    hp: 14, dmg: [2, 4], xp: 14, miasma: 5, keepsake: 'glass_terrarium',
     drops: [{ item: 'rotten_flesh', chance: 0.7, qty: [1, 3] }, { item: 'alchemy_salve', chance: 0.15 }, { item: 'fiend_fang', chance: 0.2 }],
   },
   shifting_fiend: {
@@ -89,24 +89,28 @@ export const MONSTERS: Record<string, MonsterDef> = {
     name: 'Fiend เรขาคณิต',
     emoji: '🔷',
     desc: 'Fiend ของ Loki รูปร่างหักมุมเปลี่ยนไปทุกครั้งที่กะพริบตา',
-    hp: 18, ac: 13, dmg: [3, 6], hit: 0.6, xp: 22, minLevel: 5, sanity: 4,
+    hp: 18, dmg: [3, 6], xp: 22, sanity: 4, keepsake: 'stained_glass',
     drops: [{ item: 'raw_meat', chance: 0.8, qty: [2, 4] }, { item: 'fiend_fang', chance: 0.4 }, { item: 'sigil', chance: 0.2 }, { item: 'rusted_armor', chance: 0.04 }],
   },
 };
 
 export const getMonster = (id: string) => MONSTERS[id];
 
-/** Monster hp grows a little with the hunter's level. */
-const scaledHp = (def: MonsterDef, level: number, t: TierDef) => Math.round((def.hp + Math.floor((level - 1) * 1.5)) * t.hpMul);
+/** Every monster in a hunt is the level of the city it happens in — the hunter's own level never changes them. */
+export const huntLevel = (h: Hunt): number => zoneLevel(getZone(h.zone));
 
-/** Difficulty of the zone this hunt happens in. */
-const huntTier = (h: Hunt): TierDef => zoneTier(getZone(h.zone));
+/** ×1 at Lv 1, growing by `perLevel` for each level above it. */
+const scale = (lv: number, perLevel: number) => 1 + perLevel * (lv - 1);
 
-/** Monster level for the to-hit formula: its own minLevel + the city's recommended level − 1. */
-export const monsterLevel = (def: MonsterDef, t: TierDef) => (def.minLevel ?? 1) + t.rec - 1;
+const scaledHp = (def: MonsterDef, lv: number) => Math.round(def.hp * scale(lv, balance.huntHpPerLevel));
 
-/** Hunter's dodge: half the AGI bonus (0–5) added to what monsters must roll. */
-const evade = (char: Character) => Math.min(5, Math.round(Math.max(0, statMod(char, 'agi')) / 2));
+/** XP for a kill: farming far below your level pays little, punching up pays a bit more. */
+function xpGap(charLv: number, monLv: number): number {
+  const d = monLv - charLv;
+  if (d <= -6) return 0.2;
+  if (d <= -3) return 0.5;
+  return d > 0 ? Math.min(1.5, 1 + 0.1 * d) : 1;
+}
 
 function pickDoor(zone: ZoneDef): IconDoor | undefined {
   const w = zone.doorWeights;
@@ -121,7 +125,7 @@ export type HuntStart = { ok: true; hunt: Hunt } | { ok: false; error: string };
 
 export function startHunt(char: Character): HuntStart {
   const zone = currentZone(char);
-  const pool = zone.monsters.map(getMonster).filter((m): m is MonsterDef => !!m && (m.minLevel ?? 1) <= char.level + zoneTier(zone).lvlBonus);
+  const pool = zone.monsters.map(getMonster).filter((m): m is MonsterDef => !!m);
   if (pool.length === 0) return { ok: false, error: `ไม่มีอะไรให้ล่าที่ ${zone.name}` };
   if (!isDev(char) && char.stamina < balance.huntStaminaCost) {
     return { ok: false, error: `หมดแรง ⚡ ${char.stamina}/${char.maxStamina} — พักก่อน (ฟื้น +1 ทุก 5 นาที)` };
@@ -137,8 +141,8 @@ export function startHunt(char: Character): HuntStart {
     log.unshift(`-# ${line}`);
   }
   const monsters: MonsterState[] = Array.from({ length: 3 }, () => {
-    const def = pool[rand(0, pool.length - 1)]!;
-    const hp = scaledHp(def, char.level, zoneTier(zone));
+    const def = getMonster(pickWeighted(pool.map((m) => [m.id, zone.spawn?.[m.id] ?? 1])))!;
+    const hp = scaledHp(def, zoneLevel(zone));
     return { id: def.id, hp, maxHp: hp };
   });
   const hunt: Hunt = { zone: zone.id, monsters, door: pickDoor(zone), log, loot: {}, xp: 0 };
@@ -165,16 +169,16 @@ const nameOf = (m: MonsterState) => {
 function monstersAttack(char: Character, h: Hunt): { lines: string[]; applied?: AppliedOutcome } {
   const lines: string[] = [];
   const crimson = isCrimsonMoon() && char.location !== 'rouge_land';
-  const t = huntTier(h);
+  const lv = huntLevel(h);
+  const dc = levelDC(lv, char.level) + evadeMod(char);
   for (const m of alive(h)) {
     const def = getMonster(m.id)!;
-    const dc = levelDC(monsterLevel(def, t), char.level) + evade(char);
     const roll = rand(1, 20);
     if (!d20Success(roll, 0, dc)) {
-      lines.push(`-# ${nameOf(m)} พลาด \`🎲 ${roll}/${dc}\``);
+      lines.push(`-# ${nameOf(m)} พลาด \`${rollTag(roll, 0, dc)}\``);
       continue;
     }
-    let dmg = rand(def.dmg[0], def.dmg[1]) + t.dmgAdd + streakDmg(char);
+    let dmg = Math.round(rand(def.dmg[0], def.dmg[1]) * scale(lv, balance.huntDmgPerLevel)) + streakDmg(char);
     if (crimson) dmg = Math.ceil(dmg * 1.3);
     const o: Outcome = { text: '', hp: -dmg };
     const soft = (n: number) => Math.max(1, Math.round(n * balance.huntSanityMult));
@@ -187,28 +191,60 @@ function monstersAttack(char: Character, h: Hunt): { lines: string[]; applied?: 
   return { lines };
 }
 
+/** Meat and supplies come in piles; weapons, armor, relics and decoration one at a time. */
+const piles = (item: string) => ['material', 'consumable'].includes(getItem(item)?.type ?? '');
+
 function rollLoot(char: Character, h: Hunt, m: MonsterState): string[] {
   const def = getMonster(m.id)!;
-  const t = huntTier(h);
+  const z = getZone(h.zone);
+  const lv = huntLevel(h);
   const got: string[] = [];
-  const mult = t.lootMul * lootMult(char);
-  const drops = [...def.drops, { item: 'hunted_flesh', chance: char.role === 'hound' ? 0.45 : 0.08 }];
-  for (const d of drops) {
+  const give = (item: string, n: number, rare: boolean) => {
+    gainItem(char, item, n);
+    h.loot[item] = (h.loot[item] ?? 0) + n;
+    if (rare) feed(char, 'rare', `**${char.name}** ได้ ${itemLabel(item, n)} จาก ${def.name}!`);
+    got.push(itemLabel(item, n));
+  };
+  // its body: more of it in higher cities and deeper into a streak
+  const mult = scale(lv, balance.huntLootPerLevel) * lootMult(char);
+  for (const d of [...def.drops, { item: 'hunted_flesh', chance: char.role === 'hound' ? 0.45 : 0.08 }]) {
     const p = d.chance < 0.3 ? d.chance + rareBonus(char) : d.chance;
     if (!chance(p)) continue;
-    const n = Math.max(1, Math.round((d.qty ? rand(d.qty[0], d.qty[1]) : 1) * mult));
-    gainItem(char, d.item, n);
-    h.loot[d.item] = (h.loot[d.item] ?? 0) + n;
-    if (d.chance < 0.1 && d.item !== 'hunted_flesh') feed(char, 'rare', `**${char.name}** ได้ ${itemLabel(d.item, n)} จาก ${def.name}!`);
-    got.push(itemLabel(d.item, n));
+    const n = piles(d.item) ? Math.max(1, Math.round((d.qty ? rand(d.qty[0], d.qty[1]) : 1) * mult)) : 1;
+    give(d.item, n, d.chance < 0.1 && d.item !== 'hunted_flesh');
   }
-  h.xp += Math.round(def.xp * t.xpMul);
+  // what it carried: local goods, gear that fits the city, the piece it guarded — always one
+  const carried: string[] = [];
+  if (z?.continent && chance(LOCAL_DROP_CHANCE)) carried.push(pickWeighted(LOCAL_DROPS[z.continent]));
+  const gear = TIER_GEAR[z?.tier ?? 'easy'];
+  if (chance(gear.chance)) carried.push(gear.items[rand(0, gear.items.length - 1)]!);
+  if (def.keepsake && chance(KEEPSAKE_CHANCE * lootMult(char))) carried.push(def.keepsake);
+  for (const item of carried) give(item, 1, prized(item));
+  h.xp += Math.max(1, Math.round(def.xp * scale(lv, balance.huntXpPerLevel) * xpGap(char.level, lv)));
   return got;
+}
+
+/** Once per hunt won — search what's left of the place: a small real-world relic, or (rarely) a room-decoration piece. */
+function salvage(char: Character, h: Hunt): string[] {
+  const z = getZone(h.zone);
+  const found: string[] = [];
+  if (chance(RELIC_CHANCE)) found.push(VINTAGE_IDS[rand(0, VINTAGE_IDS.length - 1)]!);
+  if (chance(DECOR_CHANCE[z?.tier ?? 'easy'] + DECOR_STREAK_STEP * Math.min(streakOf(char), 8))) {
+    const id = pickDecor(z?.continent);
+    found.push(id);
+    feed(char, 'rare', `**${char.name}** เจอ ${itemLabel(id)} ที่ ${z ? `${z.emoji} ${z.name}` : h.zone}!`);
+  }
+  for (const id of found) {
+    gainItem(char, id, 1);
+    h.loot[id] = (h.loot[id] ?? 0) + 1;
+  }
+  return found.map((id) => itemLabel(id));
 }
 
 function finishIfWon(char: Character, h: Hunt, lines: string[]): RoundResult['ended'] {
   if (alive(h).length > 0) return undefined;
   h.won = true;
+  const found = salvage(char, h);
   bumpStreak(char);
   {
     const z = getZone(h.zone);
@@ -217,7 +253,7 @@ function finishIfWon(char: Character, h: Hunt, lines: string[]): RoundResult['en
     feed(char, 'hunt', `**${char.name}** ล่า ${names} ที่ ${z ? `${z.emoji} ${z.name}` : h.zone} สำเร็จ${streak > 1 ? ` (ติดกัน ${streak})` : ''}`, h.zone);
   }
   const a = applyOutcome(char, { text: '', xp: h.xp });
-  lines.push('', `🏆 **กำจัดได้ทั้งหมด!**`, ...a.lines);
+  lines.push('', `🏆 **กำจัดได้ทั้งหมด!**`, ...(found.length ? [`🧳 ค้นซากเจอ ${found.join(', ')}`] : []), ...a.lines);
   if (h.door) lines.push(`\n${DOORS[h.door].emoji} **ท่ามกลางซากศพ มี${DOORS[h.door].name}ปรากฏขึ้น...**`);
   return 'won';
 }
@@ -237,24 +273,36 @@ export function attack(char: Character, idx: number): RoundResult {
   if (char.dying) return { lines: ['🩸 คุณกำลังจะตาย — เลือก 🥚 ใช้รกคืนชีพ หรือ ☠️ ยอมตาย ก่อน'], ended: 'dying' };
   if (!h || h.won || !target || target.hp <= 0) return { lines: ['เป้าหมายไม่อยู่แล้ว'] };
   const def = getMonster(target.id)!;
-  const ac = levelDC(char.level, monsterLevel(def, huntTier(h))); // level formula replaces monster AC
+  const foeLv = huntLevel(h);
+  const ac = levelDC(char.level, foeLv);
   const lines: string[] = [];
 
   const roll = rand(1, 20);
-  const mod = statMod(char, 'str');
+  const mod = hitMod(char);
   const hit = d20Success(roll, mod, ac);
-  const dice: DiceRoll = { label: `โจมตี ${def.name}`, mod, target: ac, rolls: [roll], success: hit, win: roll === 20 ? 'คริติคอล!' : 'โดน!', lose: 'พลาด' };
+  const dice: DiceRoll = {
+    label: `โจมตี ${def.name}`,
+    mod,
+    modLabel: 'พละ',
+    parts: hitParts(char),
+    target: ac,
+    targetNote: `คุณ Lv ${char.level} · มอน Lv ${foeLv}`,
+    rolls: [roll],
+    success: hit,
+    win: roll === 20 ? 'คริติคอล!' : 'โดน!',
+    lose: 'พลาด',
+  };
   if (hit) {
-    let dmg = rand(1, 6) + Math.floor(char.level / 4) + gearAtk(char) + mergeDmg(char) + Math.floor(char.stats.str / 2);
+    let dmg = rand(1, 6) + Math.floor(char.level / 2) + gearAtk(char) + mergeDmg(char) + Math.floor(char.stats.str / 2);
     if (roll === 20) dmg *= 2;
     target.hp = Math.max(0, target.hp - dmg);
-    lines.push(`⚔️ \`🎲 ${roll + mod}/${ac}\` ${roll === 20 ? '**คริติคอล!** ' : ''}ฟาด ${nameOf(target)} **-${dmg}**`);
+    lines.push(`⚔️ \`${rollTag(roll, mod, ac)}\` ${roll === 20 ? '**คริติคอล!** ' : ''}ฟาด ${nameOf(target)} **-${dmg}**`);
     if (target.hp === 0) {
       const got = rollLoot(char, h, target);
       lines.push(`💀 ${nameOf(target)} ล้มลง${got.length ? ` — ได้ ${got.join(', ')}` : ''}`);
     }
   } else {
-    lines.push(`⚔️ \`🎲 ${roll + mod}/${ac}\` ฟาดพลาด ${nameOf(target)}`);
+    lines.push(`⚔️ \`${rollTag(roll, mod, ac)}\` ฟาดพลาด ${nameOf(target)}`);
   }
 
   const won = finishIfWon(char, h, lines);

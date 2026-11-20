@@ -4,7 +4,7 @@
  * duel starts. Pure logic; the Discord side lives in interactions/duel.ts.
  */
 import { gearDef, statMod } from './character.js';
-import { d20Success, levelDC, type DiceRoll } from './dice.js';
+import { d20Success, levelDC, rollTag, type DiceRoll } from './dice.js';
 import { rand } from './engine.js';
 import { feed } from './feed.js';
 import type { Character } from './types.js';
@@ -111,19 +111,23 @@ export function duelAct(d: Duel, action: DuelAction): DuelStep {
   } else {
     const smash = action === 'smash';
     const toHit = me.toHit - (smash ? 4 : 0);
-    const ac = levelDC(me.level, foe.level) + foe.evade + (foe.guarding ? 4 : 0);
+    const base = levelDC(me.level, foe.level);
+    const ac = base + foe.evade + (foe.guarding ? 4 : 0);
     const roll = rand(1, 20);
     const hit = d20Success(roll, toHit, ac);
     dice = {
       label: `${me.name} ${smash ? 'ทุ่มสุดตัวใส่' : 'ฟาด'} ${foe.name}`,
       mod: toHit,
+      modLabel: 'พละ',
+      parts: smash ? [['พละ', me.toHit], ['ทุ่มสุดตัว', -4]] : [['พละ', me.toHit]],
       target: ac,
+      targetNote: [`เลเวล ${base}`, ...(foe.evade ? [`หลบ +${foe.evade}`] : []), ...(foe.guarding ? ['การ์ด +4'] : [])].join(' · '),
       rolls: [roll],
       success: hit,
       win: roll === 20 ? 'คริติคอล!' : 'โดน!',
       lose: 'วืด!',
     };
-    const tag = `\`🎲 ${roll + toHit}/${ac}\``;
+    const tag = `\`${rollTag(roll, toHit, ac)}\``;
     if (hit) {
       let dmg = rand(1, 8) + me.dmg;
       if (smash) dmg = Math.round(dmg * 1.75);

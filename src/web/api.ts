@@ -9,7 +9,7 @@ import { ITEMS } from '../game/items.js';
 import { ROLES } from '../game/roles.js';
 import type { Character } from '../game/types.js';
 import { DOORS, DUNGEON_RULES, isCrimsonMoon, LOCATIONS, nextCrimsonMoon } from '../game/world.js';
-import { CONTINENTS, citiesByContinent, currentZone, getZone, mapCities, TIERS, zoneLabel } from '../game/zones.js';
+import { CONTINENTS, citiesByContinent, currentZone, getZone, mapCities, TIERS, zoneLabel, zoneLevel } from '../game/zones.js';
 import { CONTINENT_STOCK } from '../commands/actions.js';
 
 export type PlayerSource = () => Character[];
@@ -40,7 +40,7 @@ export function world() {
       id: c,
       ...CONTINENTS[c],
       shop: CONTINENT_STOCK[c],
-      cities: zs.map((z) => ({ id: z.id, name: z.name, emoji: z.emoji, tier: z.tier, desc: z.desc.split('\n')[0] })),
+      cities: zs.map((z) => ({ id: z.id, name: z.name, emoji: z.emoji, tier: z.tier, level: zoneLevel(z), desc: z.desc.split('\n')[0] })),
     })),
   };
 }

@@ -25,7 +25,7 @@ import {
 import { itemCount, saveCharacter } from '../game/character.js';
 import { getItem, itemLabel } from '../game/items.js';
 import type { Character } from '../game/types.js';
-import { CONTINENTS, citiesByContinent, currentZone, tierLabel, ZONES, type Continent } from '../game/zones.js';
+import { CONTINENTS, citiesByContinent, currentZone, riskLabel, tierLabel, ZONES, type Continent } from '../game/zones.js';
 import {
   buyItem,
   buyPrice,
@@ -307,7 +307,7 @@ function cityPickers(char: Character, continent?: Continent) {
           label: z.id === here.id ? `${z.name} (อยู่ที่นี่)` : z.name,
           value: z.id,
           emoji: z.emoji,
-          description: z.id === here.id ? '📍 คุณอยู่ที่นี่' : tierLabel(z),
+          description: z.id === here.id ? '📍 คุณอยู่ที่นี่' : riskLabel(char, z),
         })),
       ),
     );

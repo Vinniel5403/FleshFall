@@ -7,17 +7,17 @@ import { feed } from '../game/feed.js';
 import { EmbedBuilder, MessageFlags, type InteractionReplyOptions, type InteractionUpdateOptions } from 'discord.js';
 import { balance } from '../config.js';
 import { activeBuff, addItem, applyOutcome, buffLabel, consume, cooldownLeft, itemCount, MAX_MERGE_COPIES, mergeBonus, mergeCopies, removeItem, saveCharacter, setCooldown } from '../game/character.js';
-import { inField, streakText, tripLines } from '../game/expedition.js';
+import { inField, streakText, tripLines, tripSize } from '../game/expedition.js';
 import { chance } from '../game/engine.js';
 import { mods } from '../game/icons.js';
 import { getItem, itemLabel } from '../game/items.js';
 import type { Character, ItemType, Outcome } from '../game/types.js';
-import { CONTINENTS, citiesByContinent, currentZone, getZone, startTravel, TIERS, zoneLabel, type Continent } from '../game/zones.js';
+import { CONTINENTS, cityRisk, citiesByContinent, currentZone, getZone, startTravel, tierLegend, travelLeft, zoneLabel, zoneLevel, zoneTier, type Continent } from '../game/zones.js';
 import { renderInventoryCard, renderShopCard, renderUpgradeCard } from '../render/itemCards.js';
 import { renderMapCard } from '../render/mapCard.js';
 import { imagePayload, type ImagePayload } from '../render/view.js';
 import { COLORS, fmtDuration, resultEmbed } from '../ui.js';
-import { idleError } from './guard.js';
+import { idleError, travelingText } from './guard.js';
 
 export interface ActionResult {
   ok: boolean;
@@ -72,8 +72,8 @@ export function inventoryNotes(char: Character): string[] {
   const out: string[] = [];
   const loot = tripLines(char);
   if (inField(char)) {
-    if (loot.length) out.push(`**🎒 ของรอรับ** (ได้เมื่อกลับถึง Rouge Land · ตายก่อน = ไม่ได้): ${loot.join(', ')}`);
-    const trip = streakText(char);
+    if (loot.length) out.push(`**🎒 ของรอรับ ${tripSize(char)} ชิ้น:** ${loot.join(', ')}`);
+    const trip = streakText(char, !loot.length);
     if (trip) out.push(`-# ${trip}`);
   }
   const b = activeBuff(char);
@@ -153,7 +153,7 @@ export const autoSrc = (c: Character): ShopSrc => (c.location === 'rouge_land' ?
 export function homeError(char: Character): string | undefined {
   if (isDev(char)) return undefined;
   if (char.traveling) {
-    return char.traveling.to === 'rouge_land' ? '🧭 กำลังเดินทางกลับ Rouge Land — รอให้ถึงก่อน' : '🧭 คุณกำลังเดินทางอยู่ใน Old Realm — ร้านใน Rouge Land ใช้ไม่ได้';
+    return travelingText(char, char.traveling.to === 'rouge_land' ? 'ร้าน/บาร์/ครัวใน Rouge Land ใช้ได้เมื่อถึงบ้านแล้ว' : 'คุณอยู่ใน Old Realm — ร้านใน Rouge Land ใช้ไม่ได้')!;
   }
   if (char.location === 'cypress') {
     return `🟥 คุณอยู่บน **Cypress Isle** (เข้ามาทางประตูสีแดง) — ร้านใน Rouge Land ใช้ไม่ได้
@@ -168,7 +168,7 @@ export function homeError(char: Character): string | undefined {
 
 /** Continent shop: must be standing in an Old Realm city. */
 export function fieldError(char: Character): string | undefined {
-  if (char.traveling) return '🧭 กำลังเดินทาง — ร้านอยู่ในเมือง รอให้ถึงก่อน';
+  if (char.traveling) return travelingText(char, 'ร้านประจำทวีปอยู่ในเมือง รอให้ถึงก่อน')!;
   if (char.location === 'cypress') {
     return `🟥 คุณอยู่บน **Cypress Isle** (เข้ามาทางประตูสีแดง) — บนเกาะไม่มีร้าน
 กด ⚔️ สำรวจบนเกาะเพื่อหาคนพายเรือ / ประตูดำ หรือใช้ 🧭 เดินทางไปเมืองใน Old Realm`;
@@ -399,13 +399,13 @@ export function travelEmbed(char: Character): EmbedBuilder {
         citiesByContinent()
           .map(([c, zs]) => {
             const ct = CONTINENTS[c];
-            const list = zs.map((z) => `${z.id === here.id ? '📍' : z.emoji} ${z.name} ${TIERS[z.tier ?? 'easy'].emoji}`).join(' · ');
+            const list = zs.map((z) => `${z.id === here.id ? '📍' : z.emoji} ${z.name} ${zoneTier(z).emoji}${zoneLevel(z)}`).join(' · ');
             return `**${ct.emoji} ${ct.name}** — ${ct.icon}
 ${list}`;
           })
           .join('\n\n'),
         '',
-        `-# ${Object.values(TIERS).map((t) => `${t.emoji} ${t.name} Lv ${t.rec}+`).join(' · ')}`,
+        `-# ${tierLegend()} · มอนในเมือง = เลเวลเมือง`,
         '',
         home
           ? `-# ออกจาก Rouge Land ถึงทันที · กลับมาใช้เวลา ${mins} นาที · ข้างนอกใช้ร้านใน Rouge Land ไม่ได้ มีแต่ร้านประจำทวีป`
@@ -419,8 +419,9 @@ export function travelPayload(char: Character, focus?: Continent): Promise<Image
   const mins = Math.round(balance.travelMs / 60_000);
   const home = char.location === 'rouge_land';
   const text = [
-    home ? 'ประตูหลังร้านเนื้อเปิดสู่ Old Realm ได้ทุกเมือง — เลือกทวีป แล้วเลือกเมืองปลายทาง คุณจะไปถึงทันที' : `ตอนนี้อยู่ที่ **${zoneLabel(currentZone(char))}**`,
-    `-# ${Object.values(TIERS).map((t) => `${t.emoji} ${t.name} Lv ${t.rec}+`).join(' · ')}`,
+    travelingText(char, 'เดินทางซ้อนไม่ได้ รอให้ถึงก่อน') ??
+      (home ? 'ประตูหลังร้านเนื้อเปิดสู่ Old Realm ได้ทุกเมือง — เลือกทวีป แล้วเลือกเมืองปลายทาง คุณจะไปถึงทันที' : `ตอนนี้อยู่ที่ **${zoneLabel(currentZone(char))}**`),
+    `-# ${tierLegend()} · มอนในเมือง = เลเวลเมือง`,
     home
       ? `-# ออกจาก Rouge Land ถึงทันที · กลับมาใช้เวลา ${mins} นาที · ข้างนอกใช้ร้านใน Rouge Land ไม่ได้ มีแต่ร้านประจำทวีป`
       : `-# ข้ามเมือง / กลับ Rouge Land ใช้เวลา ${mins} นาที · ระหว่างทางล่า/สำรวจ/ซื้อของไม่ได้`,
@@ -437,13 +438,16 @@ export function travelAction(char: Character, to: string): ActionResult {
   delete char.hunt; // any leftover door fades when you leave
   saveCharacter(char);
   const z = getZone(to)!;
+  // warning only — nowhere is locked
+  const risk = cityRisk(char, z);
+  const warn = risk ? [`${risk} มอนที่นี่ Lv ${zoneLevel(z)} คุณ Lv ${char.level} — ${risk === '💀' ? 'แทบตีไม่โดน อันตรายมาก' : 'ตีโดนยากขึ้น โดนตีง่ายขึ้น'}`] : [];
   if (!char.traveling) {
     if (fromHome) {
       return done(
         resultEmbed(
           char,
           `🗺️ ${z.emoji} ${z.name}`,
-          ['ประตูหลังร้านเนื้อเปิดออก อากาศเหม็นเปรี้ยวของ Old Realm ปะทะหน้า ถนนยืดยาวออกไปไม่สิ้นสุด', '', `-# ไปที่ห้อง **#${z.id.replace(/_/g, '-')}** เพื่อล่า/สำรวจ`],
+          ['ประตูหลังร้านเนื้อเปิดออก อากาศเหม็นเปรี้ยวของ Old Realm ปะทะหน้า ถนนยืดยาวออกไปไม่สิ้นสุด', ...warn, '', `-# ไปที่ห้อง **#${z.id.replace(/_/g, '-')}** เพื่อล่า/สำรวจ`],
           COLORS.bone,
         ),
       );
@@ -455,7 +459,7 @@ export function travelAction(char: Character, to: string): ActionResult {
       ? 'คุณออกเดินบนถนนที่ยืดยาวกว่าโลกจริงสิบเท่า เมืองถัดไปยังอยู่อีกไกล'
       : 'คุณหันหลังให้ Old Realm มุ่งหน้ากลับ — กลิ่นเนื้อสดหอมหวานของ Le Fontaine de Sang ลอยมาแต่ไกล';
   const title = to === 'rouge_land' ? '🏠 เดินทางกลับ Rouge Land' : `🧭 ออกเดินทางไป ${z.emoji} ${z.name}`;
-  return done(resultEmbed(char, title, [flavor, '', `⏳ ถึง <t:${Math.ceil(r.arriveAt / 1000)}:R> (<t:${Math.ceil(r.arriveAt / 1000)}:t>)`], COLORS.bone));
+  return done(resultEmbed(char, title, [flavor, ...warn, '', `⏳ เหลือเวลาอีก **${travelLeft(char)}** — ถึง <t:${Math.ceil(r.arriveAt / 1000)}:t>`, '-# ระหว่างทางล่า/สำรวจ/ซื้อของไม่ได้'], COLORS.bone));
 }
 
 // ---------- upgrades (bar) ----------

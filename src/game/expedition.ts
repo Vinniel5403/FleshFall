@@ -47,15 +47,15 @@ export function bumpStreak(char: Character): void {
   (char.trip ??= { loot: {}, streak: 0 }).streak += 1;
 }
 
-/** "🎒 ของรอรับ 12 ชิ้น · 🔥 ล่าติดกัน 3 · ..." — shown on hunt screens. */
-export function streakText(char: Character): string | null {
+/** "🎒 ของรอรับ 12 ชิ้น · 🔥 ล่าติดกัน 3 · ..." — shown on hunt screens. `bag: false` leaves the haul count out (the caller lists the haul itself). */
+export function streakText(char: Character, bag = true): string | null {
   if (!inField(char)) return null;
   const s = streakOf(char);
-  const parts = [`🎒 ของรอรับ ${tripSize(char)} ชิ้น (ได้เมื่อกลับถึงบ้าน · ตายก่อน = ไม่ได้)`];
+  const parts = bag ? [`🎒 ของรอรับ ${tripSize(char)} ชิ้น`] : [];
   if (s > 0) parts.push(`🔥 ล่าติดกัน ${s} · ของดีขึ้น +${Math.round((lootMult(char) - 1) * 100)}%`);
   if (streakMiasma(char)) parts.push(`🌫️ Miasma ${streakMiasma(char)}/การล่า`);
   if (streakDmg(char)) parts.push(`👹 มอนแรง +${streakDmg(char)}`);
-  return parts.join(' · ');
+  return parts.length ? parts.join(' · ') : null;
 }
 
 // ---------- end of round ----------

@@ -13,7 +13,7 @@ import { itemLabel } from './game/items.js';
 import { maidGrade, ROLES } from './game/roles.js';
 import type { Character, GameEventDef } from './game/types.js';
 import { closingShiftHour, DOORS, DUNGEON_RULES, isCrimsonMoon, LOCATIONS, STAT_NAMES } from './game/world.js';
-import { currentZone, getZone, zoneLabel } from './game/zones.js';
+import { currentZone, getZone, travelLine, zoneLabel } from './game/zones.js';
 
 export const COLORS = { blood: 0x8b0000, rot: 0x4b5320, bone: 0xd8cfc4, crimson: 0xdc143c, fiend: 0x1a0000, shrine: 0xe8e4f0 };
 
@@ -57,7 +57,7 @@ export function profileEmbed(char: Character): EmbedBuilder {
         `${icon.emoji} สาวกของ **${icon.name}** — ${icon.title}`,
         char.role === 'maid' ? `🎖️ M.A.I.D.S ${maidGrade(char.level)}` : null,
         char.traveling
-          ? `🧭 กำลังเดินทางไป **${getZone(char.traveling.to)?.name ?? char.traveling.to}** — ถึง <t:${Math.ceil(char.traveling.arriveAt / 1000)}:R>`
+          ? `${travelLine(char)} (ถึง <t:${Math.ceil(char.traveling.arriveAt / 1000)}:t>)`
           : `${loc.emoji} อยู่ที่ **${zoneLabel(currentZone(char))}**${char.run ? ` · ${DOORS[char.run.door].emoji} ในดันเจียน ห้อง ${char.run.depth}/${char.run.maxDepth}` : ''}${char.hunt && !char.hunt.won ? ' · ⚔️ กำลังล่า' : ''}`,
         isCrimsonMoon() ? '🌕 **Crimson Moon กำลังส่องแสง**' : null,
       ]
@@ -114,7 +114,7 @@ function bioText(char: Character): string | null {
 export function profilePayload(char: Character): Promise<ImagePayload> {
   const lines = [
     char.traveling
-      ? `🧭 กำลังเดินทางไป **${getZone(char.traveling.to)?.name ?? char.traveling.to}** — ถึง <t:${Math.ceil(char.traveling.arriveAt / 1000)}:R>`
+      ? `${travelLine(char)} (ถึง <t:${Math.ceil(char.traveling.arriveAt / 1000)}:t>)`
       : null,
     isCrimsonMoon() ? '🌕 **Crimson Moon กำลังส่องแสง**' : null,
     activeBuff(char) ? `🍽️ ${buffLabel(char)} — หมด <t:${Math.ceil(activeBuff(char)!.until / 1000)}:R>` : null,

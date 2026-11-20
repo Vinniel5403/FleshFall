@@ -9,10 +9,12 @@ import type { DiceRoll } from '../game/dice.js';
 import { background, C, canvas, doubleFrame, fitText, font, rgba, type Ctx } from './kit.js';
 
 const W = 440;
-const H = 300;
+const H = 360;
 const CX = W / 2;
-const CY = 150;
+const CY = 196;
 const R = 66;
+/** baseline of the equation row (captions sit 17px under it) */
+const EQ_Y = 290;
 const GOLD = '#e3b341';
 const LAST_HOLD = 60_000; // final frame: effectively "stay here"
 
@@ -114,7 +116,7 @@ function drawDie(ctx: Ctx, x: number, y: number, opts: { angle?: number; scale?:
 function rays(ctx: Ctx, color: string, len: number, phase = 0): void {
   ctx.save();
   ctx.beginPath();
-  ctx.rect(0, 84, W, 140); // keep clear of the header and footer text
+  ctx.rect(0, CY - R - 4, W, R * 2 + 8); // keep clear of the header and footer text
   ctx.clip();
   ctx.translate(CX, CY);
   ctx.strokeStyle = color;
@@ -142,50 +144,95 @@ function base(ctx: Ctx): void {
   ctx.drawImage(bgCache, 0, 0);
 }
 
+const signed = (n: number) => `${n < 0 ? '−' : '+'}${Math.abs(n)}`;
+
+/** Title, then what has to happen in words, then where the bonus comes from. */
 function header(ctx: Ctx, d: DiceRoll): void {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = C.flesh;
-  fitText(ctx, d.label, CX, 48, W - 80, 21, 600);
+  fitText(ctx, d.label, CX, 42, W - 80, 21, 600);
+  const what = d.modLabel ?? 'โบนัส';
+  ctx.fillStyle = C.bone;
+  fitText(ctx, d.mod ? `ลูกเต๋า ${signed(d.mod)} ${what} ต้องถึง ${d.target}` : `ลูกเต๋าต้องออก ${d.target} ขึ้นไป`, CX, 66, W - 70, 16);
+  const from = (d.parts ?? []).filter(([, v]) => v !== 0);
+  const notes = [
+    from.length > 1 ? `${what} ${signed(d.mod)} = ${from.map(([l, v], i) => `${i ? (v < 0 ? '− ' : '+ ') : v < 0 ? '−' : ''}${l} ${Math.abs(v)}`).join(' ')}` : '',
+    d.targetNote ? `ต้องถึง ${d.target}: ${d.targetNote}` : '',
+  ].filter(Boolean);
   ctx.fillStyle = C.muted;
-  const bonus = d.mod ? ` · โบนัส ${d.mod > 0 ? '+' : '−'}${Math.abs(d.mod)}` : '';
-  fitText(ctx, `ต้องได้ ${d.target} ขึ้นไป${bonus}`, CX, 72, W - 80, 16);
+  notes.forEach((n, i) => fitText(ctx, n, CX, 86 + i * 17, W - 60, 13, 400, 'Kanit', 10));
 }
 
-function footer(ctx: Ctx, eq: string | null, verdict: string, color: string): void {
+interface Cell {
+  text: string;
+  /** small caption under the number */
+  cap?: string;
+  color?: string;
+}
+
+/** `2 + 16 = 18 ≥ 6`, each number captioned (ทอยได้ / พละ / รวม / ต้องถึง). */
+function equation(ctx: Ctx, cells: Cell[]): void {
+  const gap = 12;
+  const NUM = 24;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  if (eq) {
-    ctx.fillStyle = C.bone;
-    font(ctx, 22, 700, 'Cinzel');
-    ctx.fillText(eq, CX, 250);
-  }
+  const widths = cells.map((c) => {
+    font(ctx, NUM, 700, 'Cinzel');
+    const num = ctx.measureText(c.text).width;
+    if (!c.cap) return num;
+    font(ctx, 12);
+    return Math.max(num, ctx.measureText(c.cap).width);
+  });
+  let x = CX - (widths.reduce((s, w) => s + w, 0) + gap * (cells.length - 1)) / 2;
+  cells.forEach((c, i) => {
+    const mid = x + widths[i]! / 2;
+    ctx.fillStyle = c.color ?? (c.cap ? C.bone : C.muted);
+    font(ctx, NUM, 700, 'Cinzel');
+    ctx.fillText(c.text, mid, EQ_Y);
+    if (c.cap) {
+      ctx.fillStyle = C.muted;
+      font(ctx, 12);
+      ctx.fillText(c.cap, mid, EQ_Y + 17);
+    }
+    x += widths[i]! + gap;
+  });
+}
+
+function footer(ctx: Ctx, eq: Cell[] | null, verdict: string, color: string): void {
+  if (eq) equation(ctx, eq);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = color;
-  fitText(ctx, verdict, CX, eq ? 280 : 262, W - 60, 22, 600);
+  fitText(ctx, verdict, CX, eq ? H - 22 : H - 44, W - 60, 22, 600);
 }
 
 interface Landing {
   face: Face;
-  eq: string;
+  eq: Cell[];
   verdict: string;
   color: string;
 }
 
 function landing(d: DiceRoll, roll: number, final: boolean): Landing {
   const total = roll + d.mod;
-  const sign = d.mod >= 0 ? '+' : '−';
-  const eq = d.mod ? `${roll} ${sign} ${Math.abs(d.mod)} = ${total}  /  ${d.target}` : `${total}  /  ${d.target}`;
   const success = final ? d.success : false; // an earlier roll was re-rolled, so it failed
+  const reached = total >= d.target;
+  const tone = success ? C.good : C.crimson;
+  const eq: Cell[] = [
+    { text: String(roll), cap: 'ทอยได้' },
+    ...(d.mod ? [{ text: d.mod < 0 ? '−' : '+' }, { text: String(Math.abs(d.mod)), cap: d.modLabel ?? 'โบนัส' }, { text: '=' }, { text: String(total), cap: 'รวม', color: reached ? C.good : C.crimson }] : []),
+    { text: reached ? '≥' : '<' },
+    { text: String(d.target), cap: 'ต้องถึง' },
+  ];
   const win = d.win ?? 'สำเร็จ';
   const lose = d.lose ?? 'ล้มเหลว';
-  if (roll === 20) return { face: 'crit', eq, verdict: `NAT 20 — ${win}`, color: GOLD };
-  if (roll === 1) return { face: 'fumble', eq, verdict: `NAT 1 — ${lose}`, color: C.crimson };
-  if (success) {
-    const close = total === d.target;
-    return { face: 'hit', eq, verdict: close ? `${win} ฉิวเฉียด!` : win, color: C.good };
-  }
+  // a natural 20 / 1 decides on its own, whatever the sum says
+  if (roll === 20) return { face: 'crit', eq, verdict: `NAT 20 — ${win}${reached ? '' : ' (ออก 20 = ผ่านเสมอ)'}`, color: GOLD };
+  if (roll === 1) return { face: 'fumble', eq, verdict: `NAT 1 — ${lose}${reached ? ' (ออก 1 = พลาดเสมอ)' : ''}`, color: C.crimson };
+  if (success) return { face: 'hit', eq, verdict: total === d.target ? `${win} ฉิวเฉียด!` : win, color: tone };
   const gap = d.target - total;
-  return { face: 'miss', eq, verdict: gap <= 2 ? `${lose} — ขาดอีก ${gap}!` : lose, color: C.crimson };
+  return { face: 'miss', eq, verdict: gap <= 2 ? `${lose} — ขาดอีก ${gap}!` : lose, color: tone };
 }
 
 interface Frame {
@@ -206,7 +253,7 @@ function tumbleFrames(d: DiceRoll, frames: Frame[]): void {
     const ghost = prevAngle;
     prevAngle = angle;
     const squash = 0.72 + 0.28 * Math.abs(Math.cos(angle * 1.3));
-    const bounce = -38 * Math.abs(Math.sin(t * Math.PI * 2.5)) * (1 - t);
+    const bounce = -22 * Math.abs(Math.sin(t * Math.PI * 2.5)) * (1 - t);
     let next = 1 + Math.floor(Math.random() * 20);
     if (next === num) next = (next % 20) + 1;
     num = next;

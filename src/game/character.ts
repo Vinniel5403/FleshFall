@@ -2,13 +2,14 @@ import { isDev } from './dev.js';
 import { feed } from './feed.js';
 import { balance } from '../config.js';
 import { db } from '../db/index.js';
+import type { DicePart } from './dice.js';
 import { endTripSafe, inField, loseTrip, tripGain } from './expedition.js';
 import { ICONS, mods } from './icons.js';
 import { getItem, itemLabel } from './items.js';
 import { ROLES } from './roles.js';
 import { CHAR_VERSION, type BuffDef, type Character, type IconId, type Outcome, type RoleId, type StatKey } from './types.js';
 import { isCrimsonMoon, LOCATIONS } from './world.js';
-import { currentZone, resolveTravel, startTravel } from './zones.js';
+import { currentZone, resolveTravel, startTravel, travelLeft } from './zones.js';
 
 /** Build a fresh character without saving it (web demo, sims). */
 export function newCharacter(userId: string, name: string, role: RoleId, icon: IconId): Character {
@@ -154,17 +155,46 @@ export function gearDef(char: Character): number {
   return (a ? (getItem(a)?.def ?? 0) + (char.gearLevels?.[a] ?? 0) : 0) + (mods(char.icon).dmgReduction ?? 0) + buffAmount(char, 'def');
 }
 
-export function statMod(char: Character, stat: StatKey): number {
+/** Bonuses that come and go (Icon, meal, cornered, Hound out hunting, hallucinations) — shared by event checks and combat. */
+function sideParts(char: Character, stat: StatKey): DicePart[] {
   const m = mods(char.icon);
-  let v = char.stats[stat] + Math.floor(char.level / 3);
-  if (stat === 'str') v += gearAtk(char);
-  v += m.checkBonus?.[stat] ?? 0;
-  v += buffAmount(char, 'stat', stat);
-  if (m.lowHpBonus && char.hp < char.maxHp * 0.3) v += m.lowHpBonus;
-  if (char.role === 'hound' && stat === 'str' && char.location !== 'rouge_land') v += 1;
-  if (char.sanity < 30) v -= 2; // hallucinations
-  return v;
+  return [
+    [ICONS[char.icon].name, m.checkBonus?.[stat] ?? 0],
+    ['อาหาร', buffAmount(char, 'stat', stat)],
+    ['จนตรอก', m.lowHpBonus && char.hp < char.maxHp * 0.3 ? m.lowHpBonus : 0],
+    ['Hound', char.role === 'hound' && stat === 'str' && char.location !== 'rouge_land' ? 1 : 0],
+    ['หลอน', char.sanity < 30 ? -2 : 0], // hallucinations
+  ];
 }
+
+const shown = (parts: DicePart[]) => parts.filter(([, v], i) => i === 0 || v !== 0);
+const total = (parts: DicePart[]) => parts.reduce((s, [, v]) => s + v, 0);
+
+/** Everything that adds to a d20 check on `stat`, labelled (the dice card lists these). */
+export function statParts(char: Character, stat: StatKey): DicePart[] {
+  return shown([
+    [`ค่า${STAT_LABEL[stat]}`, char.stats[stat]],
+    ['เลเวล', Math.floor(char.level / 3)],
+    ['อาวุธ', stat === 'str' ? gearAtk(char) : 0],
+    ...sideParts(char, stat),
+  ]);
+}
+
+export const statMod = (char: Character, stat: StatKey): number => total(statParts(char, stat));
+
+/**
+ * To-hit bonus in a hunt: half of STR (rounded up) + the situational bonuses.
+ * No level and no weapon here — level already sets the target (`levelDC`), the weapon adds damage.
+ */
+export function hitParts(char: Character): DicePart[] {
+  return shown([['ครึ่งค่าพละ', Math.ceil(char.stats.str / 2)], ...sideParts(char, 'str')]);
+}
+
+export const hitMod = (char: Character): number => total(hitParts(char));
+
+/** Dodge in a hunt: half of AGI (rounded up, same situational bonuses), 0–5 — added to what a monster must roll. */
+export const evadeMod = (char: Character): number =>
+  Math.min(5, Math.max(0, Math.ceil((char.stats.agi + total(sideParts(char, 'agi'))) / 2)));
 
 export function seesHints(char: Character): boolean {
   return char.role === 'survivor' || !!mods(char.icon).seesHints;
@@ -433,7 +463,7 @@ export function wakeUp(target: Character, by: Character, now = Date.now()): Wake
   if (helper.length) lines.push(`-# ${by.name}: ${helper.join(' ')}`);
   if (target.reachedRougeLand) {
     const t = startTravel(target, 'rouge_land', now);
-    lines.push(t.ok ? `🏠 ${target.name} พยุงตัวกลับ Rouge Land พร้อมของรอบนี้` : `-# ${t.error}`);
+    lines.push(t.ok ? `🏠 ${target.name} พยุงตัวกลับ Rouge Land พร้อมของรอบนี้ — ถึงในอีก ${travelLeft(target, now)}` : `-# ${t.error}`);
   }
   return { ok: true, lines };
 }

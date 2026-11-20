@@ -21,6 +21,11 @@ export const balance = {
   /** Travel time between zones. Override with env TRAVEL_MINUTES (e.g. 1 for testing). */
   travelMs: Number(process.env.TRAVEL_MINUTES ?? 30) * 60_000,
   huntStaminaCost: 2,
+  /** Monsters are the city's level. Per level above 1 they gain this share of their base hp / damage / xp, and drop this much more meat & supplies. */
+  huntHpPerLevel: 0.2,
+  huntDmgPerLevel: 0.15,
+  huntXpPerLevel: 0.25,
+  huntLootPerLevel: 0.1,
   /** Monster hits: sanity / Miasma per hit is multiplied by this (min 1). Was 1 — playtesters found sanity draining too fast. */
   huntSanityMult: 0.5,
   /** Passive sanity regen per stamina tick (5 min) while safe in Rouge Land. */
