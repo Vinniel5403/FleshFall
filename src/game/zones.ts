@@ -24,7 +24,7 @@ export const CONTINENTS: Record<Continent, ContinentDef> = {
   africa: { name: 'Africa', emoji: '🦁', icon: 'Sophia', door: 'green' },
   australia: { name: 'Australia', emoji: '🦘', icon: 'Hastur', door: 'yellow' },
   antarctica: { name: 'Antarctica', emoji: '🐧', icon: 'Wendigo', door: 'white' },
-  /** Cities out of myth — on no real map. Purple = the one door colour no other continent claims. */
+  /** Myth cities that belong to no continent (Purgatory, Limbo, Gehenna). Purple = the one door colour no other continent claims. */
   unknown: { name: 'Unknown Realm', emoji: '🌀', icon: 'Thanatos', door: 'purple' },
 };
 
@@ -104,6 +104,9 @@ const CITIES: CitySpec[] = [
   ['geneva', 'Geneva', '⌚', 'europe', 'hard', 9, 'นาฬิกานับพันเรือนเดินไม่ตรงกัน ทะเลสาบนิ่งจนเห็นอีกเมืองอยู่ใต้น้ำ'],
   ['budapest', 'Budapest', '🌉', 'europe', 'hard', 10, 'สะพานข้ามแม่น้ำดานูบยาวขึ้นทุกครั้งที่เดิน บ่อน้ำร้อนเดือดเป็นเลือด'],
   ['granada', 'Granada', '🕍', 'europe', 'epic', 12, 'พระราชวังอัลฮัมบราที่ลวดลายบนผนังขยับเป็นเรขาคณิต — ที่มั่นของ Loki'],
+  // Legendary (myth) — Lv 50 floor, scales with the hunter
+  ['atlantis', 'Atlantis', '🔱', 'europe', 'legendary', 50, 'นครที่จมลงใต้มหาสมุทรโผล่ขึ้นมาหายใจอีกครั้ง ถนนยังเปียก ผู้คนในวิหารยังจมน้ำอยู่ทั้งที่ยืนบนบก'],
+  ['olympus', 'Olympus', '⛈️', 'europe', 'legendary', 50, 'ยอดเขาเหนือเมฆที่บัลลังก์ทั้งสิบสองว่างเปล่า ฟ้าผ่าลงมาเป็นจังหวะเหมือนมีใครยังรอคำสั่ง'],
   // Asia
   ['bangkok', 'Bangkok', '🛕', 'asia', 'easy', 1, 'ตลาดน้ำขายของที่ไม่มีใครรู้ว่าเนื้ออะไร ไฟจราจรแดงค้างตลอดกาล'],
   ['seoul', 'Seoul', '🏙️', 'asia', 'easy', 2, 'ป้ายนีออนกะพริบเป็นภาษาที่อ่านไม่ออก ร้านไก่ทอดเปิดตลอด 24 ชั่วโมงโดยไม่มีพนักงาน'],
@@ -115,6 +118,7 @@ const CITIES: CitySpec[] = [
   ['qatar', 'Qatar', '🏜️', 'asia', 'hard', 9, 'เมืองทองคำกลางทะเลทราย ความร้อนละลายเงาจนไหลไปตามพื้น'],
   ['tel_aviv', 'Tel Aviv', '🌊', 'asia', 'hard', 10, 'ชายหาดที่คลื่นซัดเศษเนื้อขึ้นฝั่ง เสียงเพลงจากผับดังขึ้นแต่ไม่มีใครเต้น'],
   ['jerusalem', 'Jerusalem', '🕯️', 'asia', 'epic', 12, 'นครศักดิ์สิทธิ์ที่เสียงสวดทุกภาษาปนกันจนกลายเป็นเสียงเคี้ยว — ที่มั่นของ Beelzebub'],
+  ['shangri_la', 'Shangri-La', '🏯', 'asia', 'legendary', 50, 'หุบเขาที่ไม่มีใครแก่ลง ไม่มีใครตาย และไม่มีใครได้ออกไปอีกเลย ดอกไม้บานตลอดปีบนกองกระดูก'],
   // America
   ['british_columbia', 'British Columbia', '🌲', 'america', 'easy', 1, 'ป่าสนสูงเสียดฟ้า ต้นไม้บางต้นมีเปลือกเป็นผิวหนังคน'],
   ['texas', 'Texas', '🤠', 'america', 'easy', 2, 'ทุ่งกว้างไร้ขอบ วัวที่เลี้ยงไว้ยืนมองคุณด้วยดวงตามนุษย์'],
@@ -149,11 +153,8 @@ const CITIES: CitySpec[] = [
   // Australia / Antarctica
   ['australia', 'Australia', '🦘', 'australia', 'epic', 14, 'ทวีปทั้งทวีปที่แผ่นดินแดงฉานเงียบสนิท สัตว์ทุกตัวจ้องมองจากความมืด ความกลัวกลายเป็นอากาศ — ที่มั่นของ Hastur'],
   ['antarctica', 'Antarctica', '🧊', 'antarctica', 'epic', 16, 'ความหนาวที่ไม่ได้ฆ่า แต่ทำให้ทรมานไม่สิ้นสุด ใต้น้ำแข็งมีบางอย่างหิวโหย — ที่มั่นของ Wendigo'],
-  // Unknown Realm — cities out of myth; monsters never below Lv 50, and the only place legends drop often enough to hope for
-  ['atlantis', 'Atlantis', '🔱', 'unknown', 'legendary', 50, 'นครที่จมลงใต้มหาสมุทรโผล่ขึ้นมาหายใจอีกครั้ง ถนนยังเปียก ผู้คนในวิหารยังจมน้ำอยู่ทั้งที่ยืนบนบก'],
-  ['olympus', 'Olympus', '⛈️', 'unknown', 'legendary', 50, 'ยอดเขาเหนือเมฆที่บัลลังก์ทั้งสิบสองว่างเปล่า ฟ้าผ่าลงมาเป็นจังหวะเหมือนมีใครยังรอคำสั่ง'],
-  ['shangri_la', 'Shangri-La', '🏯', 'unknown', 'legendary', 50, 'หุบเขาที่ไม่มีใครแก่ลง ไม่มีใครตาย และไม่มีใครได้ออกไปอีกเลย ดอกไม้บานตลอดปีบนกองกระดูก'],
-  ['agartha', 'Agartha', '💎', 'unknown', 'legendary', 50, 'โลกกลวงใต้ขั้วโลก ดวงอาทิตย์สีแดงดวงเล็กแขวนอยู่กลางแผ่นดิน ผลึกบนผนังถ้ำเต้นตุบเหมือนหัวใจ'],
+  ['agartha', 'Agartha', '💎', 'antarctica', 'legendary', 50, 'โลกกลวงใต้ขั้วโลก ดวงอาทิตย์สีแดงดวงเล็กแขวนอยู่กลางแผ่นดิน ผลึกบนผนังถ้ำเต้นตุบเหมือนหัวใจ'],
+  // Unknown Realm — myth cities on no continent (Atlantis, Olympus, Shangri-La, Agartha sit in their own continents above)
   ['purgatory', 'Purgatory', '⛰️', 'unknown', 'legendary', 50, 'ภูเขาชำระบาปที่ทุกคนปีนไม่หยุด ยิ่งขึ้นสูงยิ่งเหลือเนื้อน้อยลง ไม่มีใครเห็นยอดเขา'],
   ['limbo', 'Limbo', '🌫️', 'unknown', 'legendary', 50, 'ชายแดนระหว่างทุกสิ่ง วิญญาณยืนต่อแถวรอการตัดสินที่ไม่มีวันมาถึง หมอกกลืนเสียงจนได้ยินแต่ความคิดตัวเอง'],
   ['gehenna', 'Gehenna', '🔥', 'unknown', 'legendary', 50, 'หุบเหวที่ไฟไม่เคยมอดแต่ไม่ให้ความร้อน มันหิว — เถ้าที่ปลิวมาคือคนที่เคยมาก่อนคุณ'],
