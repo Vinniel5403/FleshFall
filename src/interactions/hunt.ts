@@ -5,7 +5,7 @@
  */
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, StringSelectMenuBuilder, type ButtonInteraction, type RepliableInteraction, type StringSelectMenuInteraction } from 'discord.js';
 import { loadCharacter, saveCharacter } from '../game/character.js';
-import { attack, enterHuntDoor, getMonster, huntUsable, leaveHunt, startHunt, useInHunt, type RoundResult } from '../game/hunt.js';
+import { attack, enterHuntDoor, getMonster, huntUsable, leaveHunt, nextHuntLevel, startHunt, useInHunt, type RoundResult } from '../game/hunt.js';
 import { fallRow } from './fallRow.js';
 import { inField, streakOf, streakText, tripSize } from '../game/expedition.js';
 import { getItem, itemEffects, itemLabel } from '../game/items.js';
@@ -79,7 +79,7 @@ export function huntButtons(char: Character): ActionRowBuilder<ButtonBuilder>[] 
     const bag = tripSize(char);
     return [
       new ActionRowBuilder<ButtonBuilder>().addComponents(
-        btn(uid, 'again', field && streakOf(char) > 0 ? `ล่าต่อ (ลึก ${streakOf(char) + 1})` : 'ล่าต่อ', ButtonStyle.Danger, '🎲'),
+        btn(uid, 'again', field && streakOf(char) > 0 ? `ล่าต่อ (ลึก ${streakOf(char) + 1} · มอน Lv ${nextHuntLevel(char)})` : 'ล่าต่อ', ButtonStyle.Danger, '🎲'),
         btn(uid, 'home', 'กลับ Rouge Land', field && bag ? ButtonStyle.Success : ButtonStyle.Secondary, '🏠'),
       ),
     ];

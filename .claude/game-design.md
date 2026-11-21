@@ -44,6 +44,8 @@ Level is relative to the place. Each city has a level (easy 1–3, normal 4–6,
 - Measured with the real code (typical gear, no healing, no streak): at-level 85–100% wins losing 20–55% HP; one level under 40–85%; two under 0–65%; over by 4 loses under 20% HP. Lv 1 starters in a Lv 1 city: Survivor/Hound/Maid ~98–100%, Patron 90%, Bar 78%, Outsider 69% — Lv 2 fixes it.
 
 ## Hunt drops — 2026-11-20
+Streak = hunts won this trip (resets at home): loot ×(1+0.15/step, cap 8) but each step raises the next hunt's monsters by `balance.huntStreakLevels` (2) levels, uncapped — measured full-HP win rate at-level 97–99% → 60–84% → 11–55% → 2–17% → ~0. Push one or two deeper, then extract.
+
 Per kill: the body (meat piles scale with city level + streak; gear/relics always one) · 10% a local good of the continent · 2/3/5/7% gear that fits the tier (hard/epic include drop-only pieces) · 1% the decoration piece that monster kind guards. Per hunt won (searching the place): 8% a small real-world relic, 2/3/4/6% by tier (+1% per streak step) a room-decoration piece — 16 common ones anywhere plus three per continent, each 3× as likely there (local pieces ≈ 36% of finds). Roughly one decoration per 20 hunts in easy cities, one per 11 in epic. Gear ladder: weapons atk 1–8 (24), armor def 1–6 (16); top shop piece atk 5 / def 4, atk 6–8 / def 5–6 drop-only in hard/epic. Decoration pieces are vintage items (sell at full value, tradeable); each becomes placeable room furniture once its art is painted (`assets/rooms-src`) and the item gets its `furniture` id.
 
 ## Feedback pass — 2026-11-21

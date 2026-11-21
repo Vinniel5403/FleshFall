@@ -51,6 +51,8 @@ export interface MonsterState {
 export interface Hunt {
   zone: ZoneId;
   monsters: MonsterState[];
+  /** Monster level for this hunt = city level + trip streak bonus. Missing on old saves → city level. */
+  lv?: number;
   door?: IconDoor;
   log: string[];
   loot: Record<string, number>;

@@ -6,7 +6,7 @@ import { feed } from './feed.js';
  */
 import { balance } from '../config.js';
 import { applyOutcome, consume, evadeMod, gainItem, gearAtk, hitMod, hitParts, mergeDmg, removeItem, stopped, type AppliedOutcome } from './character.js';
-import { bumpStreak, lootMult, rareBonus, streakDmg, streakMiasma, streakOf } from './expedition.js';
+import { bumpStreak, lootMult, rareBonus, streakLevels, streakMiasma, streakOf } from './expedition.js';
 import { chance, rand, startRun } from './engine.js';
 import { d20Success, levelDC, rollTag, type DiceRoll } from './dice.js';
 import { DECOR_CHANCE, DECOR_STREAK_STEP, KEEPSAKE_CHANCE, LOCAL_DROP_CHANCE, LOCAL_DROPS, RELIC_CHANCE, TIER_GEAR, pickDecor, pickWeighted, prized } from './drops.js';
@@ -97,7 +97,10 @@ export const MONSTERS: Record<string, MonsterDef> = {
 export const getMonster = (id: string) => MONSTERS[id];
 
 /** Every monster in a hunt is the level of the city it happens in — the hunter's own level never changes them. */
-export const huntLevel = (h: Hunt): number => zoneLevel(getZone(h.zone));
+export const huntLevel = (h: Hunt): number => h.lv ?? zoneLevel(getZone(h.zone));
+
+/** Level the next hunt here would be: city level + trip streak. */
+export const nextHuntLevel = (char: Character): number => zoneLevel(currentZone(char)) + streakLevels(char);
 
 /** ×1 at Lv 1, growing by `perLevel` for each level above it. */
 const scale = (lv: number, perLevel: number) => 1 + perLevel * (lv - 1);
@@ -140,12 +143,14 @@ export function startHunt(char: Character): HuntStart {
     if (stopped(a)) return { ok: false, error: line };
     log.unshift(`-# ${line}`);
   }
+  const lv = nextHuntLevel(char);
+  if (lv > zoneLevel(zone)) log.push(`👹 ยิ่งล่าลึก มอนยิ่งดุ — มอนรอบนี้ Lv ${lv} (เมือง Lv ${zoneLevel(zone)})`);
   const monsters: MonsterState[] = Array.from({ length: 3 }, () => {
     const def = getMonster(pickWeighted(pool.map((m) => [m.id, zone.spawn?.[m.id] ?? 1])))!;
-    const hp = scaledHp(def, zoneLevel(zone));
+    const hp = scaledHp(def, lv);
     return { id: def.id, hp, maxHp: hp };
   });
-  const hunt: Hunt = { zone: zone.id, monsters, door: pickDoor(zone), log, loot: {}, xp: 0 };
+  const hunt: Hunt = { zone: zone.id, monsters, lv, door: pickDoor(zone), log, loot: {}, xp: 0 };
   char.hunt = hunt;
   return { ok: true, hunt };
 }
@@ -178,7 +183,7 @@ function monstersAttack(char: Character, h: Hunt): { lines: string[]; applied?: 
       lines.push(`-# ${nameOf(m)} พลาด \`${rollTag(roll, 0, dc)}\``);
       continue;
     }
-    let dmg = Math.round(rand(def.dmg[0], def.dmg[1]) * scale(lv, balance.huntDmgPerLevel)) + streakDmg(char);
+    let dmg = Math.round(rand(def.dmg[0], def.dmg[1]) * scale(lv, balance.huntDmgPerLevel));
     if (crimson) dmg = Math.ceil(dmg * 1.3);
     const o: Outcome = { text: '', hp: -dmg };
     const soft = (n: number) => Math.max(1, Math.round(n * balance.huntSanityMult));

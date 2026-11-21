@@ -3,11 +3,12 @@
  * Loot found out there isn't handed over yet — it's this round's pending haul, delivered when you
  * get home. Die before that → you wake up at home and simply don't get this round's haul.
  * The inventory itself is never touched.
- * Every hunt won in the round raises `streak`: better loot, but Miasma and monsters get worse.
+ * Every hunt won in the round raises `streak`: better loot, but Miasma thickens and monsters climb levels.
  *
  * Outsiders who haven't reached Rouge Land have no home to return to, so they get loot directly.
  * Pure data helpers — no imports from character.ts (zones.ts uses this on arrival).
  */
+import { balance } from '../config.js';
 import { itemLabel } from './items.js';
 import { feed } from './feed.js';
 import type { Character } from './types.js';
@@ -39,8 +40,8 @@ export const lootMult = (char: Character) => 1 + STREAK_LOOT_STEP * Math.min(str
 export const rareBonus = (char: Character) => 0.03 * Math.min(streakOf(char), STREAK_CAP);
 /** Miasma breathed in when starting another hunt this deep into a round. */
 export const streakMiasma = (char: Character) => (streakOf(char) >= 2 ? streakOf(char) - 1 : 0);
-/** Extra monster damage. */
-export const streakDmg = (char: Character) => Math.floor(Math.min(streakOf(char), STREAK_CAP) / 2);
+/** Levels added to the next hunt's monsters (uncapped — the deeper the round, the harder it gets). */
+export const streakLevels = (char: Character) => (inField(char) ? streakOf(char) * balance.huntStreakLevels : 0);
 
 export function bumpStreak(char: Character): void {
   if (!inField(char)) return;
@@ -54,7 +55,7 @@ export function streakText(char: Character, bag = true): string | null {
   const parts = bag ? [`🎒 ของรอรับ ${tripSize(char)} ชิ้น`] : [];
   if (s > 0) parts.push(`🔥 ล่าติดกัน ${s} · ของดีขึ้น +${Math.round((lootMult(char) - 1) * 100)}%`);
   if (streakMiasma(char)) parts.push(`🌫️ Miasma ${streakMiasma(char)}/การล่า`);
-  if (streakDmg(char)) parts.push(`👹 มอนแรง +${streakDmg(char)}`);
+  if (streakLevels(char)) parts.push(`👹 มอน +${streakLevels(char)} เลเวล`);
   return parts.length ? parts.join(' · ') : null;
 }
 

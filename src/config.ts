@@ -26,6 +26,8 @@ export const balance = {
   huntDmgPerLevel: 0.15,
   huntXpPerLevel: 0.25,
   huntLootPerLevel: 0.15,
+  /** Every hunt won this trip makes the next hunt's monsters this many levels higher (no cap) — hp/dmg/to-hit/xp/loot all follow. Resets at home. */
+  huntStreakLevels: 2,
   /** Monster hits: sanity / Miasma per hit is multiplied by this (min 1). Was 1 — playtesters found sanity draining too fast. */
   huntSanityMult: 0.5,
   /** Passive sanity regen per stamina tick (5 min) while safe in Rouge Land. */
