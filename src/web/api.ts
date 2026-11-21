@@ -6,6 +6,7 @@ import { balance } from '../config.js';
 import { MONSTERS } from '../game/hunt.js';
 import { ICONS } from '../game/icons.js';
 import { ITEMS } from '../game/items.js';
+import { namedItem, publicItem, roomArt } from '../game/itemAdmin.js';
 import { ROLES } from '../game/roles.js';
 import type { Character } from '../game/types.js';
 import { DOORS, DUNGEON_RULES, isCrimsonMoon, LOCATIONS, nextCrimsonMoon } from '../game/world.js';
@@ -47,7 +48,7 @@ export function world() {
 
 export const icons = () => Object.values(ICONS).map(({ mods: _m, ...rest }) => rest);
 export const roles = () => Object.values(ROLES).map(({ id, name, emoji, short, perks, stats, maxHp, maxStamina }) => ({ id, name, emoji, short, perks, stats, maxHp, maxStamina }));
-export const items = () => Object.values(ITEMS);
+export const items = () => Object.values(ITEMS).map(publicItem);
 export const bestiary = () => Object.values(MONSTERS);
 export const imageSlots = () => Object.values(IMAGE_SLOTS);
 
@@ -112,7 +113,7 @@ export function characterByHandle(src: PlayerSource, raw: string) {
 export function characterProfile(src: PlayerSource, slug: string) {
   const c = realPlayers(src).find((x) => profileSlug(x.userId) === slug);
   if (!c) return null;
-  const item = (id: string) => ({ id, name: ITEMS[id]?.name ?? id, emoji: ITEMS[id]?.emoji ?? '❔' });
+  const item = namedItem;
   return {
     slug,
     handle: assignHandles(realPlayers(src)).get(c.userId) ?? nameHandle(c.name),
@@ -151,6 +152,8 @@ export function characterProfile(src: PlayerSource, slug: string) {
     images: publicMedia(c).images.map(({ slot, key, at }) => ({ slot, key, at })),
     sprite: publicMedia(c).sprite,
     room: c.room ?? null,
+    /** room stickers from uploaded item art (on top of the website's built catalog) */
+    roomArt: roomArt(),
   };
 }
 export type CharacterProfile = NonNullable<ReturnType<typeof characterProfile>>;

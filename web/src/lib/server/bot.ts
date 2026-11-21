@@ -14,6 +14,15 @@ export interface AccountReply {
 }
 
 export async function bot(path: "get" | "create" | "join" | "rename" | "bio" | "room" | "image/add" | "image/remove" | "sprite/set" | "sprite/clear" | "sprite/height", body: Record<string, unknown>) {
+  return post<AccountReply>(path, body);
+}
+
+/** Admin item editor (src/web/admin.ts). The bot checks the user's Discord username against ADMIN_USERS (403 otherwise). */
+export function botAdmin<T>(path: "admin/items" | "admin/item" | "admin/item/reset" | "admin/item/image", body: Record<string, unknown>) {
+  return post<T & { error?: string; evicted?: string[] }>(path, body);
+}
+
+async function post<T>(path: string, body: Record<string, unknown>) {
   const base = process.env.BOT_API_URL;
   const secret = process.env.BOT_API_SECRET;
   if (!base || !secret) throw new Error("BOT_API_URL / BOT_API_SECRET missing");
@@ -24,7 +33,7 @@ export async function bot(path: "get" | "create" | "join" | "rename" | "bio" | "
     cache: "no-store",
     signal: AbortSignal.timeout(10_000),
   });
-  const data = (await res.json().catch(() => ({ error: "bad response" }))) as AccountReply;
+  const data = (await res.json().catch(() => ({ error: "bad response" }))) as T;
   return { status: res.status, data };
 }
 

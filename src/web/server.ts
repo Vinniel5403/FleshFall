@@ -7,6 +7,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { isUserId } from '../game/account.js';
 import * as account from './account.js';
+import * as admin from './admin.js';
 import * as api from './api.js';
 
 function json(res: ServerResponse, code: number, body: unknown) {
@@ -52,6 +53,17 @@ async function handleAccount(req: IncomingMessage, res: ServerResponse, p: strin
   const uid = b.userId;
   if (!isUserId(uid)) return json(res, 400, { error: 'bad user' });
   let r: { code: number; body: unknown };
+  if (p.startsWith('/api/account/admin/')) {
+    if (!(await o.gate.isAdmin(uid).catch(() => false))) return json(res, 403, { error: 'เฉพาะแอดมิน' });
+    switch (p) {
+      case '/api/account/admin/items': r = admin.listItems(); break;
+      case '/api/account/admin/item': r = admin.saveItem(b); break;
+      case '/api/account/admin/item/reset': r = admin.resetItem(b); break;
+      case '/api/account/admin/item/image': r = admin.setItemImage(b); break;
+      default: r = { code: 404, body: { error: 'not found' } };
+    }
+    return json(res, r.code, r.body);
+  }
   switch (p) {
     case '/api/account/get': r = await account.getAccount(o.gate, uid); break;
     case '/api/account/create': r = await account.createAccount(o.gate, uid, b); break;

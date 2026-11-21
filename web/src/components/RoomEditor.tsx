@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import templateRig from "@/data/sprite-template.json";
-import { defaultRoom, furniture, furnitureSrc, FURNITURE, placedCounts, placeNew, ROOM_MAX_ITEMS, ROOM_TEMPLATES, type RoomLayout } from "@/lib/room";
+import { addRoomArt, defaultRoom, furniture, furnitureSrc, FURNITURE, placedCounts, placeNew, ROOM_MAX_ITEMS, ROOM_TEMPLATES, type RoomLayout } from "@/lib/room";
 import type { Rig } from "@/lib/rig";
 import { ownProfilePath, type AccountView } from "@/lib/types";
 import { RoomStage } from "./RoomStage";
@@ -16,6 +16,7 @@ const same = (a: RoomLayout, b: RoomLayout) => JSON.stringify([a.template, a.ite
 
 /** /profile panel: decorate the private room (pick a template, add / drag / flip / layer furniture) and walk around in it. */
 export function RoomEditor(props: { character: AccountView; onChange: (c: AccountView) => void }) {
+  addRoomArt(props.character.roomArt);
   const toast = useToast();
   const saved = useMemo<RoomLayout>(() => props.character.room ?? defaultRoom(), [props.character.room]);
   const [room, setRoom] = useState<RoomLayout>(saved);

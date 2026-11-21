@@ -2,12 +2,16 @@
  * What a hunt can turn up besides the monster's own body (`MonsterDef.drops` in hunt.ts):
  *  - per kill: local goods of the continent · gear that fits the city's tier · the decoration piece that monster guards
  *  - once per hunt won: a small real-world relic, or (rarely) a room-decoration piece
- * Tables + pickers only — hunt.ts rolls and hands the items over.
+ * Tables + pickers only — hunt.ts rolls and hands the items over. These are the code defaults: catalog.ts rebuilds
+ * them in place from admin placements, and picks inside a pool are weighted by item rarity (`rarityWeight`).
  */
-import { DECOR_IDS, getItem } from './items.js';
+import { DECOR_IDS, getItem, rarityWeight } from './items.js';
 import type { Continent, Tier } from './zones.js';
 
 export type Weighted = [id: string, weight: number];
+
+/** One of `ids`, weighted by rarity (undefined when the pool is empty). */
+export const pickByRarity = (ids: string[]): string | undefined => (ids.length ? pickWeighted(ids.map((id) => [id, rarityWeight(id)])) : undefined);
 
 export function pickWeighted(list: Weighted[]): string {
   let r = Math.random() * list.reduce((s, [, w]) => s + w, 0);
@@ -50,7 +54,7 @@ export const RELIC_CHANCE = 0.08;
 export const DECOR_CHANCE: Record<Tier, number> = { easy: 0.02, normal: 0.03, hard: 0.04, epic: 0.06 };
 export const DECOR_STREAK_STEP = 0.01;
 
-/** Decoration found only on its own continent — each three times as likely there as any single common piece. */
+/** Decoration found only on its own continent (default rarity uncommon = twice a common piece's rare). */
 export const DECOR_LOCAL: Record<Continent, string[]> = {
   europe: ['grandfather_clock', 'candelabra', 'manor_bookcase'],
   asia: ['paper_lantern', 'maneki_neko', 'bonsai'],
@@ -67,10 +71,8 @@ export const DECOR_COMMON = [
   'snow_globe', 'porcelain_doll', 'birdcage', 'music_box', 'rocking_chair', 'gramophone', 'sewing_machine', 'dollhouse', 'deer_trophy', 'clawfoot_tub',
 ];
 
-export function pickDecor(continent: Continent | undefined): string {
-  const pool: Weighted[] = DECOR_COMMON.map((id) => [id, 1]);
-  if (continent) for (const id of DECOR_LOCAL[continent]) pool.push([id, 3]);
-  return pickWeighted(pool);
+export function pickDecor(continent: Continent | undefined): string | undefined {
+  return pickByRarity([...DECOR_COMMON, ...(continent ? DECOR_LOCAL[continent] : [])]);
 }
 
 /** Worth a line in the activity feed. */

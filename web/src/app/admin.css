@@ -1,0 +1,64 @@
+/* /admin item editor (team only) — same blood palette as the profile studio */
+.admin-page { max-width: 1280px; margin: 0 auto; padding: clamp(84px, 8vw, 104px) 16px 80px; }
+.adm-title h1 { font: 700 30px var(--font-kanit), sans-serif; color: var(--bone); margin: 0; }
+.adm-title p { color: var(--muted); margin: 6px 0 22px; font-size: 14px; }
+
+.adm-gate { padding: 60px 16px; text-align: center; color: var(--flesh); display: grid; gap: 16px; justify-items: center; }
+
+.adm-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+.adm-bar select, .adm-search, .adm-form input:not([type="checkbox"]), .adm-form select, .adm-form textarea {
+  background: rgba(5, 3, 3, .55); border: 1px solid rgba(230, 184, 162, .22); color: var(--bone);
+  font: 400 14px var(--font-kanit), sans-serif; padding: 8px 10px; min-height: 38px;
+}
+.adm-search { flex: 1; min-width: 200px; }
+.adm-form input:focus, .adm-form select:focus, .adm-form textarea:focus, .adm-search:focus, .adm-bar select:focus { outline: none; border-color: var(--crimson); }
+.adm-form input:disabled, .adm-form select:disabled { opacity: .55; }
+
+.adm-body { display: grid; grid-template-columns: minmax(280px, 400px) 1fr; gap: 16px; align-items: start; }
+.adm-list { list-style: none; margin: 0; padding: 0; max-height: calc(100vh - 220px); overflow-y: auto; border: 1px solid var(--line); background: rgba(10, 5, 5, .5); scrollbar-width: thin; scrollbar-color: rgba(224, 30, 55, .5) transparent; }
+.adm-row, .adm-row:hover { transform: none; border-radius: 0; box-shadow: none; min-height: 0; }
+.adm-row { position: relative; display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; width: 100%; padding: 8px 12px; background: transparent; border: 0; border-bottom: 1px solid rgba(58, 23, 23, .7); color: var(--bone); text-align: left; cursor: pointer; font: 400 14px var(--font-kanit), sans-serif; }
+.adm-row:hover { background: rgba(163, 18, 27, .1); }
+.adm-row.on { background: rgba(163, 18, 27, .2); box-shadow: inset 3px 0 0 var(--crimson); }
+.adm-row-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-row-name small, .adm-row-meta small { display: block; color: var(--muted); font-size: 11.5px; }
+.adm-row-meta { text-align: right; }
+.adm-dot { position: absolute; top: 8px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--crimson); }
+.adm-empty, .adm-hint { padding: 24px; color: var(--muted); text-align: center; }
+
+.adm-icon { display: inline-grid; place-items: center; width: 40px; height: 40px; font-size: 26px; line-height: 1; }
+.adm-icon img { width: 100%; height: 100%; object-fit: contain; }
+.adm-icon.big { width: 72px; height: 72px; font-size: 48px; border: 1px solid rgba(230, 184, 162, .18); background: rgba(5, 3, 3, .45); }
+
+.adm-rar { display: inline-block; font-size: 11.5px; padding: 1px 8px; border: 1px solid currentColor; }
+.r-common { color: #b9aba2; }
+.r-uncommon { color: #6fcf7f; }
+.r-rare { color: #5aa8ff; }
+.r-legendary { color: #f0c24b; }
+
+.adm-editor { border: 1px solid var(--line); background: rgba(16, 7, 7, .7); min-height: 300px; }
+.adm-form { padding: 18px; display: grid; gap: 18px; }
+.adm-head { display: flex; gap: 14px; align-items: center; }
+.adm-head h2 { margin: 0; font: 600 22px var(--font-kanit), sans-serif; color: var(--bone); }
+.adm-head small { color: var(--muted); font-size: 12.5px; }
+.adm-sec h3 { margin: 12px 0 8px; font: 500 13.5px var(--font-kanit), sans-serif; color: var(--flesh); }
+.adm-sec h3:first-child { margin-top: 0; }
+.adm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.adm-grid label { display: grid; gap: 4px; font-size: 12.5px; color: var(--muted); }
+.adm-grid .adm-wide { grid-column: 1 / -1; }
+.adm-grid .adm-inline { display: flex; gap: 8px; align-items: center; color: var(--bone); font-size: 13.5px; }
+.adm-form textarea { resize: vertical; }
+.adm-checks { display: flex; flex-wrap: wrap; gap: 6px; }
+.adm-checks label { display: inline-flex; gap: 6px; align-items: center; padding: 5px 10px; border: 1px solid rgba(230, 184, 162, .18); font-size: 13px; color: var(--muted); cursor: pointer; }
+.adm-checks label.on { border-color: var(--crimson); color: var(--bone); background: rgba(163, 18, 27, .14); }
+.adm-checks input { accent-color: var(--crimson); }
+.adm-art { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.adm-art .st-btn { cursor: pointer; }
+.adm-note { margin: 6px 0 0; color: var(--muted); font-size: 12.5px; width: 100%; }
+.adm-foot { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
+
+@media (max-width: 860px) {
+  .admin-page { padding-top: 76px; }
+  .adm-body { grid-template-columns: 1fr; }
+  .adm-list { max-height: 45vh; }
+}

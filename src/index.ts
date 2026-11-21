@@ -15,10 +15,15 @@ import { handlePanelButton, handlePanelSelect } from './interactions/panels.js';
 import { handleMarketModal } from './interactions/market.js';
 import { proxyEnabled, startProxy } from './rpProxy.js';
 import { startFeed } from './feed.js';
+import { refreshCatalog } from './game/catalog.js';
+import { ADMIN_USERS } from './web/admin.js';
 
 /** Kick members who join without a website character (needs the privileged Server Members intent). */
 const REQUIRE_CHARACTER = process.env.REQUIRE_CHARACTER === '1';
 const WEB_URL = process.env.WEB_URL ?? 'https://fleshfall.org';
+
+// admin item edits (website /admin) on top of the code items
+refreshCatalog(db.allItemPatches());
 
 const client = new Client({
   intents: [
@@ -107,6 +112,10 @@ if (process.env.API_PORT) {
         async isMember(userId) {
           const guild = await client.guilds.fetch(guildId);
           return guild.members.fetch(userId).then(() => true, () => false);
+        },
+        async isAdmin(userId) {
+          const u = await client.users.fetch(userId).catch(() => null);
+          return !!u && ADMIN_USERS.includes(u.username.toLowerCase());
         },
       }
     : undefined;

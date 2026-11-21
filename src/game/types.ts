@@ -1,3 +1,4 @@
+import type { Continent, Tier } from './zones.js';
 export type StatKey = 'str' | 'agi' | 'int';
 export type RoleId = 'maid' | 'hound' | 'bar' | 'patron' | 'outsider' | 'survivor';
 export type IconId = 'beelzebub' | 'hastur' | 'loki' | 'belphegor' | 'sophia' | 'thanatos' | 'wendigo';
@@ -247,7 +248,33 @@ export interface ItemDef {
   furniture?: string;
   /** Room-decoration collectible found on hunts (drops.ts). Placeable as an emoji sticker (`decorFurnitureId`) until real art exists. */
   decor?: boolean;
+  /** Drop weight inside every pool it sits in (`RARITY_WEIGHT`); filled in by catalog.ts when the item doesn't set one. */
+  rarity?: Rarity;
+  /** Uploaded art (R2 key `items/<id>-<rand>.<ext>`, public URL = IMAGE_BASE_URL + key) — replaces the emoji on cards and the web. */
+  image?: string;
+  /** Pixel size of `image` (aspect ratio for room stickers). */
+  imageSize?: [number, number];
+  /** Furniture with uploaded art: real height in cm of the sticker in a room. */
+  sizeCm?: number;
+  /** Made on the admin page (not in items.ts). */
+  custom?: boolean;
 }
+
+export type Rarity = 'common' | 'uncommon' | 'rare' | 'legendary';
+
+/** Where an item can be bought or found. `home` = the Rouge Land butchery; continent = that continent's shop / pools. */
+export interface ItemPlacement {
+  shop: ('home' | Continent)[];
+  /** local goods a monster may carry (per kill, LOCAL_DROPS) */
+  local: Continent[];
+  /** gear that fits the city tier (per kill, TIER_GEAR) */
+  tiers: Tier[];
+  /** decoration pieces found searching after a hunt: 'any' = every city, continent = only there */
+  decor: ('any' | Continent)[];
+}
+
+/** Admin edit of one item (db `items`): fields replace the code's (or define a custom item); `where` replaces its placement. */
+export type ItemPatch = Partial<ItemDef> & { id: string; where?: ItemPlacement };
 
 export interface Outcome {
   text: string;

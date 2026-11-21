@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import { existsSync, mkdirSync, readFileSync, renameSync } from 'node:fs';
 import { dirname } from 'node:path';
-import type { Character, MarketOrder } from '../game/types.js';
+import type { Character, ItemPatch, MarketOrder } from '../game/types.js';
 
 /** The old single-JSON-file shape (imported once into SQLite). */
 interface LegacyDb {
@@ -33,6 +33,7 @@ const SCHEMA = `
   );
   CREATE TABLE IF NOT EXISTS market (id TEXT PRIMARY KEY, data TEXT NOT NULL);
   CREATE TABLE IF NOT EXISTS proxied (message_id TEXT PRIMARY KEY, data TEXT NOT NULL);
+  CREATE TABLE IF NOT EXISTS items (id TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at INTEGER NOT NULL);
 `;
 
 /**
@@ -68,6 +69,11 @@ export class Store {
       orders: this.sql.prepare<[], { data: string }>('SELECT data FROM market'),
       putOrder: this.sql.prepare<[string, string]>('INSERT OR REPLACE INTO market (id, data) VALUES (?, ?)'),
       delOrder: this.sql.prepare<[string]>('DELETE FROM market WHERE id = ?'),
+      items: this.sql.prepare<[], { data: string }>('SELECT data FROM items ORDER BY rowid'),
+      putItem: this.sql.prepare<[string, string, number]>(
+        'INSERT INTO items (id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at',
+      ),
+      delItem: this.sql.prepare<[string]>('DELETE FROM items WHERE id = ?'),
       getProxied: this.sql.prepare<[string], { data: string }>('SELECT data FROM proxied WHERE message_id = ?'),
       putProxied: this.sql.prepare<[string, string]>('INSERT OR REPLACE INTO proxied (message_id, data) VALUES (?, ?)'),
       delProxied: this.sql.prepare<[string]>('DELETE FROM proxied WHERE message_id = ?'),
@@ -143,6 +149,19 @@ export class Store {
     this.refresh();
     this.orders.delete(id);
     this.q.delOrder.run(id);
+  }
+
+  /** Admin item edits (catalog.ts applies them). Not cached: read on startup and after each edit. */
+  allItemPatches(): ItemPatch[] {
+    return this.q.items.all().map((r) => JSON.parse(r.data) as ItemPatch);
+  }
+
+  saveItemPatch(p: ItemPatch): void {
+    this.q.putItem.run(p.id, JSON.stringify(p), Date.now());
+  }
+
+  deleteItemPatch(id: string): void {
+    this.q.delItem.run(id);
   }
 
   getProxied(messageId: string): ProxiedMessage | undefined {

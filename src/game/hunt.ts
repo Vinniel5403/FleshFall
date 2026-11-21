@@ -9,7 +9,8 @@ import { applyOutcome, consume, evadeMod, gainItem, gearAtk, hitMod, hitParts, m
 import { bumpStreak, lootMult, rareBonus, streakLevels, streakMiasma, streakOf } from './expedition.js';
 import { chance, rand, startRun } from './engine.js';
 import { d20Success, levelDC, rollTag, type DiceRoll } from './dice.js';
-import { DECOR_CHANCE, DECOR_STREAK_STEP, KEEPSAKE_CHANCE, LOCAL_DROP_CHANCE, LOCAL_DROPS, RELIC_CHANCE, TIER_GEAR, pickDecor, pickWeighted, prized } from './drops.js';
+import { DECOR_CHANCE, DECOR_STREAK_STEP, KEEPSAKE_CHANCE, LOCAL_DROP_CHANCE, LOCAL_DROPS, RELIC_CHANCE, TIER_GEAR, pickByRarity, pickDecor, pickWeighted, prized } from './drops.js';
+import './catalog.js'; // rarities + live pools
 import { getItem, itemLabel, VINTAGE_IDS } from './items.js';
 import type { Character, Hunt, IconDoor, MonsterState, Outcome } from './types.js';
 import { DOORS, DUNGEON_RULES, isCrimsonMoon } from './world.js';
@@ -221,9 +222,11 @@ function rollLoot(char: Character, h: Hunt, m: MonsterState): string[] {
   }
   // what it carried: local goods, gear that fits the city, the piece it guarded — always one
   const carried: string[] = [];
-  if (z?.continent && chance(LOCAL_DROP_CHANCE)) carried.push(pickWeighted(LOCAL_DROPS[z.continent]));
+  const local = z?.continent ? LOCAL_DROPS[z.continent] : [];
+  if (local.length && chance(LOCAL_DROP_CHANCE)) carried.push(pickWeighted(local));
   const gear = TIER_GEAR[z?.tier ?? 'easy'];
-  if (chance(gear.chance)) carried.push(gear.items[rand(0, gear.items.length - 1)]!);
+  const piece = chance(gear.chance) ? pickByRarity(gear.items) : undefined;
+  if (piece) carried.push(piece);
   if (def.keepsake && chance(KEEPSAKE_CHANCE * lootMult(char))) carried.push(def.keepsake);
   for (const item of carried) give(item, 1, prized(item));
   h.xp += Math.max(1, Math.round(def.xp * scale(lv, balance.huntXpPerLevel) * xpGap(char.level, lv)));
@@ -234,11 +237,12 @@ function rollLoot(char: Character, h: Hunt, m: MonsterState): string[] {
 function salvage(char: Character, h: Hunt): string[] {
   const z = getZone(h.zone);
   const found: string[] = [];
-  if (chance(RELIC_CHANCE)) found.push(VINTAGE_IDS[rand(0, VINTAGE_IDS.length - 1)]!);
+  const relic = chance(RELIC_CHANCE) ? pickByRarity(VINTAGE_IDS) : undefined;
+  if (relic) found.push(relic);
   if (chance(DECOR_CHANCE[z?.tier ?? 'easy'] + DECOR_STREAK_STEP * Math.min(streakOf(char), 8))) {
     const id = pickDecor(z?.continent);
-    found.push(id);
-    feed(char, 'rare', `**${char.name}** เจอ ${itemLabel(id)} ที่ ${z ? `${z.emoji} ${z.name}` : h.zone}!`);
+    if (id) found.push(id);
+    if (id) feed(char, 'rare', `**${char.name}** เจอ ${itemLabel(id)} ที่ ${z ? `${z.emoji} ${z.name}` : h.zone}!`);
   }
   for (const id of found) {
     gainItem(char, id, 1);

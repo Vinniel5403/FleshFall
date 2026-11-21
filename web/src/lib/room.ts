@@ -51,7 +51,23 @@ export const FURNITURE = catalog.items as RoomFurniture[];
 export const ROOM_MAX_ITEMS = 60;
 
 export const roomBg = (t: RoomTemplate) => `/rooms/${t.id}.webp`;
-export const furnitureSrc = (f: RoomFurniture) => `/rooms/items/${f.id}.webp`;
+/** Uploaded art (admin page) for a catalog id — replaces the built sticker. */
+const uploaded = new Map<string, string>();
+export const furnitureSrc = (f: RoomFurniture) => uploaded.get(f.id) ?? `/rooms/items/${f.id}.webp`;
+
+/**
+ * Merge the bot's stickers from uploaded item art (`roomArt` on /api/me and public profiles) into the catalog:
+ * an id the built rooms.json already has takes the new art + size, a new id is appended. Idempotent — call it
+ * while rendering, before a RoomStage/RoomEditor reads FURNITURE.
+ */
+export function addRoomArt(art: (RoomFurniture & { src: string })[] | undefined): void {
+  for (const { src, ...f } of art ?? []) {
+    uploaded.set(f.id, src);
+    const i = FURNITURE.findIndex((x) => x.id === f.id);
+    if (i < 0) FURNITURE.push(f);
+    else FURNITURE[i] = { ...f, x: FURNITURE[i]!.x, y: FURNITURE[i]!.y };
+  }
+}
 export const furniture = (id: string) => FURNITURE.find((f) => f.id === id);
 export const template = (id?: string) => ROOM_TEMPLATES.find((t) => t.id === id) ?? ROOM_TEMPLATES[0];
 

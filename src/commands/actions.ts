@@ -120,8 +120,8 @@ export function equipItem(char: Character, id: string): ActionResult {
 
 // ---------- shop ----------
 
-/** Branch butchery stock (Rouge Land only). */
-export const STOCK = ['bandage', 'alchemy_salve', 'rage_tonic', 'hide_tonic', 'bone_bomb', 'blood_wine', 'fetal_flesh', 'fresh_cut', 'wild_flour', 'lighter', 'claw_hammer', 'leather_coat', 'maid_corset', 'chainmail_apron', 'bone_saw', 'rusted_armor', 'sigil', 'placenta', 'steel_shelf'];
+import { CONTINENT_STOCK, STOCK } from '../game/shops.js';
+export { CONTINENT_STOCK, STOCK };
 
 export const buyPrice = (c: Character, id: string) => Math.ceil((getItem(id)?.value ?? 0) * (c.role === 'patron' ? 0.75 : 1));
 /** Field merchants lowball: selling out in the Old Realm pays 70%. Bring it home for the full price. */
@@ -135,16 +135,6 @@ export const sellPrice = (c: Character, id: string, src: ShopSrc = 'home') => {
   return Math.floor(def.value * base * (c.role === 'maid' ? 1.5 : 1) * (src === 'field' ? FIELD_SELL_MULT : 1));
 };
 
-/** Old Realm continent shops — each city sells its continent's stock. */
-export const CONTINENT_STOCK: Record<Continent, string[]> = {
-  europe: ['bandage', 'absinthe', 'blood_wine', 'rage_tonic', 'walking_cane', 'kris', 'meat_hook', 'leather_coat', 'riot_vest', 'lighter'],
-  asia: ['bandage', 'spice_jerky', 'instant_noodle', 'alchemy_salve', 'bone_bomb', 'carving_knife', 'katana', 'samurai_do', 'sigil'],
-  america: ['bandage', 'canned_beans', 'grilled_meat', 'bone_bomb', 'claw_hammer', 'old_shotgun', 'leather_coat', 'biker_jacket', 'lighter'],
-  south_america: ['bandage', 'mate_tea', 'fetal_flesh', 'rage_tonic', 'bone_club', 'machete', 'hunting_bow', 'blood_apron', 'rain_poncho'],
-  africa: ['myrrh_balm', 'alchemy_salve', 'hide_tonic', 'wild_flour', 'rusty_chain', 'hunting_bow', 'bone_saw', 'rib_plate', 'sigil', 'placenta'],
-  australia: ['eucalyptus_oil', 'alchemy_salve', 'hide_tonic', 'bone_bomb', 'fresh_cut', 'cricket_bat', 'boomerang', 'rusted_armor'],
-  antarctica: ['whale_blubber', 'fresh_cut', 'alchemy_salve', 'hide_tonic', 'bone_bomb', 'ice_pick', 'harpoon', 'old_shotgun', 'fur_parka', 'rusted_armor'],
-};
 
 /** home = Rouge Land shops (cafe/bar/butchery) · field = continent shop in an Old Realm city. */
 export type ShopSrc = 'home' | 'field';

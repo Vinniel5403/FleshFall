@@ -67,6 +67,54 @@ export interface Item {
   description: string;
 }
 
+/** Furniture sticker from uploaded item art (bot src/game/itemAdmin.ts roomArt) — same shape as a rooms.json item + its image URL. */
+export type RoomArt = import("./room").RoomFurniture & { src: string };
+
+// ---------- admin item editor (bot src/game/itemAdmin.ts) ----------
+
+export type Rarity = "common" | "uncommon" | "rare" | "legendary";
+export type ItemType = Item["type"];
+export interface ItemPlacement {
+  shop: string[];
+  local: string[];
+  tiers: string[];
+  decor: string[];
+}
+export interface AdminItem {
+  id: string;
+  name: string;
+  emoji: string;
+  type: ItemType;
+  description: string;
+  value: number;
+  heal?: number;
+  stamina?: number;
+  sanity?: number;
+  humanity?: number;
+  isFlesh?: boolean;
+  atk?: number;
+  def?: number;
+  decor?: boolean;
+  furniture?: string;
+  rarity: Rarity;
+  image: string | null;
+  imageKey: string | null;
+  imageSize?: [number, number];
+  sizeCm?: number;
+  custom: boolean;
+  edited?: boolean;
+  effects: string;
+  special: string[];
+  where: ItemPlacement;
+}
+export interface AdminCatalog {
+  items: AdminItem[];
+  continents: { id: string; name: string; emoji: string }[];
+  tiers: { id: string; name: string }[];
+  rarities: Rarity[];
+  types: ItemType[];
+}
+
 export interface Monster {
   id: string;
   name: string;
@@ -130,6 +178,8 @@ export interface AccountView {
   room: import("./room").RoomLayout | null;
   /** spare furniture items in the inventory by room catalog id (placed pieces are not counted); absent on an older bot */
   furniture?: Record<string, number>;
+  /** room stickers from uploaded item art (admin page); absent on an older bot */
+  roomArt?: RoomArt[];
 }
 
 /** GET /api/me response (website route handler). */
@@ -159,7 +209,8 @@ export interface PlayerHit {
   portraitUrl?: string | null;
 }
 
-type Named = { id: string; name: string; emoji: string };
+/** `image` = uploaded item art URL (admin page), else show the emoji */
+type Named = { id: string; name: string; emoji: string; image?: string };
 
 /** GET /api/characters/<slug> (bot src/web/api.ts characterProfile). Everything is public by design, except Discord ids. */
 export interface PlayerProfile {
@@ -181,6 +232,7 @@ export interface PlayerProfile {
   images: AccountView["images"];
   sprite: AccountView["sprite"];
   room: AccountView["room"];
+  roomArt?: RoomArt[];
 }
 
 /** GET /api/characters/by-name/<handle> (bot src/web/api.ts characterByHandle): one owner → profile, else candidates. */

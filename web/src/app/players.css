@@ -155,3 +155,6 @@
   .pf-meters { grid-template-columns: 1fr; }
   .pf-stats dd { font-size: 19px; }
 }
+
+/* uploaded item art in place of the emoji */
+.pf-emo-img { width: 1.25em; height: 1.25em; object-fit: contain; vertical-align: -0.2em; }

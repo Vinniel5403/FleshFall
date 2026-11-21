@@ -100,11 +100,12 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
   }, [rig, src]);
 
   // furniture images: load whatever the layout (or the editor palette) needs, once each
-  const wanted = edit ? FURNITURE.map((f) => f.id).join() : layout.items.map((i) => i.id).join();
+  const wanted = (edit ? FURNITURE.map((f) => f.id) : layout.items.map((i) => i.id)).map((id) => `${id}=${furniture(id) ? furnitureSrc(furniture(id)!) : ""}`).join();
   useEffect(() => {
-    for (const id of new Set(wanted.split(",").filter(Boolean))) {
+    for (const id of new Set(wanted.split(",").filter(Boolean).map((w) => w.split("=")[0]!))) {
       const f = furniture(id);
-      if (!f || stickers.current.has(id)) continue;
+      // same id, new art (uploaded on the admin page) → load again
+      if (!f || stickers.current.get(id)?.src === new URL(furnitureSrc(f), location.href).href) continue;
       loadImg(furnitureSrc(f)).then((img) => stickers.current.set(id, img), () => {});
     }
   }, [wanted]);

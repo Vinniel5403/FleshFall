@@ -143,6 +143,7 @@ export function PlayerDossier({ p }: { p: PlayerProfile }) {
             rig={p.sprite}
             url={p.sprite ? publicUrl(p.sprite.base) : null}
             name={p.name}
+            roomArt={p.roomArt}
           />
         </div>
       </section>
@@ -229,18 +230,14 @@ export function PlayerDossier({ p }: { p: PlayerProfile }) {
               <div>
                 <dt>อาวุธ</dt>
                 <dd>
-                  <span className="pf-emo">
-                    {p.equipped.weapon?.emoji ?? "✊"}
-                  </span>
+                  <Emo it={p.equipped.weapon} none="✊" />
                   {weapon ?? <span className="pf-muted">มือเปล่า</span>}
                 </dd>
               </div>
               <div>
                 <dt>เกราะ</dt>
                 <dd>
-                  <span className="pf-emo">
-                    {p.equipped.armor?.emoji ?? "·"}
-                  </span>
+                  <Emo it={p.equipped.armor} none="·" />
                   {armor ?? <span className="pf-muted">ไม่มีเกราะ</span>}
                 </dd>
               </div>
@@ -314,7 +311,7 @@ export function PlayerDossier({ p }: { p: PlayerProfile }) {
               <ul className="pf-inv">
                 {p.inventory.map((it) => (
                   <li key={it.id}>
-                    <span className="pf-emo">{it.emoji}</span>
+                    <Emo it={it} />
                     <span className="pf-inv-name">{it.name}</span>
                     <b>×{it.qty}</b>
                   </li>
@@ -327,5 +324,15 @@ export function PlayerDossier({ p }: { p: PlayerProfile }) {
         </aside>
       </div>
     </article>
+  );
+}
+
+/** Item icon: uploaded art (admin page) when there is one, else the emoji. */
+function Emo({ it, none = "·" }: { it: { emoji: string; image?: string } | null; none?: string }) {
+  return (
+    <span className="pf-emo">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {it?.image ? <img className="pf-emo-img" src={it.image} alt="" loading="lazy" /> : (it?.emoji ?? none)}
+    </span>
   );
 }

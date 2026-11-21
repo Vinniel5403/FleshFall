@@ -1,4 +1,4 @@
-import type { ItemDef, StatKey } from './types.js';
+import type { ItemDef, ItemPatch, ItemPlacement, Rarity, StatKey } from './types.js';
 
 const list: ItemDef[] = [
   // --- เนื้อ & ของกิน ---
@@ -199,9 +199,18 @@ const list: ItemDef[] = [
  * keeps the same id (rooms.json item `"id"` override), so placed pieces survive the swap.
  */
 export const decorFurnitureId = (itemId: string) => `decor-${itemId.replace(/_/g, '-')}`;
-for (const i of list) if (i.decor) i.furniture ??= decorFurnitureId(i.id);
 
-export const ITEMS: Record<string, ItemDef> = Object.fromEntries(list.map((i) => [i.id, i]));
+/** The items as written above (admin edits never touch these). */
+const BASE: Readonly<Record<string, ItemDef>> = Object.fromEntries(list.map((i) => [i.id, i]));
+export const baseItem = (id: string): ItemDef | undefined => BASE[id];
+
+/**
+ * Live items = the code above + admin edits (db `items`, `applyItemPatches`). Every table below is rebuilt in
+ * place, so modules holding a reference keep seeing the current data.
+ */
+export const ITEMS: Record<string, ItemDef> = {};
+/** Admin-set placements (`ItemPatch.where`), read by catalog.ts when it rebuilds shops and drop pools. */
+export const PLACEMENT_OVERRIDE: Record<string, ItemPlacement> = {};
 
 export function getItem(id: string): ItemDef | undefined {
   return ITEMS[id];
@@ -240,13 +249,46 @@ export function itemEffects(id: string, short = false): string {
 }
 
 /** Items players can trade on the market (not quest relics). */
-export const TRADEABLE_IDS = list.filter((i) => i.value > 0).map((i) => i.id);
+export const TRADEABLE_IDS: string[] = [];
 
 /** room catalog id → the furniture item that places it */
-export const FURNITURE_ITEM: Record<string, string> = Object.fromEntries(list.filter((i) => i.furniture).map((i) => [i.furniture!, i.id]));
+export const FURNITURE_ITEM: Record<string, string> = {};
 
 /** Small real-world relics: ferry fare, Patron commissions, event rewards. Decoration pieces are kept out so those never eat or hand out one. */
-export const VINTAGE_IDS = list.filter((i) => i.type === 'vintage' && !i.decor).map((i) => i.id);
+export const VINTAGE_IDS: string[] = [];
 
 /** Room-decoration collectibles (hunt drops). */
-export const DECOR_IDS = list.filter((i) => i.decor).map((i) => i.id);
+export const DECOR_IDS: string[] = [];
+
+/** Pick weight of each rarity inside a drop pool. */
+export const RARITY_WEIGHT: Record<Rarity, number> = { common: 4, uncommon: 2, rare: 1, legendary: 0.4 };
+export const rarityWeight = (id: string) => RARITY_WEIGHT[ITEMS[id]?.rarity ?? 'common'];
+
+const refill = <T>(arr: T[], items: T[]) => arr.splice(0, arr.length, ...items);
+const clear = (rec: Record<string, unknown>) => {
+  for (const k of Object.keys(rec)) delete rec[k];
+};
+
+/**
+ * Rebuild ITEMS from the code + admin patches (each patch replaces fields; an unknown id = a custom item).
+ * Use `refreshCatalog` (catalog.ts) instead — it also refills rarities, shops and drop pools.
+ */
+export function applyItemPatches(patches: ItemPatch[]): void {
+  clear(ITEMS);
+  clear(PLACEMENT_OVERRIDE);
+  for (const [id, d] of Object.entries(BASE)) ITEMS[id] = { ...d };
+  for (const { where, ...p } of patches) {
+    const cur = ITEMS[p.id];
+    if (!cur && !p.custom) continue; // edit of an item that no longer exists in code
+    ITEMS[p.id] = { ...(cur ?? ({} as ItemDef)), ...p };
+    if (where) PLACEMENT_OVERRIDE[p.id] = where;
+  }
+  const all = Object.values(ITEMS);
+  for (const i of all) if ((i.decor || i.type === 'furniture') && !i.furniture) i.furniture = decorFurnitureId(i.id);
+  refill(TRADEABLE_IDS, all.filter((i) => i.value > 0).map((i) => i.id));
+  refill(VINTAGE_IDS, all.filter((i) => i.type === 'vintage' && !i.decor).map((i) => i.id));
+  refill(DECOR_IDS, all.filter((i) => i.decor).map((i) => i.id));
+  clear(FURNITURE_ITEM);
+  for (const i of all) if (i.furniture) FURNITURE_ITEM[i.furniture] = i.id;
+}
+applyItemPatches([]);

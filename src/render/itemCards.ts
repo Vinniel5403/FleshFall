@@ -1,8 +1,10 @@
 /** Inventory, shop and upgrade cards. Callers pass pre-computed data (no commands/ imports here). */
+import type { Image } from '@napi-rs/canvas';
+import { imageUrl } from '../game/account.js';
 import { gearAtk, gearDef } from '../game/character.js';
 import { getItem } from '../game/items.js';
 import type { Character, ItemType } from '../game/types.js';
-import { art, background, box, C, canvas, diamond, fitText, font, logo, noEmoji, png, rgba, SCENE_ART, sectionHead, wrap, type Ctx } from './kit.js';
+import { art, background, remoteArt, box, C, canvas, diamond, fitText, font, logo, noEmoji, png, rgba, SCENE_ART, sectionHead, wrap, type Ctx } from './kit.js';
 
 const W = 1200;
 const PAD = 48;
@@ -41,6 +43,33 @@ function footer(ctx: Ctx, h: number, left: string): void {
   logo(ctx, W - PAD, h - 28);
 }
 
+// ---------- item icons: uploaded art (admin page) or the emoji ----------
+
+type ItemArt = Map<string, Image>;
+
+/** Fetch the uploaded art of these items (cached in kit.remoteArt); items without art are left out. */
+async function itemArt(ids: (string | undefined)[]): Promise<ItemArt> {
+  const out: ItemArt = new Map();
+  await Promise.all(
+    [...new Set(ids)].map(async (id) => {
+      const key = id ? getItem(id)?.image : undefined;
+      const url = key && imageUrl(key);
+      const img = url ? await remoteArt(url) : null;
+      if (img) out.set(id!, img);
+    }),
+  );
+  return out;
+}
+
+/** Where the emoji would sit at font size `size` with its baseline at y: the art fitted into that square, else the emoji. */
+function itemIcon(ctx: Ctx, arts: ItemArt, id: string | undefined, x: number, y: number, size: number): void {
+  const img = id ? arts.get(id) : undefined;
+  if (!img) return void ctx.fillText((id && getItem(id)?.emoji) || (id ? '❔' : '·'), x, y);
+  const k = Math.min(size / img.width, size / img.height);
+  const w = img.width * k, h = img.height * k;
+  ctx.drawImage(img, x + (size - w) / 2, y - size * 0.85 + (size - h) / 2, w, h);
+}
+
 function gearLine(char: Character, slot: 'weapon' | 'armor'): { emoji: string; name: string; effect: string } {
   const id = char.equipped[slot];
   const effect = slot === 'weapon' ? `ดาเมจ +${gearAtk(char)}` : `ลดดาเมจ ${gearDef(char)}`;
@@ -66,6 +95,7 @@ export async function renderInventoryCard(char: Character): Promise<Buffer> {
   for (const t of order) H += 44 + Math.ceil(groups.get(t)!.length / COLS) * (TH + GAP);
   if (!order.length) H += 90;
   H += 90;
+  const arts = await itemArt([...Object.keys(char.inventory), char.equipped.weapon, char.equipped.armor]);
 
   const { cv, ctx } = canvas(W, H);
   background(ctx, W, H, { x: W / 2, y: 60, r: 520 });
@@ -79,7 +109,7 @@ export async function renderInventoryCard(char: Character): Promise<Buffer> {
     const g = gearLine(char, slot);
     box(ctx, x, y, half, 100, { line: rgba(C.crimson, 0.45) });
     font(ctx, 52);
-    ctx.fillText(g.emoji || '·', x + 22, y + 68);
+    itemIcon(ctx, arts, char.equipped[slot], x + 22, y + 68, 52);
     font(ctx, 15);
     ctx.fillStyle = C.muted;
     ctx.fillText(`${slot === 'weapon' ? 'อาวุธที่ใช้' : 'เกราะที่สวม'} · ${g.effect}`, x + 98, y + 38);
@@ -107,7 +137,7 @@ export async function renderInventoryCard(char: Character): Promise<Buffer> {
       const on = equipped.has(id);
       box(ctx, x, ty, tw, TH, { line: on ? rgba(C.crimson, 0.7) : C.line, fill: on ? 'rgba(60,10,14,.55)' : undefined });
       font(ctx, 34);
-      ctx.fillText(it?.emoji ?? '❔', x + 14, ty + 48);
+      itemIcon(ctx, arts, id, x + 14, ty + 48, 34);
       ctx.fillStyle = C.bone;
       fitText(ctx, it?.name ?? id, x + 62, ty + (on ? 34 : 44), tw - 62 - 56, 18, 500);
       if (on) {
@@ -142,6 +172,7 @@ export async function renderShopCard(char: Character, d: ShopCardData): Promise<
   const tw = (W - PAD * 2 - GAP) / COLS;
   const rows = Math.ceil(d.stock.length / COLS);
   const H = 150 + (d.flavor ? 40 : 0) + rows * (TH + GAP) + 110;
+  const arts = await itemArt(d.stock.map((x) => x.id));
   const { cv, ctx } = canvas(W, H);
   background(ctx, W, H, { x: W / 2, y: 60, r: 520 });
   let y = sectionHead(ctx, d.en, d.th, W / 2, 72);
@@ -162,7 +193,7 @@ export async function renderShopCard(char: Character, d: ShopCardData): Promise<
     const owned = char.inventory[id] ?? 0;
     box(ctx, x, ty, tw, TH);
     font(ctx, 44);
-    ctx.fillText(it?.emoji ?? '❔', x + 18, ty + 66);
+    itemIcon(ctx, arts, id, x + 18, ty + 66, 44);
     const tx = x + 86;
     const priceW = 110;
     ctx.fillStyle = C.bone;
@@ -209,6 +240,7 @@ export interface MergeData {
 
 export async function renderUpgradeCard(char: Character, slots: UpgradeSlotData[], merge?: MergeData): Promise<Buffer> {
   const H = merge ? 700 : 640;
+  const arts = await itemArt(slots.map((s) => s.id));
   const { cv, ctx } = canvas(W, H);
   background(ctx, W, H, { x: W / 2, y: 80, r: 560 });
   let y = sectionHead(ctx, 'THE FORGE', 'ช่างหลังบาร์', W / 2, 72);
@@ -235,7 +267,7 @@ export async function renderUpgradeCard(char: Character, slots: UpgradeSlotData[
       return;
     }
     font(ctx, 64);
-    ctx.fillText(it?.emoji ?? '❔', x + 24, y + 126);
+    itemIcon(ctx, arts, s.id, x + 24, y + 126, 64);
     ctx.fillStyle = C.bone;
     fitText(ctx, it?.name ?? s.id, x + 112, y + 92, pw - 140, 26, 600);
     // level pips

@@ -9,6 +9,7 @@ import { createCharacter, loadCharacter, saveCharacter } from '../game/character
 import { ICONS } from '../game/icons.js';
 import { ROLES } from '../game/roles.js';
 import { feed } from '../game/feed.js';
+import { roomArt } from '../game/itemAdmin.js';
 import type { IconId, RoleId } from '../game/types.js';
 
 /** Discord side, injected by index.ts so this file stays Discord-free. */
@@ -17,6 +18,8 @@ export interface GuildGate {
   /** Add the user to the guild with their OAuth token (scope guilds.join). */
   join(userId: string, accessToken: string): Promise<void>;
   isMember(userId: string): Promise<boolean>;
+  /** Discord username is on the admin list (env ADMIN_USERS) — gates the admin endpoints. */
+  isAdmin(userId: string): Promise<boolean>;
 }
 
 /** Website renames: one per hour. */
@@ -48,7 +51,7 @@ const realPlayers = () => db.allCharacters().filter((c) => /^\d+$/.test(c.userId
 
 /** accountView + the character's unique public handle (assignHandles over every real player). */
 function view(char: Parameters<typeof accountView>[0]) {
-  return { ...accountView(char), handle: assignHandles(realPlayers()).get(char.userId) ?? nameHandle(char.name) };
+  return { ...accountView(char), handle: assignHandles(realPlayers()).get(char.userId) ?? nameHandle(char.name), roomArt: roomArt() };
 }
 
 /** Create the character (one per Discord account; a Fiend may start over), then join the guild. */
