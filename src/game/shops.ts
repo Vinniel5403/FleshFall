@@ -15,4 +15,5 @@ export const CONTINENT_STOCK: Record<Continent, string[]> = {
   africa: ['myrrh_balm', 'alchemy_salve', 'hide_tonic', 'wild_flour', 'rusty_chain', 'hunting_bow', 'bone_saw', 'rib_plate', 'sigil', 'placenta'],
   australia: ['eucalyptus_oil', 'alchemy_salve', 'hide_tonic', 'bone_bomb', 'fresh_cut', 'cricket_bat', 'boomerang', 'rusted_armor'],
   antarctica: ['whale_blubber', 'fresh_cut', 'alchemy_salve', 'hide_tonic', 'bone_bomb', 'ice_pick', 'harpoon', 'old_shotgun', 'fur_parka', 'rusted_armor'],
+  unknown: ['bandage', 'alchemy_salve', 'rage_tonic', 'hide_tonic', 'bone_bomb', 'sigil', 'placenta'],
 };

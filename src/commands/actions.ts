@@ -12,7 +12,7 @@ import { chance } from '../game/engine.js';
 import { mods } from '../game/icons.js';
 import { getItem, itemEffects, itemLabel } from '../game/items.js';
 import type { Character, ItemType, Outcome } from '../game/types.js';
-import { CONTINENTS, cityRisk, citiesByContinent, currentZone, getZone, startTravel, tierLegend, travelNotice, zoneLabel, zoneLevel, zoneTier, type Continent } from '../game/zones.js';
+import { CONTINENTS, cityRisk, citiesByContinent, currentZone, getZone, startTravel, tierLegend, travelNotice, zoneLabel, zoneLevel, zoneLevelText, zoneTier, type Continent } from '../game/zones.js';
 import { renderInventoryCard, renderShopCard, renderUpgradeCard } from '../render/itemCards.js';
 import { renderMapCard } from '../render/mapCard.js';
 import { imagePayload, type ImagePayload } from '../render/view.js';
@@ -389,7 +389,7 @@ export function travelEmbed(char: Character): EmbedBuilder {
         citiesByContinent()
           .map(([c, zs]) => {
             const ct = CONTINENTS[c];
-            const list = zs.map((z) => `${z.id === here.id ? '📍' : z.emoji} ${z.name} ${zoneTier(z).emoji}${zoneLevel(z)}`).join(' · ');
+            const list = zs.map((z) => `${z.id === here.id ? '📍' : z.emoji} ${z.name} ${zoneTier(z).emoji}${zoneLevelText(z)}`).join(' · ');
             return `**${ct.emoji} ${ct.name}** — ${ct.icon}
 ${list}`;
           })

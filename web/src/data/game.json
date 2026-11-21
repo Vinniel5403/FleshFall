@@ -36,7 +36,14 @@
    "epic": {
     "name": "Epic",
     "emoji": "🟣",
-    "rec": 12
+    "rec": 12,
+    "scales": true
+   },
+   "legendary": {
+    "name": "Legendary",
+    "emoji": "🌟",
+    "rec": 50,
+    "scales": true
    }
   },
   "doors": {
@@ -677,6 +684,80 @@
       "desc": "ความหนาวที่ไม่ได้ฆ่า แต่ทำให้ทรมานไม่สิ้นสุด ใต้น้ำแข็งมีบางอย่างหิวโหย — ที่มั่นของ Wendigo"
      }
     ]
+   },
+   {
+    "id": "unknown",
+    "name": "Unknown Realm",
+    "emoji": "🌀",
+    "icon": "Thanatos",
+    "door": "purple",
+    "shop": [
+     "bandage",
+     "alchemy_salve",
+     "rage_tonic",
+     "hide_tonic",
+     "bone_bomb",
+     "sigil",
+     "placenta"
+    ],
+    "cities": [
+     {
+      "id": "atlantis",
+      "name": "Atlantis",
+      "emoji": "🔱",
+      "tier": "legendary",
+      "level": 50,
+      "desc": "นครที่จมลงใต้มหาสมุทรโผล่ขึ้นมาหายใจอีกครั้ง ถนนยังเปียก ผู้คนในวิหารยังจมน้ำอยู่ทั้งที่ยืนบนบก"
+     },
+     {
+      "id": "olympus",
+      "name": "Olympus",
+      "emoji": "⛈️",
+      "tier": "legendary",
+      "level": 50,
+      "desc": "ยอดเขาเหนือเมฆที่บัลลังก์ทั้งสิบสองว่างเปล่า ฟ้าผ่าลงมาเป็นจังหวะเหมือนมีใครยังรอคำสั่ง"
+     },
+     {
+      "id": "shangri_la",
+      "name": "Shangri-La",
+      "emoji": "🏯",
+      "tier": "legendary",
+      "level": 50,
+      "desc": "หุบเขาที่ไม่มีใครแก่ลง ไม่มีใครตาย และไม่มีใครได้ออกไปอีกเลย ดอกไม้บานตลอดปีบนกองกระดูก"
+     },
+     {
+      "id": "agartha",
+      "name": "Agartha",
+      "emoji": "💎",
+      "tier": "legendary",
+      "level": 50,
+      "desc": "โลกกลวงใต้ขั้วโลก ดวงอาทิตย์สีแดงดวงเล็กแขวนอยู่กลางแผ่นดิน ผลึกบนผนังถ้ำเต้นตุบเหมือนหัวใจ"
+     },
+     {
+      "id": "purgatory",
+      "name": "Purgatory",
+      "emoji": "⛰️",
+      "tier": "legendary",
+      "level": 50,
+      "desc": "ภูเขาชำระบาปที่ทุกคนปีนไม่หยุด ยิ่งขึ้นสูงยิ่งเหลือเนื้อน้อยลง ไม่มีใครเห็นยอดเขา"
+     },
+     {
+      "id": "limbo",
+      "name": "Limbo",
+      "emoji": "🌫️",
+      "tier": "legendary",
+      "level": 50,
+      "desc": "ชายแดนระหว่างทุกสิ่ง วิญญาณยืนต่อแถวรอการตัดสินที่ไม่มีวันมาถึง หมอกกลืนเสียงจนได้ยินแต่ความคิดตัวเอง"
+     },
+     {
+      "id": "gehenna",
+      "name": "Gehenna",
+      "emoji": "🔥",
+      "tier": "legendary",
+      "level": 50,
+      "desc": "หุบเหวที่ไฟไม่เคยมอดแต่ไม่ให้ความร้อน มันหิว — เถ้าที่ปลิวมาคือคนที่เคยมาก่อนคุณ"
+     }
+    ]
    }
   ]
  },
@@ -875,7 +956,8 @@
    "value": 8,
    "heal": 12,
    "humanity": -3,
-   "description": "เนื้อจากรกในผนังดันเจียนเขียว จืดแต่อยู่ท้อง (+12 เนื้อกาย, -3 ความเป็นมนุษย์)"
+   "description": "เนื้อจากรกในผนังดันเจียนเขียว จืดแต่อยู่ท้อง (+12 เนื้อกาย, -3 ความเป็นมนุษย์)",
+   "rarity": "common"
   },
   {
    "id": "fresh_cut",
@@ -887,7 +969,8 @@
    "heal": 25,
    "stamina": 3,
    "humanity": -6,
-   "description": "หอมหวานจนคลั่ง (+25 เนื้อกาย, +3 แรง, -6 ความเป็นมนุษย์)"
+   "description": "หอมหวานจนคลั่ง (+25 เนื้อกาย, +3 แรง, -6 ความเป็นมนุษย์)",
+   "rarity": "uncommon"
   },
   {
    "id": "rotten_flesh",
@@ -895,7 +978,8 @@
    "emoji": "🦠",
    "type": "material",
    "value": 1,
-   "description": "ต้นกำเนิด Miasma อย่ากินดิบ — เอาไปให้บาร์ปรุงด้วย /cook"
+   "description": "ต้นกำเนิด Miasma อย่ากินดิบ — เอาไปให้บาร์ปรุงด้วย /cook",
+   "rarity": "common"
   },
   {
    "id": "blood_wine",
@@ -905,7 +989,8 @@
    "value": 10,
    "stamina": 3,
    "sanity": 4,
-   "description": "หมักจากเลือด ใช้ปรุงอาหารได้ (+3 แรง, +4 สติ)"
+   "description": "หมักจากเลือด ใช้ปรุงอาหารได้ (+3 แรง, +4 สติ)",
+   "rarity": "common"
   },
   {
    "id": "raw_meat",
@@ -913,7 +998,8 @@
    "emoji": "🥓",
    "type": "material",
    "value": 5,
-   "description": "เนื้อจากสิ่งมีชีวิตใน Old Realm — ไม่ใช่เนื้อสด ปนเปื้อนจนกินดิบไม่ได้ ขายหรือเอาไปย่างที่บาร์"
+   "description": "เนื้อจากสิ่งมีชีวิตใน Old Realm — ไม่ใช่เนื้อสด ปนเปื้อนจนกินดิบไม่ได้ ขายหรือเอาไปย่างที่บาร์",
+   "rarity": "common"
   },
   {
    "id": "fiend_fang",
@@ -921,7 +1007,8 @@
    "emoji": "🦷",
    "type": "material",
    "value": 18,
-   "description": "เขี้ยวจากสัตว์ประหลาดที่เคยเป็นมนุษย์ ช่างทำอาวุธในเกาะรับซื้อ"
+   "description": "เขี้ยวจากสัตว์ประหลาดที่เคยเป็นมนุษย์ ช่างทำอาวุธในเกาะรับซื้อ",
+   "rarity": "common"
   },
   {
    "id": "eye_fruit",
@@ -929,7 +1016,8 @@
    "emoji": "👁️",
    "type": "material",
    "value": 6,
-   "description": "ขึ้นตามโขดหินที่มีกองเนื้อเยอะ ๆ บางทีก็กระพริบ"
+   "description": "ขึ้นตามโขดหินที่มีกองเนื้อเยอะ ๆ บางทีก็กระพริบ",
+   "rarity": "common"
   },
   {
    "id": "wild_flour",
@@ -937,7 +1025,8 @@
    "emoji": "🌾",
    "type": "material",
    "value": 4,
-   "description": "แป้งจากธัญพืชป่าและต้นฟีตัสตามทุ่งร้าง"
+   "description": "แป้งจากธัญพืชป่าและต้นฟีตัสตามทุ่งร้าง",
+   "rarity": "common"
   },
   {
    "id": "instant_noodle",
@@ -947,7 +1036,8 @@
    "value": 12,
    "stamina": 4,
    "sanity": 10,
-   "description": "จากดันเจียนเทา รสชาติของบ้าน... (+4 แรง, +10 สติ)"
+   "description": "จากดันเจียนเทา รสชาติของบ้าน... (+4 แรง, +10 สติ)",
+   "rarity": "common"
   },
   {
    "id": "bourguignon",
@@ -958,7 +1048,8 @@
    "heal": 15,
    "sanity": 25,
    "humanity": 5,
-   "description": "เนื้อตุ๋นไวน์โลหิต นุ่มจนน้ำในเนื้อระเบิดในปาก (+15 เนื้อกาย, +25 สติ, +5 ความเป็นมนุษย์)"
+   "description": "เนื้อตุ๋นไวน์โลหิต นุ่มจนน้ำในเนื้อระเบิดในปาก (+15 เนื้อกาย, +25 สติ, +5 ความเป็นมนุษย์)",
+   "rarity": "uncommon"
   },
   {
    "id": "taragege",
@@ -969,7 +1060,8 @@
    "heal": 20,
    "stamina": 4,
    "humanity": 3,
-   "description": "คาราเกะเนื้อทารกผิดรูป ทอดกรอบ (+20 เนื้อกาย, +4 แรง, +3 ความเป็นมนุษย์)"
+   "description": "คาราเกะเนื้อทารกผิดรูป ทอดกรอบ (+20 เนื้อกาย, +4 แรง, +3 ความเป็นมนุษย์)",
+   "rarity": "uncommon"
   },
   {
    "id": "remnant_stew",
@@ -980,7 +1072,8 @@
    "heal": 8,
    "sanity": 12,
    "humanity": 4,
-   "description": "สูตรประจำบาร์ บรรเทาผลกรรมของ Icon (+8 เนื้อกาย, +12 สติ, +4 ความเป็นมนุษย์)"
+   "description": "สูตรประจำบาร์ บรรเทาผลกรรมของ Icon (+8 เนื้อกาย, +12 สติ, +4 ความเป็นมนุษย์)",
+   "rarity": "common"
   },
   {
    "id": "grilled_meat",
@@ -991,7 +1084,8 @@
    "heal": 14,
    "stamina": 2,
    "humanity": -1,
-   "description": "เนื้อสัตว์จาก Old Realm ย่างจนไหม้ ไม่ใช่เนื้อสด แต่กินได้ (+14 เนื้อกาย, +2 แรง, -1 ความเป็นมนุษย์)"
+   "description": "เนื้อสัตว์จาก Old Realm ย่างจนไหม้ ไม่ใช่เนื้อสด แต่กินได้ (+14 เนื้อกาย, +2 แรง, -1 ความเป็นมนุษย์)",
+   "rarity": "common"
   },
   {
    "id": "hunted_flesh",
@@ -1003,7 +1097,8 @@
    "heal": 14,
    "stamina": 2,
    "humanity": -5,
-   "description": "เนื้อที่ Hound แล่จากเหยื่อสด ๆ ยังอุ่น กินดิบได้แต่มันกัดกินความเป็นมนุษย์ — ส่งให้บาร์ปรุงดีกว่า (+14 เนื้อกาย, +2 แรง, -5 ความเป็นมนุษย์)"
+   "description": "เนื้อที่ Hound แล่จากเหยื่อสด ๆ ยังอุ่น กินดิบได้แต่มันกัดกินความเป็นมนุษย์ — ส่งให้บาร์ปรุงดีกว่า (+14 เนื้อกาย, +2 แรง, -5 ความเป็นมนุษย์)",
+   "rarity": "common"
   },
   {
    "id": "hunter_steak",
@@ -1017,7 +1112,8 @@
     "amount": 2,
     "minutes": 45
    },
-   "description": "เนื้อล่าย่างไฟแรงราดซอสไวน์โลหิต (+10 เนื้อกาย · บัฟ พละ +2 นาน 45 นาที)"
+   "description": "เนื้อล่าย่างไฟแรงราดซอสไวน์โลหิต (+10 เนื้อกาย · บัฟ พละ +2 นาน 45 นาที)",
+   "rarity": "uncommon"
   },
   {
    "id": "shade_tartare",
@@ -1031,7 +1127,8 @@
     "amount": 2,
     "minutes": 45
    },
-   "description": "เนื้อล่าสับดิบคลุกผลดวงตา กินแล้วตัวเบาเหมือนเงา (+6 สติ · บัฟ ว่องไว +2 นาน 45 นาที)"
+   "description": "เนื้อล่าสับดิบคลุกผลดวงตา กินแล้วตัวเบาเหมือนเงา (+6 สติ · บัฟ ว่องไว +2 นาน 45 นาที)",
+   "rarity": "uncommon"
   },
   {
    "id": "seer_consomme",
@@ -1045,7 +1142,8 @@
     "amount": 2,
     "minutes": 45
    },
-   "description": "ซุปใสจนเห็นเงาตัวเองในชาม ประสาทสัมผัสคมขึ้น (+10 สติ · บัฟ สัมผัส +2 นาน 45 นาที)"
+   "description": "ซุปใสจนเห็นเงาตัวเองในชาม ประสาทสัมผัสคมขึ้น (+10 สติ · บัฟ สัมผัส +2 นาน 45 นาที)",
+   "rarity": "uncommon"
   },
   {
    "id": "bone_broth",
@@ -1059,7 +1157,8 @@
     "amount": 2,
     "minutes": 45
    },
-   "description": "เคี่ยวกระดูกกับเนื้อล่าจนข้นเหมือนกาว ผิวหนังด้านขึ้น (+16 เนื้อกาย · บัฟ ลดดาเมจ +2 นาน 45 นาที)"
+   "description": "เคี่ยวกระดูกกับเนื้อล่าจนข้นเหมือนกาว ผิวหนังด้านขึ้น (+16 เนื้อกาย · บัฟ ลดดาเมจ +2 นาน 45 นาที)",
+   "rarity": "uncommon"
   },
   {
    "id": "absinthe",
@@ -1069,7 +1168,8 @@
    "value": 14,
    "stamina": 1,
    "sanity": 12,
-   "description": "เหล้ายุโรปที่ทำให้เห็นนางฟ้าสีเขียว... หรืออะไรที่คล้ายกัน (+1 แรง, +12 สติ)"
+   "description": "เหล้ายุโรปที่ทำให้เห็นนางฟ้าสีเขียว... หรืออะไรที่คล้ายกัน (+1 แรง, +12 สติ)",
+   "rarity": "common"
   },
   {
    "id": "spice_jerky",
@@ -1079,7 +1179,8 @@
    "value": 12,
    "heal": 10,
    "stamina": 2,
-   "description": "เนื้อดิบหมักพริกจนกลบกลิ่น ไม่ใช่เนื้อสด (+10 เนื้อกาย, +2 แรง)"
+   "description": "เนื้อดิบหมักพริกจนกลบกลิ่น ไม่ใช่เนื้อสด (+10 เนื้อกาย, +2 แรง)",
+   "rarity": "common"
   },
   {
    "id": "canned_beans",
@@ -1089,7 +1190,8 @@
    "value": 10,
    "heal": 8,
    "sanity": 6,
-   "description": "ฉลากยังเป็นยี่ห้อจากโลกจริง รสชาติของบ้าน (+8 เนื้อกาย, +6 สติ)"
+   "description": "ฉลากยังเป็นยี่ห้อจากโลกจริง รสชาติของบ้าน (+8 เนื้อกาย, +6 สติ)",
+   "rarity": "common"
   },
   {
    "id": "mate_tea",
@@ -1099,7 +1201,8 @@
    "value": 10,
    "stamina": 4,
    "sanity": 3,
-   "description": "ดูดผ่านหลอดเงิน ขมจนตาสว่าง (+4 แรง, +3 สติ)"
+   "description": "ดูดผ่านหลอดเงิน ขมจนตาสว่าง (+4 แรง, +3 สติ)",
+   "rarity": "common"
   },
   {
    "id": "myrrh_balm",
@@ -1109,7 +1212,8 @@
    "value": 18,
    "heal": 16,
    "humanity": 1,
-   "description": "ยาโบราณของคนดองศพ ทาแล้วแผลหายเร็ว (+16 เนื้อกาย, +1 ความเป็นมนุษย์)"
+   "description": "ยาโบราณของคนดองศพ ทาแล้วแผลหายเร็ว (+16 เนื้อกาย, +1 ความเป็นมนุษย์)",
+   "rarity": "common"
   },
   {
    "id": "eucalyptus_oil",
@@ -1118,7 +1222,8 @@
    "type": "consumable",
    "value": 16,
    "sanity": 15,
-   "description": "กลิ่นแรงพอจะไล่เสียงกระซิบของ Hastur ไปได้สักพัก (+15 สติ)"
+   "description": "กลิ่นแรงพอจะไล่เสียงกระซิบของ Hastur ไปได้สักพัก (+15 สติ)",
+   "rarity": "common"
   },
   {
    "id": "whale_blubber",
@@ -1128,7 +1233,8 @@
    "value": 20,
    "heal": 18,
    "stamina": 3,
-   "description": "ไขมันข้นจากวาฬในน้ำแข็ง กันหนาวได้ดีกว่าเสื้อผ้า (+18 เนื้อกาย, +3 แรง)"
+   "description": "ไขมันข้นจากวาฬในน้ำแข็ง กันหนาวได้ดีกว่าเสื้อผ้า (+18 เนื้อกาย, +3 แรง)",
+   "rarity": "common"
   },
   {
    "id": "bandage",
@@ -1137,7 +1243,8 @@
    "type": "consumable",
    "value": 8,
    "heal": 10,
-   "description": "ห้ามเลือดได้ (+10 เนื้อกาย)"
+   "description": "ห้ามเลือดได้ (+10 เนื้อกาย)",
+   "rarity": "common"
   },
   {
    "id": "alchemy_salve",
@@ -1146,7 +1253,8 @@
    "type": "consumable",
    "value": 25,
    "heal": 22,
-   "description": "ยาที่สาวก Thanatos พึ่งพา (+22 เนื้อกาย)"
+   "description": "ยาที่สาวก Thanatos พึ่งพา (+22 เนื้อกาย)",
+   "rarity": "common"
   },
   {
    "id": "rage_tonic",
@@ -1159,7 +1267,8 @@
     "amount": 1,
     "minutes": 20
    },
-   "description": "เหล้าดองเขี้ยว Fiend กระดกแล้วเลือดสูบฉีดจนมือสั่น (บัฟ พละ +1 นาน 20 นาที)"
+   "description": "เหล้าดองเขี้ยว Fiend กระดกแล้วเลือดสูบฉีดจนมือสั่น (บัฟ พละ +1 นาน 20 นาที)",
+   "rarity": "common"
   },
   {
    "id": "hide_tonic",
@@ -1172,7 +1281,8 @@
     "amount": 1,
     "minutes": 20
    },
-   "description": "ทาแล้วผิวแข็งกระด้างเหมือนหนังตากแห้ง (บัฟ ลดดาเมจ +1 นาน 20 นาที)"
+   "description": "ทาแล้วผิวแข็งกระด้างเหมือนหนังตากแห้ง (บัฟ ลดดาเมจ +1 นาน 20 นาที)",
+   "rarity": "common"
   },
   {
    "id": "fiend_adrenal",
@@ -1186,7 +1296,8 @@
     "amount": 3,
     "minutes": 30
    },
-   "description": "ต่อมสด ๆ จาก Fiend ในเมืองอันตราย กลืนแล้วกล้ามเนื้อกระตุกไม่หยุด (บัฟ พละ +3 นาน 30 นาที, -2 ความเป็นมนุษย์) · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป"
+   "description": "ต่อมสด ๆ จาก Fiend ในเมืองอันตราย กลืนแล้วกล้ามเนื้อกระตุกไม่หยุด (บัฟ พละ +3 นาน 30 นาที, -2 ความเป็นมนุษย์) · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป",
+   "rarity": "rare"
   },
   {
    "id": "bone_bomb",
@@ -1198,7 +1309,8 @@
     6,
     10
    ],
-   "description": "กระป๋องอัดดินปืนกับเศษกระดูก ขว้างตอนล่า — มอนสเตอร์ทุกตัวโดน 6–10 (+ครึ่งเลเวลของคุณ)"
+   "description": "กระป๋องอัดดินปืนกับเศษกระดูก ขว้างตอนล่า — มอนสเตอร์ทุกตัวโดน 6–10 (+ครึ่งเลเวลของคุณ)",
+   "rarity": "uncommon"
   },
   {
    "id": "flesh_grenade",
@@ -1210,7 +1322,8 @@
     14,
     20
    ],
-   "description": "ก้อนเนื้อบวมก๊าซที่ยังเต้นอยู่ ขว้างตอนล่า — มอนสเตอร์ทุกตัวโดน 14–20 (+ครึ่งเลเวลของคุณ) · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป"
+   "description": "ก้อนเนื้อบวมก๊าซที่ยังเต้นอยู่ ขว้างตอนล่า — มอนสเตอร์ทุกตัวโดน 14–20 (+ครึ่งเลเวลของคุณ) · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป",
+   "rarity": "rare"
   },
   {
    "id": "pipe",
@@ -1219,7 +1332,8 @@
    "type": "weapon",
    "value": 4,
    "atk": 1,
-   "description": "ดาเมจ +1 · ทอยพละในเหตุการณ์ +1"
+   "description": "ดาเมจ +1 · ทอยพละในเหตุการณ์ +1",
+   "rarity": "common"
   },
   {
    "id": "walking_cane",
@@ -1228,7 +1342,8 @@
    "type": "weapon",
    "value": 15,
    "atk": 1,
-   "description": "ดาเมจ +1 · ทอยพละในเหตุการณ์ +1 · ดูดีสำหรับคนมีฐานะ"
+   "description": "ดาเมจ +1 · ทอยพละในเหตุการณ์ +1 · ดูดีสำหรับคนมีฐานะ",
+   "rarity": "uncommon"
   },
   {
    "id": "kris",
@@ -1237,7 +1352,8 @@
    "type": "weapon",
    "value": 18,
    "atk": 2,
-   "description": "ดาเมจ +2 · ทอยพละในเหตุการณ์ +2 · แบบเดียวกับของบาทหลวงดาเมียโน"
+   "description": "ดาเมจ +2 · ทอยพละในเหตุการณ์ +2 · แบบเดียวกับของบาทหลวงดาเมียโน",
+   "rarity": "uncommon"
   },
   {
    "id": "carving_knife",
@@ -1246,7 +1362,8 @@
    "type": "weapon",
    "value": 25,
    "atk": 2,
-   "description": "ดาเมจ +2 · ทอยพละในเหตุการณ์ +2 · คมพอจะแล่โดยไม่เหลือเศษ"
+   "description": "ดาเมจ +2 · ทอยพละในเหตุการณ์ +2 · คมพอจะแล่โดยไม่เหลือเศษ",
+   "rarity": "uncommon"
   },
   {
    "id": "bone_club",
@@ -1255,7 +1372,8 @@
    "type": "weapon",
    "value": 20,
    "atk": 2,
-   "description": "ดาเมจ +2 · ทอยพละในเหตุการณ์ +2"
+   "description": "ดาเมจ +2 · ทอยพละในเหตุการณ์ +2",
+   "rarity": "uncommon"
   },
   {
    "id": "bone_saw",
@@ -1264,7 +1382,8 @@
    "type": "weapon",
    "value": 70,
    "atk": 4,
-   "description": "ดาเมจ +4 · ทอยพละในเหตุการณ์ +4"
+   "description": "ดาเมจ +4 · ทอยพละในเหตุการณ์ +4",
+   "rarity": "rare"
   },
   {
    "id": "old_shotgun",
@@ -1273,7 +1392,8 @@
    "type": "weapon",
    "value": 120,
    "atk": 5,
-   "description": "ดาเมจ +5 · ทอยพละในเหตุการณ์ +5 · ของวินเทจที่ยังยิงได้"
+   "description": "ดาเมจ +5 · ทอยพละในเหตุการณ์ +5 · ของวินเทจที่ยังยิงได้",
+   "rarity": "legendary"
   },
   {
    "id": "broken_bottle",
@@ -1282,7 +1402,8 @@
    "type": "weapon",
    "value": 3,
    "atk": 1,
-   "description": "ดาเมจ +1 · ทอยพละในเหตุการณ์ +1 · คอขวดคมกริบ ยังมีกลิ่นเหล้าติดอยู่"
+   "description": "ดาเมจ +1 · ทอยพละในเหตุการณ์ +1 · คอขวดคมกริบ ยังมีกลิ่นเหล้าติดอยู่",
+   "rarity": "common"
   },
   {
    "id": "meat_hook",
@@ -1291,7 +1412,8 @@
    "type": "weapon",
    "value": 10,
    "atk": 1,
-   "description": "ดาเมจ +1 · ทอยพละในเหตุการณ์ +1 · ถอดมาจากราวในห้องเย็น"
+   "description": "ดาเมจ +1 · ทอยพละในเหตุการณ์ +1 · ถอดมาจากราวในห้องเย็น",
+   "rarity": "uncommon"
   },
   {
    "id": "claw_hammer",
@@ -1300,7 +1422,8 @@
    "type": "weapon",
    "value": 22,
    "atk": 2,
-   "description": "ดาเมจ +2 · ทอยพละในเหตุการณ์ +2 · ด้านหนึ่งตอก อีกด้านงัด อะไรก็ได้"
+   "description": "ดาเมจ +2 · ทอยพละในเหตุการณ์ +2 · ด้านหนึ่งตอก อีกด้านงัด อะไรก็ได้",
+   "rarity": "uncommon"
   },
   {
    "id": "ice_pick",
@@ -1309,7 +1432,8 @@
    "type": "weapon",
    "value": 24,
    "atk": 2,
-   "description": "ดาเมจ +2 · ทอยพละในเหตุการณ์ +2 · เจาะน้ำแข็งก็ได้ เจาะอย่างอื่นก็ดี"
+   "description": "ดาเมจ +2 · ทอยพละในเหตุการณ์ +2 · เจาะน้ำแข็งก็ได้ เจาะอย่างอื่นก็ดี",
+   "rarity": "uncommon"
   },
   {
    "id": "cricket_bat",
@@ -1318,7 +1442,8 @@
    "type": "weapon",
    "value": 22,
    "atk": 2,
-   "description": "ดาเมจ +2 · ทอยพละในเหตุการณ์ +2 · ตะปูเป็นสนิมทุกดอก"
+   "description": "ดาเมจ +2 · ทอยพละในเหตุการณ์ +2 · ตะปูเป็นสนิมทุกดอก",
+   "rarity": "uncommon"
   },
   {
    "id": "rusty_chain",
@@ -1327,7 +1452,8 @@
    "type": "weapon",
    "value": 40,
    "atk": 3,
-   "description": "ดาเมจ +3 · ทอยพละในเหตุการณ์ +3 · ปลายโซ่ยังมีกุญแจมือติดอยู่"
+   "description": "ดาเมจ +3 · ทอยพละในเหตุการณ์ +3 · ปลายโซ่ยังมีกุญแจมือติดอยู่",
+   "rarity": "rare"
   },
   {
    "id": "machete",
@@ -1336,7 +1462,8 @@
    "type": "weapon",
    "value": 42,
    "atk": 3,
-   "description": "ดาเมจ +3 · ทอยพละในเหตุการณ์ +3 · ฟันทีเดียวขาด ทั้งอ้อยและเถาเนื้อ"
+   "description": "ดาเมจ +3 · ทอยพละในเหตุการณ์ +3 · ฟันทีเดียวขาด ทั้งอ้อยและเถาเนื้อ",
+   "rarity": "uncommon"
   },
   {
    "id": "boomerang",
@@ -1345,7 +1472,8 @@
    "type": "weapon",
    "value": 45,
    "atk": 3,
-   "description": "ดาเมจ +3 · ทอยพละในเหตุการณ์ +3 · ขว้างแล้วกลับมาเสมอ บางทีก็พาอะไรติดมาด้วย"
+   "description": "ดาเมจ +3 · ทอยพละในเหตุการณ์ +3 · ขว้างแล้วกลับมาเสมอ บางทีก็พาอะไรติดมาด้วย",
+   "rarity": "rare"
   },
   {
    "id": "hunting_bow",
@@ -1354,7 +1482,8 @@
    "type": "weapon",
    "value": 80,
    "atk": 4,
-   "description": "ดาเมจ +4 · ทอยพละในเหตุการณ์ +4 · สายธนูทำจากเอ็น — ไม่มีใครถามว่าเอ็นของอะไร"
+   "description": "ดาเมจ +4 · ทอยพละในเหตุการณ์ +4 · สายธนูทำจากเอ็น — ไม่มีใครถามว่าเอ็นของอะไร",
+   "rarity": "legendary"
   },
   {
    "id": "harpoon",
@@ -1363,7 +1492,8 @@
    "type": "weapon",
    "value": 75,
    "atk": 4,
-   "description": "ดาเมจ +4 · ทอยพละในเหตุการณ์ +4 · จากเรือล่าวาฬที่ติดอยู่ในน้ำแข็ง"
+   "description": "ดาเมจ +4 · ทอยพละในเหตุการณ์ +4 · จากเรือล่าวาฬที่ติดอยู่ในน้ำแข็ง",
+   "rarity": "legendary"
   },
   {
    "id": "katana",
@@ -1372,7 +1502,8 @@
    "type": "weapon",
    "value": 130,
    "atk": 5,
-   "description": "ดาเมจ +5 · ทอยพละในเหตุการณ์ +5 · ใบดาบบิ่นเป็นรูปฟัน ราวกับเคยฟันอะไรที่กัดตอบ"
+   "description": "ดาเมจ +5 · ทอยพละในเหตุการณ์ +5 · ใบดาบบิ่นเป็นรูปฟัน ราวกับเคยฟันอะไรที่กัดตอบ",
+   "rarity": "legendary"
   },
   {
    "id": "sledgehammer",
@@ -1381,7 +1512,8 @@
    "type": "weapon",
    "value": 110,
    "atk": 5,
-   "description": "ดาเมจ +5 · ทอยพละในเหตุการณ์ +5 · หนักจนเหวี่ยงทีเดียวเหนื่อยไปครึ่งวัน"
+   "description": "ดาเมจ +5 · ทอยพละในเหตุการณ์ +5 · หนักจนเหวี่ยงทีเดียวเหนื่อยไปครึ่งวัน",
+   "rarity": "rare"
   },
   {
    "id": "butcher_cleaver",
@@ -1390,7 +1522,8 @@
    "type": "weapon",
    "value": 180,
    "atk": 6,
-   "description": "ดาเมจ +6 · ทอยพละในเหตุการณ์ +6 · หนักจนต้องจับสองมือ · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป"
+   "description": "ดาเมจ +6 · ทอยพละในเหตุการณ์ +6 · หนักจนต้องจับสองมือ · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป",
+   "rarity": "rare"
   },
   {
    "id": "knight_sword",
@@ -1399,7 +1532,8 @@
    "type": "weapon",
    "value": 260,
    "atk": 7,
-   "description": "ดาเมจ +7 · ทอยพละในเหตุการณ์ +7 · คู่กับเกราะของเจ้าของเดิม คมกว่าที่สนิมบอก · ดรอปเฉพาะเมืองระดับ Epic"
+   "description": "ดาเมจ +7 · ทอยพละในเหตุการณ์ +7 · คู่กับเกราะของเจ้าของเดิม คมกว่าที่สนิมบอก · ดรอปเฉพาะเมืองระดับ Epic",
+   "rarity": "legendary"
   },
   {
    "id": "revolver",
@@ -1408,7 +1542,8 @@
    "type": "weapon",
    "value": 190,
    "atk": 6,
-   "description": "ดาเมจ +6 · ทอยพละในเหตุการณ์ +6 · ในรังเหลือกระสุนแกะสลักชื่อคนไว้ทุกนัด · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป"
+   "description": "ดาเมจ +6 · ทอยพละในเหตุการณ์ +6 · ในรังเหลือกระสุนแกะสลักชื่อคนไว้ทุกนัด · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป",
+   "rarity": "rare"
   },
   {
    "id": "spine_whip",
@@ -1417,7 +1552,8 @@
    "type": "weapon",
    "value": 200,
    "atk": 6,
-   "description": "ดาเมจ +6 · ทอยพละในเหตุการณ์ +6 · ข้อกระดูกยังขยับเองเวลาเหวี่ยง · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป"
+   "description": "ดาเมจ +6 · ทอยพละในเหตุการณ์ +6 · ข้อกระดูกยังขยับเองเวลาเหวี่ยง · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป",
+   "rarity": "legendary"
   },
   {
    "id": "chainsaw",
@@ -1426,7 +1562,8 @@
    "type": "weapon",
    "value": 340,
    "atk": 8,
-   "description": "ดาเมจ +8 · ทอยพละในเหตุการณ์ +8 · ไม่มีน้ำมันแต่ยังติดเครื่องได้ — อย่าถามว่าด้วยอะไร · ดรอปเฉพาะเมืองระดับ Epic"
+   "description": "ดาเมจ +8 · ทอยพละในเหตุการณ์ +8 · ไม่มีน้ำมันแต่ยังติดเครื่องได้ — อย่าถามว่าด้วยอะไร · ดรอปเฉพาะเมืองระดับ Epic",
+   "rarity": "legendary"
   },
   {
    "id": "blood_apron",
@@ -1435,7 +1572,8 @@
    "type": "armor",
    "value": 12,
    "def": 1,
-   "description": "ลดดาเมจ 1"
+   "description": "ลดดาเมจ 1",
+   "rarity": "uncommon"
   },
   {
    "id": "feed_sack",
@@ -1444,7 +1582,8 @@
    "type": "armor",
    "value": 6,
    "def": 1,
-   "description": "ลดดาเมจ 1 คันทั้งตัว แต่ดีกว่าไม่มี"
+   "description": "ลดดาเมจ 1 คันทั้งตัว แต่ดีกว่าไม่มี",
+   "rarity": "common"
   },
   {
    "id": "rain_poncho",
@@ -1453,7 +1592,8 @@
    "type": "armor",
    "value": 10,
    "def": 1,
-   "description": "ลดดาเมจ 1 เลือดไม่ซึม ล้างทีเดียวออก"
+   "description": "ลดดาเมจ 1 เลือดไม่ซึม ล้างทีเดียวออก",
+   "rarity": "common"
   },
   {
    "id": "leather_coat",
@@ -1462,7 +1602,8 @@
    "type": "armor",
    "value": 25,
    "def": 2,
-   "description": "ลดดาเมจ 2"
+   "description": "ลดดาเมจ 2",
+   "rarity": "common"
   },
   {
    "id": "biker_jacket",
@@ -1471,7 +1612,8 @@
    "type": "armor",
    "value": 30,
    "def": 2,
-   "description": "ลดดาเมจ 2 หมุดเหล็กเต็มหลัง ชื่อแก๊งถูกขูดออก"
+   "description": "ลดดาเมจ 2 หมุดเหล็กเต็มหลัง ชื่อแก๊งถูกขูดออก",
+   "rarity": "rare"
   },
   {
    "id": "maid_corset",
@@ -1480,7 +1622,8 @@
    "type": "armor",
    "value": 35,
    "def": 2,
-   "description": "ลดดาเมจ 2 ระบายลูกไม้ซ่อนแผ่นเหล็กไว้ข้างใน"
+   "description": "ลดดาเมจ 2 ระบายลูกไม้ซ่อนแผ่นเหล็กไว้ข้างใน",
+   "rarity": "uncommon"
   },
   {
    "id": "chainmail_apron",
@@ -1489,7 +1632,8 @@
    "type": "armor",
    "value": 60,
    "def": 3,
-   "description": "ลดดาเมจ 3 แบบที่คนแล่เนื้อใส่กันมีดบาด"
+   "description": "ลดดาเมจ 3 แบบที่คนแล่เนื้อใส่กันมีดบาด",
+   "rarity": "uncommon"
   },
   {
    "id": "fur_parka",
@@ -1498,7 +1642,8 @@
    "type": "armor",
    "value": 65,
    "def": 3,
-   "description": "ลดดาเมจ 3 ขนหนาจนเขี้ยวจมไม่ถึงเนื้อ"
+   "description": "ลดดาเมจ 3 ขนหนาจนเขี้ยวจมไม่ถึงเนื้อ",
+   "rarity": "rare"
   },
   {
    "id": "riot_vest",
@@ -1507,7 +1652,8 @@
    "type": "armor",
    "value": 70,
    "def": 3,
-   "description": "ลดดาเมจ 3 ป้ายชื่อตำรวจถูกฉีกทิ้ง"
+   "description": "ลดดาเมจ 3 ป้ายชื่อตำรวจถูกฉีกทิ้ง",
+   "rarity": "legendary"
   },
   {
    "id": "samurai_do",
@@ -1516,7 +1662,8 @@
    "type": "armor",
    "value": 95,
    "def": 4,
-   "description": "ลดดาเมจ 4 เชือกถักขาดหลายเส้น แต่แผ่นเกราะยังแข็ง"
+   "description": "ลดดาเมจ 4 เชือกถักขาดหลายเส้น แต่แผ่นเกราะยังแข็ง",
+   "rarity": "legendary"
   },
   {
    "id": "rib_plate",
@@ -1525,7 +1672,8 @@
    "type": "armor",
    "value": 100,
    "def": 4,
-   "description": "ลดดาเมจ 4 ซี่โครงขนาดใหญ่เกินกว่าจะเป็นของคน"
+   "description": "ลดดาเมจ 4 ซี่โครงขนาดใหญ่เกินกว่าจะเป็นของคน",
+   "rarity": "legendary"
   },
   {
    "id": "rusted_armor",
@@ -1534,7 +1682,8 @@
    "type": "armor",
    "value": 90,
    "def": 4,
-   "description": "ลดดาเมจ 4 ยังมีคราบของเจ้าของเดิม"
+   "description": "ลดดาเมจ 4 ยังมีคราบของเจ้าของเดิม",
+   "rarity": "legendary"
   },
   {
    "id": "hazmat_suit",
@@ -1543,7 +1692,8 @@
    "type": "armor",
    "value": 120,
    "def": 4,
-   "description": "ลดดาเมจ 4 กรองกลิ่น Miasma ไม่ได้ แต่ฟันฉีกไม่เข้า · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป"
+   "description": "ลดดาเมจ 4 กรองกลิ่น Miasma ไม่ได้ แต่ฟันฉีกไม่เข้า · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป",
+   "rarity": "rare"
   },
   {
    "id": "diving_suit",
@@ -1552,7 +1702,8 @@
    "type": "armor",
    "value": 190,
    "def": 5,
-   "description": "ลดดาเมจ 5 หมวกทองเหลืองมีรอยข่วนจากด้านใน · ดรอปเฉพาะเมืองระดับ Epic"
+   "description": "ลดดาเมจ 5 หมวกทองเหลืองมีรอยข่วนจากด้านใน · ดรอปเฉพาะเมืองระดับ Epic",
+   "rarity": "rare"
   },
   {
    "id": "fiend_hide",
@@ -1561,7 +1712,8 @@
    "type": "armor",
    "value": 200,
    "def": 5,
-   "description": "ลดดาเมจ 5 หนังฟอกที่ยังอุ่นเหมือนมีชีวิต · ดรอปเฉพาะเมืองระดับ Epic"
+   "description": "ลดดาเมจ 5 หนังฟอกที่ยังอุ่นเหมือนมีชีวิต · ดรอปเฉพาะเมืองระดับ Epic",
+   "rarity": "legendary"
   },
   {
    "id": "flesh_carapace",
@@ -1570,7 +1722,78 @@
    "type": "armor",
    "value": 320,
    "def": 6,
-   "description": "ลดดาเมจ 6 เนื้อที่แข็งตัวเป็นกระดอง ใส่นานไปจะติดผิว · ดรอปเฉพาะเมืองระดับ Epic"
+   "description": "ลดดาเมจ 6 เนื้อที่แข็งตัวเป็นกระดอง ใส่นานไปจะติดผิว · ดรอปเฉพาะเมืองระดับ Epic",
+   "rarity": "legendary"
+  },
+  {
+   "id": "atlantis_trident",
+   "name": "ตรีศูลนครจมสมุทร",
+   "emoji": "🔱",
+   "type": "weapon",
+   "value": 1200,
+   "atk": 12,
+   "rarity": "legendary",
+   "description": "ดาเมจ +12 · ทอยพละในเหตุการณ์ +12 · น้ำทะเลยังหยดจากปลายง่าม ทั้งที่ขึ้นบกมาเป็นพันปี · ของตำนาน"
+  },
+  {
+   "id": "agartha_blade",
+   "name": "ดาบผลึกอการ์ธา",
+   "emoji": "💎",
+   "type": "weapon",
+   "value": 1350,
+   "atk": 13,
+   "rarity": "legendary",
+   "description": "ดาเมจ +13 · ทอยพละในเหตุการณ์ +13 · ผลึกจากใจกลางโลกกลวง เต้นตุบในมือเหมือนหัวใจดวงที่สอง · ของตำนาน"
+  },
+  {
+   "id": "purgatory_scythe",
+   "name": "เคียวชำระบาป",
+   "emoji": "⚰️",
+   "type": "weapon",
+   "value": 1350,
+   "atk": 13,
+   "rarity": "legendary",
+   "description": "ดาเมจ +13 · ทอยพละในเหตุการณ์ +13 · ทุกครั้งที่ฟัน บาปของอีกฝ่ายหลุดออกมาเป็นชิ้นเนื้อ · ของตำนาน"
+  },
+  {
+   "id": "gehenna_cleaver",
+   "name": "ปังตอไฟเกเฮนนา",
+   "emoji": "🔥",
+   "type": "weapon",
+   "value": 1500,
+   "atk": 14,
+   "rarity": "legendary",
+   "description": "ดาเมจ +14 · ทอยพละในเหตุการณ์ +14 · ไฟบนใบมีดไม่เคยมอดและไม่ร้อน — มันหิว · ของตำนาน"
+  },
+  {
+   "id": "olympus_aegis",
+   "name": "เกราะอีจิสแห่งโอลิมปัส",
+   "emoji": "🛡️",
+   "type": "armor",
+   "value": 1200,
+   "def": 9,
+   "rarity": "legendary",
+   "description": "ลดดาเมจ 9 หน้าเมดูซ่ากลางอกเกราะยังกะพริบตาเวลามีอะไรเข้าใกล้ · ของตำนาน"
+  },
+  {
+   "id": "shangri_la_robe",
+   "name": "จีวรแชงกรีลา",
+   "emoji": "👘",
+   "type": "armor",
+   "value": 1200,
+   "def": 9,
+   "rarity": "legendary",
+   "description": "ลดดาเมจ 9 คนสวมไม่แก่ลงอีกเลย แต่ก็ไม่ได้มีชีวิตมากขึ้น · ของตำนาน"
+  },
+  {
+   "id": "limbo_shroud",
+   "name": "ผ้าคลุมลิมโบ",
+   "emoji": "🌫️",
+   "type": "armor",
+   "value": 1400,
+   "def": 10,
+   "rarity": "legendary",
+   "description": "ลดดาเมจ 10 ทอจากความรอคอยของวิญญาณที่ไปไหนไม่ได้ เขี้ยวที่กัดลงไปจะหลงอยู่ในเนื้อผ้า · ของตำนาน"
   },
   {
    "id": "lighter",
@@ -1578,7 +1801,8 @@
    "emoji": "🔥",
    "type": "vintage",
    "value": 35,
-   "description": "แสงสว่างที่ช่วยชีวิตในดันเจียนเหลือง"
+   "description": "แสงสว่างที่ช่วยชีวิตในดันเจียนเหลือง",
+   "rarity": "uncommon"
   },
   {
    "id": "dead_phone",
@@ -1586,7 +1810,8 @@
    "emoji": "📱",
    "type": "vintage",
    "value": 60,
-   "description": "ใช้ไม่ได้ แต่ Patron ยอมจ่ายแพง"
+   "description": "ใช้ไม่ได้ แต่ Patron ยอมจ่ายแพง",
+   "rarity": "rare"
   },
   {
    "id": "family_photo",
@@ -1594,7 +1819,8 @@
    "emoji": "🖼️",
    "type": "vintage",
    "value": 45,
-   "description": "หน้าคนในรูปเริ่มเลือนลาง"
+   "description": "หน้าคนในรูปเริ่มเลือนลาง",
+   "rarity": "rare"
   },
   {
    "id": "pocket_watch",
@@ -1602,7 +1828,8 @@
    "emoji": "⌚",
    "type": "vintage",
    "value": 55,
-   "description": "เข็มเดินถอยหลัง"
+   "description": "เข็มเดินถอยหลัง",
+   "rarity": "rare"
   },
   {
    "id": "vinyl_record",
@@ -1610,7 +1837,8 @@
    "emoji": "💿",
    "type": "vintage",
    "value": 70,
-   "description": "เพลงที่ไม่มีใครในเกาะจำได้"
+   "description": "เพลงที่ไม่มีใครในเกาะจำได้",
+   "rarity": "rare"
   },
   {
    "id": "old_coin",
@@ -1618,7 +1846,8 @@
    "emoji": "🪙",
    "type": "vintage",
    "value": 30,
-   "description": "รูปคนบนเหรียญหันหน้ามามองคุณ"
+   "description": "รูปคนบนเหรียญหันหน้ามามองคุณ",
+   "rarity": "rare"
   },
   {
    "id": "train_ticket",
@@ -1626,7 +1855,8 @@
    "emoji": "🎫",
    "type": "vintage",
    "value": 25,
-   "description": "ปลายทางเขียนว่า \"บ้าน\" แต่ไม่มีสถานีไหนชื่อนี้"
+   "description": "ปลายทางเขียนว่า \"บ้าน\" แต่ไม่มีสถานีไหนชื่อนี้",
+   "rarity": "common"
   },
   {
    "id": "lipstick",
@@ -1634,7 +1864,8 @@
    "emoji": "💄",
    "type": "vintage",
    "value": 30,
-   "description": "สีแดงสด เหมือนเลือดที่ยังไม่แห้ง"
+   "description": "สีแดงสด เหมือนเลือดที่ยังไม่แห้ง",
+   "rarity": "uncommon"
   },
   {
    "id": "love_letter",
@@ -1642,7 +1873,8 @@
    "emoji": "💌",
    "type": "vintage",
    "value": 35,
-   "description": "ผนึกซองไว้ ไม่มีใครกล้าเปิด"
+   "description": "ผนึกซองไว้ ไม่มีใครกล้าเปิด",
+   "rarity": "uncommon"
   },
   {
    "id": "cassette_tape",
@@ -1650,7 +1882,8 @@
    "emoji": "📼",
    "type": "vintage",
    "value": 40,
-   "description": "เทปอัดเสียงร้องเพลงวันเกิด เสียงคนร้องค่อย ๆ เพี้ยน"
+   "description": "เทปอัดเสียงร้องเพลงวันเกิด เสียงคนร้องค่อย ๆ เพี้ยน",
+   "rarity": "rare"
   },
   {
    "id": "teddy_bear",
@@ -1658,7 +1891,8 @@
    "emoji": "🧸",
    "type": "vintage",
    "value": 40,
-   "description": "ปุยนุ่นทะลักออกมา ปนกับอะไรที่ไม่ใช่นุ่น"
+   "description": "ปุยนุ่นทะลักออกมา ปนกับอะไรที่ไม่ใช่นุ่น",
+   "rarity": "uncommon"
   },
   {
    "id": "comic_book",
@@ -1666,7 +1900,8 @@
    "emoji": "📚",
    "type": "vintage",
    "value": 45,
-   "description": "ฉบับพิมพ์ครั้งแรก หน้าสุดท้ายถูกฉีกหาย"
+   "description": "ฉบับพิมพ์ครั้งแรก หน้าสุดท้ายถูกฉีกหาย",
+   "rarity": "uncommon"
   },
   {
    "id": "gold_glasses",
@@ -1674,7 +1909,8 @@
    "emoji": "👓",
    "type": "vintage",
    "value": 45,
-   "description": "สวมแล้วเห็นโลกชัดขึ้น... ชัดเกินไป"
+   "description": "สวมแล้วเห็นโลกชัดขึ้น... ชัดเกินไป",
+   "rarity": "rare"
   },
   {
    "id": "harmonica",
@@ -1682,7 +1918,8 @@
    "emoji": "🎵",
    "type": "vintage",
    "value": 50,
-   "description": "เป่าเบา ๆ แล้วมีเสียงตอบมาจากที่ไกล ๆ"
+   "description": "เป่าเบา ๆ แล้วมีเสียงตอบมาจากที่ไกล ๆ",
+   "rarity": "uncommon"
   },
   {
    "id": "wedding_ring",
@@ -1690,7 +1927,8 @@
    "emoji": "💍",
    "type": "vintage",
    "value": 50,
-   "description": "สลักชื่อสองคนไว้ด้านใน ชื่อหนึ่งถูกขูดออก"
+   "description": "สลักชื่อสองคนไว้ด้านใน ชื่อหนึ่งถูกขูดออก",
+   "rarity": "rare"
   },
   {
    "id": "film_camera",
@@ -1698,7 +1936,8 @@
    "emoji": "📷",
    "type": "vintage",
    "value": 75,
-   "description": "ฟิล์มม้วนสุดท้ายยังไม่ได้ล้าง อย่าล้างเลย"
+   "description": "ฟิล์มม้วนสุดท้ายยังไม่ได้ล้าง อย่าล้างเลย",
+   "rarity": "legendary"
   },
   {
    "id": "handheld_game",
@@ -1706,7 +1945,8 @@
    "emoji": "🎮",
    "type": "vintage",
    "value": 80,
-   "description": "ถ่านหมดไปนานแล้ว แต่ไฟสถานะยังกะพริบ"
+   "description": "ถ่านหมดไปนานแล้ว แต่ไฟสถานะยังกะพริบ",
+   "rarity": "legendary"
   },
   {
    "id": "tube_radio",
@@ -1716,7 +1956,8 @@
    "decor": true,
    "value": 110,
    "description": "เปิดแล้วมีแต่เสียงซ่า กับเสียงใครบางคนเรียกชื่อคุณ · ของเก่าแต่งห้อง",
-   "furniture": "decor-tube-radio"
+   "furniture": "decor-tube-radio",
+   "rarity": "rare"
   },
   {
    "id": "rotary_phone",
@@ -1726,7 +1967,8 @@
    "decor": true,
    "value": 100,
    "description": "สายขาดไปนานแล้ว แต่บางคืนมันยังดัง · ของเก่าแต่งห้อง",
-   "furniture": "decor-rotary-phone"
+   "furniture": "decor-rotary-phone",
+   "rarity": "rare"
   },
   {
    "id": "crt_tv",
@@ -1736,7 +1978,8 @@
    "decor": true,
    "value": 140,
    "description": "จอเป็นเม็ดหิมะ มองนานพอจะเห็นห้องของคุณเอง · ของเก่าแต่งห้อง",
-   "furniture": "decor-crt-tv"
+   "furniture": "decor-crt-tv",
+   "rarity": "rare"
   },
   {
    "id": "typewriter",
@@ -1746,7 +1989,8 @@
    "decor": true,
    "value": 120,
    "description": "กระดาษที่ค้างอยู่พิมพ์คำเดียวซ้ำทั้งหน้า · ของเก่าแต่งห้อง",
-   "furniture": "decor-typewriter"
+   "furniture": "decor-typewriter",
+   "rarity": "rare"
   },
   {
    "id": "oil_lamp",
@@ -1756,7 +2000,8 @@
    "decor": true,
    "value": 90,
    "description": "เปลวไฟเอนเข้าหาคนเสมอ · ของเก่าแต่งห้อง",
-   "furniture": "decor-oil-lamp"
+   "furniture": "decor-oil-lamp",
+   "rarity": "rare"
   },
   {
    "id": "cracked_mirror",
@@ -1766,7 +2011,8 @@
    "decor": true,
    "value": 100,
    "description": "เงาในกระจกขยับช้ากว่าคุณครึ่งจังหวะ · ของเก่าแต่งห้อง",
-   "furniture": "decor-cracked-mirror"
+   "furniture": "decor-cracked-mirror",
+   "rarity": "rare"
   },
   {
    "id": "snow_globe",
@@ -1776,7 +2022,8 @@
    "decor": true,
    "value": 100,
    "description": "เขย่าแล้วบ้านหลังจิ๋วข้างในเปิดไฟ · ของเก่าแต่งห้อง",
-   "furniture": "decor-snow-globe"
+   "furniture": "decor-snow-globe",
+   "rarity": "rare"
   },
   {
    "id": "porcelain_doll",
@@ -1786,7 +2033,8 @@
    "decor": true,
    "value": 110,
    "description": "วางไว้หันหน้าเข้าผนัง ตื่นมามันหันออกเสมอ · ของเก่าแต่งห้อง",
-   "furniture": "decor-porcelain-doll"
+   "furniture": "decor-porcelain-doll",
+   "rarity": "rare"
   },
   {
    "id": "birdcage",
@@ -1796,7 +2044,8 @@
    "decor": true,
    "value": 110,
    "description": "ประตูกรงปิดสนิท แต่ยังได้ยินเสียงปีกกระพือ · ของเก่าแต่งห้อง",
-   "furniture": "decor-birdcage"
+   "furniture": "decor-birdcage",
+   "rarity": "rare"
   },
   {
    "id": "music_box",
@@ -1806,7 +2055,8 @@
    "decor": true,
    "value": 120,
    "description": "นักบัลเลต์จิ๋วหมุนทวนเข็มนาฬิกา · ของเก่าแต่งห้อง",
-   "furniture": "decor-music-box"
+   "furniture": "decor-music-box",
+   "rarity": "rare"
   },
   {
    "id": "rocking_chair",
@@ -1816,7 +2066,8 @@
    "decor": true,
    "value": 120,
    "description": "โยกเองเบา ๆ ทุกคืนตอนตีสาม · ของเก่าแต่งห้อง",
-   "furniture": "decor-rocking-chair"
+   "furniture": "decor-rocking-chair",
+   "rarity": "rare"
   },
   {
    "id": "gramophone",
@@ -1826,7 +2077,8 @@
    "decor": true,
    "value": 130,
    "description": "เปิดเพลงวอลทซ์ที่ไม่มีใครแต่ง · ของเก่าแต่งห้อง",
-   "furniture": "decor-gramophone"
+   "furniture": "decor-gramophone",
+   "rarity": "rare"
   },
   {
    "id": "sewing_machine",
@@ -1836,7 +2088,8 @@
    "decor": true,
    "value": 130,
    "description": "ด้ายในกระสวยเป็นสีแดงคล้ำ · ของเก่าแต่งห้อง",
-   "furniture": "decor-sewing-machine"
+   "furniture": "decor-sewing-machine",
+   "rarity": "rare"
   },
   {
    "id": "dollhouse",
@@ -1846,7 +2099,8 @@
    "decor": true,
    "value": 150,
    "description": "ผังห้องเหมือนห้องของคุณทุกกระเบียดนิ้ว · ของเก่าแต่งห้อง",
-   "furniture": "decor-dollhouse"
+   "furniture": "decor-dollhouse",
+   "rarity": "rare"
   },
   {
    "id": "deer_trophy",
@@ -1856,7 +2110,8 @@
    "decor": true,
    "value": 170,
    "description": "ตาแก้วเปียกชื้นเหมือนเพิ่งร้องไห้ · ของเก่าแต่งห้อง",
-   "furniture": "decor-deer-trophy"
+   "furniture": "decor-deer-trophy",
+   "rarity": "rare"
   },
   {
    "id": "clawfoot_tub",
@@ -1866,7 +2121,8 @@
    "decor": true,
    "value": 190,
    "description": "คราบวงแหวนรอบอ่างไม่ใช่สีของสบู่ · ของเก่าแต่งห้อง",
-   "furniture": "decor-clawfoot-tub"
+   "furniture": "decor-clawfoot-tub",
+   "rarity": "rare"
   },
   {
    "id": "grandfather_clock",
@@ -1876,7 +2132,8 @@
    "decor": true,
    "value": 200,
    "description": "ตีบอกเวลาสิบสามครั้ง จากคฤหาสน์ร้างในยุโรป · ของเก่าแต่งห้อง",
-   "furniture": "decor-grandfather-clock"
+   "furniture": "decor-grandfather-clock",
+   "rarity": "uncommon"
   },
   {
    "id": "paper_lantern",
@@ -1886,7 +2143,8 @@
    "decor": true,
    "value": 160,
    "description": "จุดแล้วส่องเห็นแต่สิ่งที่ไม่ควรเห็น จากตลาดกลางคืนในเอเชีย · ของเก่าแต่งห้อง",
-   "furniture": "decor-paper-lantern"
+   "furniture": "decor-paper-lantern",
+   "rarity": "uncommon"
   },
   {
    "id": "jukebox",
@@ -1896,7 +2154,8 @@
    "decor": true,
    "value": 220,
    "description": "เล่นเพลงเดียวซ้ำไปมา ทั้งที่ไม่มีใครหยอดเหรียญ จากร้านอาหารข้างทางในอเมริกา · ของเก่าแต่งห้อง",
-   "furniture": "decor-jukebox"
+   "furniture": "decor-jukebox",
+   "rarity": "uncommon"
   },
   {
    "id": "carnival_mask",
@@ -1906,7 +2165,8 @@
    "decor": true,
    "value": 160,
    "description": "แขวนผนังไว้ดีกว่าสวม เพราะมันถอดไม่ออก จากขบวนแห่ในอเมริกาใต้ · ของเก่าแต่งห้อง",
-   "furniture": "decor-carnival-mask"
+   "furniture": "decor-carnival-mask",
+   "rarity": "uncommon"
   },
   {
    "id": "hide_drum",
@@ -1916,7 +2176,8 @@
    "decor": true,
    "value": 170,
    "description": "วางเฉย ๆ ก็ยังได้ยินจังหวะเบา ๆ จากข้างใน จากแอฟริกา · ของเก่าแต่งห้อง",
-   "furniture": "decor-hide-drum"
+   "furniture": "decor-hide-drum",
+   "rarity": "uncommon"
   },
   {
    "id": "outback_sign",
@@ -1926,7 +2187,8 @@
    "decor": true,
    "value": 230,
    "description": "ป้ายสังกะสีรูปสัตว์ที่ไม่มีอยู่จริง จากถนนสายเปลี่ยวในออสเตรเลีย · ของเก่าแต่งห้อง",
-   "furniture": "decor-outback-sign"
+   "furniture": "decor-outback-sign",
+   "rarity": "uncommon"
   },
   {
    "id": "expedition_crate",
@@ -1936,7 +2198,8 @@
    "decor": true,
    "value": 260,
    "description": "ตีตราปี 1912 ข้างในว่างเปล่า มีรอยเล็บขูดจากด้านใน จากแอนตาร์กติกา · ของเก่าแต่งห้อง",
-   "furniture": "decor-expedition-crate"
+   "furniture": "decor-expedition-crate",
+   "rarity": "uncommon"
   },
   {
    "id": "candelabra",
@@ -1946,7 +2209,8 @@
    "decor": true,
    "value": 180,
    "description": "เทียนละลายขึ้นข้างบนแทนที่จะไหลลง จากโบสถ์ร้างในยุโรป · ของเก่าแต่งห้อง",
-   "furniture": "decor-candelabra"
+   "furniture": "decor-candelabra",
+   "rarity": "uncommon"
   },
   {
    "id": "manor_bookcase",
@@ -1956,7 +2220,8 @@
    "decor": true,
    "value": 210,
    "description": "หนังสือทุกเล่มเขียนด้วยลายมือเดียวกัน จากห้องสมุดในยุโรป · ของเก่าแต่งห้อง",
-   "furniture": "decor-manor-bookcase"
+   "furniture": "decor-manor-bookcase",
+   "rarity": "uncommon"
   },
   {
    "id": "maneki_neko",
@@ -1966,7 +2231,8 @@
    "decor": true,
    "value": 170,
    "description": "กวักมือเรียกอะไรบางอย่างเข้าบ้าน ไม่ใช่โชคลาภ จากร้านค้าในเอเชีย · ของเก่าแต่งห้อง",
-   "furniture": "decor-maneki-neko"
+   "furniture": "decor-maneki-neko",
+   "rarity": "uncommon"
   },
   {
    "id": "bonsai",
@@ -1976,7 +2242,8 @@
    "decor": true,
    "value": 200,
    "description": "ต้องรดด้วยเลือดเท่านั้น จากสวนวัดในเอเชีย · ของเก่าแต่งห้อง",
-   "furniture": "decor-bonsai"
+   "furniture": "decor-bonsai",
+   "rarity": "uncommon"
   },
   {
    "id": "neon_sign",
@@ -1986,7 +2253,8 @@
    "decor": true,
    "value": 180,
    "description": "ไฟติดทีละตัวจนอ่านว่า \"NO EXIT\" จากทางหลวงในอเมริกา · ของเก่าแต่งห้อง",
-   "furniture": "decor-neon-sign"
+   "furniture": "decor-neon-sign",
+   "rarity": "uncommon"
   },
   {
    "id": "pinball",
@@ -1996,7 +2264,8 @@
    "decor": true,
    "value": 220,
    "description": "คะแนนสูงสุดเป็นชื่อคุณ ทั้งที่ไม่เคยเล่น จากร้านเกมในอเมริกา · ของเก่าแต่งห้อง",
-   "furniture": "decor-pinball"
+   "furniture": "decor-pinball",
+   "rarity": "uncommon"
   },
   {
    "id": "llama_rug",
@@ -2006,7 +2275,8 @@
    "decor": true,
    "value": 160,
    "description": "ปูไว้แล้วรู้สึกเหมือนมันยังหายใจ จากเทือกเขาในอเมริกาใต้ · ของเก่าแต่งห้อง",
-   "furniture": "decor-llama-rug"
+   "furniture": "decor-llama-rug",
+   "rarity": "uncommon"
   },
   {
    "id": "clay_idol",
@@ -2016,7 +2286,8 @@
    "decor": true,
    "value": 200,
    "description": "ปากเปิดค้างเหมือนกำลังกรีดร้อง จากซากวิหารในอเมริกาใต้ · ของเก่าแต่งห้อง",
-   "furniture": "decor-clay-idol"
+   "furniture": "decor-clay-idol",
+   "rarity": "uncommon"
   },
   {
    "id": "carved_stool",
@@ -2026,7 +2297,8 @@
    "decor": true,
    "value": 170,
    "description": "ลายแกะเล่าเรื่องคนที่ถูกกลืนหาย จากหมู่บ้านในแอฟริกา · ของเก่าแต่งห้อง",
-   "furniture": "decor-carved-stool"
+   "furniture": "decor-carved-stool",
+   "rarity": "uncommon"
   },
   {
    "id": "safari_trunk",
@@ -2036,7 +2308,8 @@
    "decor": true,
    "value": 190,
    "description": "ป้ายชื่อเจ้าของเลือนหาย ข้างในมีแต่ทรายแดง จากแอฟริกา · ของเก่าแต่งห้อง",
-   "furniture": "decor-safari-trunk"
+   "furniture": "decor-safari-trunk",
+   "rarity": "uncommon"
   },
   {
    "id": "bitten_surfboard",
@@ -2046,7 +2319,8 @@
    "decor": true,
    "value": 200,
    "description": "รอยกัดใหญ่กว่าฉลามตัวไหนที่เคยมี จากชายหาดในออสเตรเลีย · ของเก่าแต่งห้อง",
-   "furniture": "decor-bitten-surfboard"
+   "furniture": "decor-bitten-surfboard",
+   "rarity": "uncommon"
   },
   {
    "id": "croc_skull",
@@ -2056,7 +2330,8 @@
    "decor": true,
    "value": 230,
    "description": "ฟันยังงอกใหม่ทุกเดือน จากบึงในออสเตรเลีย · ของเก่าแต่งห้อง",
-   "furniture": "decor-croc-skull"
+   "furniture": "decor-croc-skull",
+   "rarity": "uncommon"
   },
   {
    "id": "ship_wheel",
@@ -2066,7 +2341,8 @@
    "decor": true,
    "value": 240,
    "description": "หมุนเองไปทางทิศใต้เสมอ จากเรือที่จมในแอนตาร์กติกา · ของเก่าแต่งห้อง",
-   "furniture": "decor-ship-wheel"
+   "furniture": "decor-ship-wheel",
+   "rarity": "uncommon"
   },
   {
    "id": "stuffed_penguin",
@@ -2076,7 +2352,8 @@
    "decor": true,
    "value": 220,
    "description": "ข้างในอุ่นกว่าที่ควร จากสถานีวิจัยในแอนตาร์กติกา · ของเก่าแต่งห้อง",
-   "furniture": "decor-stuffed-penguin"
+   "furniture": "decor-stuffed-penguin",
+   "rarity": "uncommon"
   },
   {
    "id": "empty_icebox",
@@ -2086,7 +2363,8 @@
    "decor": true,
    "value": 150,
    "description": "เศษเดนเนื้อเฝ้ามันไว้ ทั้งที่ข้างในไม่เหลืออะไรให้กิน · ของเก่าแต่งห้อง",
-   "furniture": "decor-empty-icebox"
+   "furniture": "decor-empty-icebox",
+   "rarity": "rare"
   },
   {
    "id": "specimen_jar",
@@ -2096,7 +2374,8 @@
    "decor": true,
    "value": 150,
    "description": "ของในโหลยังขยับเป็นบางครั้ง ซากคลานเน่าชอบขดอยู่รอบมัน · ของเก่าแต่งห้อง",
-   "furniture": "decor-specimen-jar"
+   "furniture": "decor-specimen-jar",
+   "rarity": "rare"
   },
   {
    "id": "floor_lamp",
@@ -2106,7 +2385,8 @@
    "decor": true,
    "value": 160,
    "description": "เปิดแล้วเงาที่ทอดลงพื้นไม่ใช่เงาของโคม · ของเก่าแต่งห้อง",
-   "furniture": "decor-floor-lamp"
+   "furniture": "decor-floor-lamp",
+   "rarity": "rare"
   },
   {
    "id": "dog_house",
@@ -2116,7 +2396,8 @@
    "decor": true,
    "value": 160,
    "description": "ป้ายชื่อถูกกัดจนอ่านไม่ออก ข้างในยังอุ่น · ของเก่าแต่งห้อง",
-   "furniture": "decor-dog-house"
+   "furniture": "decor-dog-house",
+   "rarity": "rare"
   },
   {
    "id": "church_pew",
@@ -2126,7 +2407,8 @@
    "decor": true,
    "value": 180,
    "description": "พนักพิงสลักบทสวดที่ไม่มีในคัมภีร์ไหน · ของเก่าแต่งห้อง",
-   "furniture": "decor-church-pew"
+   "furniture": "decor-church-pew",
+   "rarity": "rare"
   },
   {
    "id": "glass_terrarium",
@@ -2136,7 +2418,8 @@
    "decor": true,
    "value": 180,
    "description": "เห็ดข้างในโตเองไม่ต้องรดน้ำ อย่าเปิดฝา · ของเก่าแต่งห้อง",
-   "furniture": "decor-glass-terrarium"
+   "furniture": "decor-glass-terrarium",
+   "rarity": "rare"
   },
   {
    "id": "stained_glass",
@@ -2146,7 +2429,8 @@
    "decor": true,
    "value": 240,
    "description": "ลวดลายเรขาคณิตเปลี่ยนไปทุกครั้งที่กะพริบตา · ของเก่าแต่งห้อง",
-   "furniture": "decor-stained-glass"
+   "furniture": "decor-stained-glass",
+   "rarity": "rare"
   },
   {
    "id": "steel_shelf",
@@ -2155,7 +2439,8 @@
    "type": "furniture",
    "value": 60,
    "furniture": "concrete-shelf",
-   "description": "ชั้นเหล็กขึ้นสนิมจากโกดังร้าง ของตกแต่งห้องส่วนตัว — จัดวางได้ที่หน้าโปรไฟล์บนเว็บ"
+   "description": "ชั้นเหล็กขึ้นสนิมจากโกดังร้าง ของตกแต่งห้องส่วนตัว — จัดวางได้ที่หน้าโปรไฟล์บนเว็บ",
+   "rarity": "uncommon"
   },
   {
    "id": "bone",
@@ -2163,7 +2448,8 @@
    "emoji": "🦴",
    "type": "material",
    "value": 3,
-   "description": "ไม่ใช่ของคุณ... หวังว่านะ"
+   "description": "ไม่ใช่ของคุณ... หวังว่านะ",
+   "rarity": "common"
   },
   {
    "id": "sophia_rite",
@@ -2171,7 +2457,8 @@
    "emoji": "🥚",
    "type": "material",
    "value": 0,
-   "description": "ไข่เนื้อสีชมพูที่ยังเต้นตุบ จากศาลของ Sophia — ใช้ /revive นำเพื่อนที่กลายเป็น Fiend กลับมา"
+   "description": "ไข่เนื้อสีชมพูที่ยังเต้นตุบ จากศาลของ Sophia — ใช้ /revive นำเพื่อนที่กลายเป็น Fiend กลับมา",
+   "rarity": "common"
   },
   {
    "id": "placenta",
@@ -2179,7 +2466,8 @@
    "emoji": "🥚",
    "type": "material",
    "value": 120,
-   "description": "รกที่ยังอุ่นและเต้นตุบ ใช้ได้ตอนล้มตายในเมืองระดับ Hard/Epic — ฟื้นขึ้นมาสู้ต่อทันที (ต้องอยู่ในกระเป๋า ไม่ใช่ของรอรับ)"
+   "description": "รกที่ยังอุ่นและเต้นตุบ ใช้ได้ตอนล้มตายในเมืองระดับ Hard/Epic — ฟื้นขึ้นมาสู้ต่อทันที (ต้องอยู่ในกระเป๋า ไม่ใช่ของรอรับ)",
+   "rarity": "rare"
   },
   {
    "id": "sigil",
@@ -2189,7 +2477,8 @@
    "value": 50,
    "sanity": 6,
    "humanity": 4,
-   "description": "ตราของรูปบูชา — ถวายที่ศาล Icon ท้ายดันเจียนเพื่อเลื่อนขั้นพร · หรือกำไว้ท่อง First Verses ได้ทุกที่ (+6 สติ, +4 ความเป็นมนุษย์)"
+   "description": "ตราของรูปบูชา — ถวายที่ศาล Icon ท้ายดันเจียนเพื่อเลื่อนขั้นพร · หรือกำไว้ท่อง First Verses ได้ทุกที่ (+6 สติ, +4 ความเป็นมนุษย์)",
+   "rarity": "uncommon"
   }
  ],
  "bestiary": [

@@ -31,6 +31,7 @@ export const LOCAL_DROPS: Record<Continent, Weighted[]> = {
   africa: [['myrrh_balm', 4], ['wild_flour', 3], ['rusty_chain', 1], ['bone_saw', 1], ['sigil', 1], ['old_coin', 1], ['hunting_bow', 0.5], ['rib_plate', 0.5], ['placenta', 0.3]],
   australia: [['eucalyptus_oil', 4], ['alchemy_salve', 2], ['fresh_cut', 2], ['cricket_bat', 2], ['boomerang', 1], ['rusted_armor', 0.5]],
   antarctica: [['whale_blubber', 4], ['alchemy_salve', 2], ['fresh_cut', 2], ['ice_pick', 2], ['fur_parka', 1], ['harpoon', 0.5], ['old_shotgun', 0.5], ['rusted_armor', 0.5]],
+  unknown: [['alchemy_salve', 4], ['sigil', 2], ['placenta', 1], ['flesh_grenade', 1], ['fiend_adrenal', 1]],
 };
 
 /**
@@ -43,7 +44,15 @@ export const TIER_GEAR: Record<Tier, { chance: number; items: string[] }> = {
   normal: { chance: 0.03, items: ['kris', 'carving_knife', 'bone_club', 'claw_hammer', 'rusty_chain', 'machete', 'leather_coat', 'biker_jacket', 'chainmail_apron', 'bone_bomb'] },
   hard: { chance: 0.05, items: ['bone_saw', 'sledgehammer', 'butcher_cleaver', 'revolver', 'spine_whip', 'rusted_armor', 'rib_plate', 'hazmat_suit', 'sigil', 'flesh_grenade', 'fiend_adrenal'] },
   epic: { chance: 0.07, items: ['old_shotgun', 'katana', 'knight_sword', 'chainsaw', 'fiend_hide', 'diving_suit', 'flesh_carapace', 'placenta', 'flesh_grenade', 'fiend_adrenal'] },
+  legendary: { chance: 0.08, items: ['knight_sword', 'chainsaw', 'fiend_hide', 'diving_suit', 'flesh_carapace', 'placenta', 'flesh_grenade', 'fiend_adrenal'] },
 };
+
+/**
+ * Legends (rarity legendary, no shop sells them): chance per kill, rolled apart from the tier gear.
+ * Unknown Realm ≈ 1 per ~110 hunts won · Epic cities ≈ 1 per ~1,700. Admin placement: the "✨ ของตำนาน" tier box.
+ */
+export const LEGEND_CHANCE: Partial<Record<Tier, number>> = { epic: 0.0002, legendary: 0.003 };
+export const LEGEND_DROPS: string[] = ['atlantis_trident', 'agartha_blade', 'purgatory_scythe', 'gehenna_cleaver', 'olympus_aegis', 'shangri_la_robe', 'limbo_shroud'];
 
 /** Chance per kill of the decoration piece that monster kind guards (`MonsterDef.keepsake`); × the streak loot bonus. */
 export const KEEPSAKE_CHANCE = 0.01;
@@ -51,7 +60,7 @@ export const KEEPSAKE_CHANCE = 0.01;
 /** Searching the place after a hunt is won: a small relic (`VINTAGE_IDS`) … */
 export const RELIC_CHANCE = 0.08;
 /** … or a room-decoration piece: base chance by tier, plus this per streak step (max 8 steps). */
-export const DECOR_CHANCE: Record<Tier, number> = { easy: 0.02, normal: 0.03, hard: 0.04, epic: 0.06 };
+export const DECOR_CHANCE: Record<Tier, number> = { easy: 0.02, normal: 0.03, hard: 0.04, epic: 0.06, legendary: 0.08 };
 export const DECOR_STREAK_STEP = 0.01;
 
 /** Decoration found only on its own continent (default rarity uncommon = twice a common piece's rare). */
@@ -63,6 +72,7 @@ export const DECOR_LOCAL: Record<Continent, string[]> = {
   africa: ['hide_drum', 'carved_stool', 'safari_trunk'],
   australia: ['outback_sign', 'bitten_surfboard', 'croc_skull'],
   antarctica: ['expedition_crate', 'ship_wheel', 'stuffed_penguin'],
+  unknown: [],
 };
 
 /** Decoration pieces any city can turn up. */

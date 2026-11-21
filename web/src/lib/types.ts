@@ -1,11 +1,13 @@
 // Shapes of the bundled game data (web/src/data/game.json, generated from src/web/api.ts).
 
-export type Tier = "easy" | "normal" | "hard" | "epic";
+export type Tier = "easy" | "normal" | "hard" | "epic" | "legendary";
 
 export interface TierInfo {
   name: string;
   emoji: string;
   rec: number;
+  /** monsters climb to the hunter's level above `rec` (Epic, Legendary) */
+  scales?: boolean;
 }
 
 

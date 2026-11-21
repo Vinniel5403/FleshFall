@@ -115,6 +115,14 @@ const list: ItemDef[] = [
   { id: 'diving_suit', name: 'ชุดดำน้ำทองเหลือง', emoji: '🤿', type: 'armor', value: 190, def: 5, description: 'ลดดาเมจ 5 หมวกทองเหลืองมีรอยข่วนจากด้านใน · ดรอปเฉพาะเมืองระดับ Epic' },
   { id: 'fiend_hide', name: 'เสื้อหนัง Fiend', emoji: '🥋', type: 'armor', value: 200, def: 5, description: 'ลดดาเมจ 5 หนังฟอกที่ยังอุ่นเหมือนมีชีวิต · ดรอปเฉพาะเมืองระดับ Epic' },
   { id: 'flesh_carapace', name: 'กระดองเนื้อ', emoji: '🐚', type: 'armor', value: 320, def: 6, description: 'ลดดาเมจ 6 เนื้อที่แข็งตัวเป็นกระดอง ใส่นานไปจะติดผิว · ดรอปเฉพาะเมืองระดับ Epic' },
+  // --- ของตำนาน: ดรอปจากเมือง Unknown Realm (ยากมาก) หรือเมือง Epic (ยากกว่านั้นมาก) — LEGEND_DROPS ใน drops.ts ---
+  { id: 'atlantis_trident', name: 'ตรีศูลนครจมสมุทร', emoji: '🔱', type: 'weapon', value: 1200, atk: 12, rarity: 'legendary', description: 'ดาเมจ +12 · ทอยพละในเหตุการณ์ +12 · น้ำทะเลยังหยดจากปลายง่าม ทั้งที่ขึ้นบกมาเป็นพันปี · ของตำนาน' },
+  { id: 'agartha_blade', name: 'ดาบผลึกอการ์ธา', emoji: '💎', type: 'weapon', value: 1350, atk: 13, rarity: 'legendary', description: 'ดาเมจ +13 · ทอยพละในเหตุการณ์ +13 · ผลึกจากใจกลางโลกกลวง เต้นตุบในมือเหมือนหัวใจดวงที่สอง · ของตำนาน' },
+  { id: 'purgatory_scythe', name: 'เคียวชำระบาป', emoji: '⚰️', type: 'weapon', value: 1350, atk: 13, rarity: 'legendary', description: 'ดาเมจ +13 · ทอยพละในเหตุการณ์ +13 · ทุกครั้งที่ฟัน บาปของอีกฝ่ายหลุดออกมาเป็นชิ้นเนื้อ · ของตำนาน' },
+  { id: 'gehenna_cleaver', name: 'ปังตอไฟเกเฮนนา', emoji: '🔥', type: 'weapon', value: 1500, atk: 14, rarity: 'legendary', description: 'ดาเมจ +14 · ทอยพละในเหตุการณ์ +14 · ไฟบนใบมีดไม่เคยมอดและไม่ร้อน — มันหิว · ของตำนาน' },
+  { id: 'olympus_aegis', name: 'เกราะอีจิสแห่งโอลิมปัส', emoji: '🛡️', type: 'armor', value: 1200, def: 9, rarity: 'legendary', description: 'ลดดาเมจ 9 หน้าเมดูซ่ากลางอกเกราะยังกะพริบตาเวลามีอะไรเข้าใกล้ · ของตำนาน' },
+  { id: 'shangri_la_robe', name: 'จีวรแชงกรีลา', emoji: '👘', type: 'armor', value: 1200, def: 9, rarity: 'legendary', description: 'ลดดาเมจ 9 คนสวมไม่แก่ลงอีกเลย แต่ก็ไม่ได้มีชีวิตมากขึ้น · ของตำนาน' },
+  { id: 'limbo_shroud', name: 'ผ้าคลุมลิมโบ', emoji: '🌫️', type: 'armor', value: 1400, def: 10, rarity: 'legendary', description: 'ลดดาเมจ 10 ทอจากความรอคอยของวิญญาณที่ไปไหนไม่ได้ เขี้ยวที่กัดลงไปจะหลงอยู่ในเนื้อผ้า · ของตำนาน' },
   // --- ของวินเทจจากโลกจริง (ขายให้ Patron / ใช้เป็นค่าโดยสารเรือ) ---
   { id: 'lighter', name: 'ไฟแช็ก', emoji: '🔥', type: 'vintage', value: 35, description: 'แสงสว่างที่ช่วยชีวิตในดันเจียนเหลือง' },
   { id: 'dead_phone', name: 'มือถือไร้สัญญาณ', emoji: '📱', type: 'vintage', value: 60, description: 'ใช้ไม่ได้ แต่ Patron ยอมจ่ายแพง' },

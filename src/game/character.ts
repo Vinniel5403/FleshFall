@@ -383,13 +383,13 @@ function levelUp(char: Character, lines: string[]): void {
   }
 }
 
-// ---------- falling in the field: downed (easy/normal) · dying (hard/epic) ----------
+// ---------- falling in the field: downed (easy/normal) · dying (hard/epic/legendary) ----------
 
 /** What HP 0 means here: Old Realm cities fall by tier, anywhere else is plain death. */
 export function fallMode(char: Character): 'downed' | 'dying' | 'dead' {
   if (char.location !== 'old_realm' || char.traveling) return 'dead';
   const tier = currentZone(char).tier;
-  return tier === 'hard' || tier === 'epic' ? 'dying' : 'downed';
+  return tier === 'easy' || tier === 'normal' || !tier ? 'downed' : 'dying';
 }
 
 /** Can't do anything until revived / resolved. */

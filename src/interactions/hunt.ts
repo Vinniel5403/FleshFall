@@ -5,7 +5,7 @@
  */
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, StringSelectMenuBuilder, type ButtonInteraction, type RepliableInteraction, type StringSelectMenuInteraction } from 'discord.js';
 import { loadCharacter, saveCharacter } from '../game/character.js';
-import { attack, enterHuntDoor, getMonster, huntUsable, leaveHunt, nextHuntLevel, startHunt, useInHunt, type RoundResult } from '../game/hunt.js';
+import { attack, enterHuntDoor, getMonster, huntUsable, leaveHunt, monsterLevel, nextHuntLevel, startHunt, useInHunt, type RoundResult } from '../game/hunt.js';
 import { fallRow } from './fallRow.js';
 import { inField, streakOf, streakText, tripSize } from '../game/expedition.js';
 import { getItem, itemEffects, itemLabel } from '../game/items.js';
@@ -31,7 +31,7 @@ export function huntEmbed(char: Character, lines: string[], ended?: string): Emb
       h.monsters
         .map((m, idx) => {
           const d = getMonster(m.id);
-          const name = `${idx + 1}. ${d?.emoji ?? ''} **${d?.name ?? m.id}**`;
+          const name = `${idx + 1}. ${d?.emoji ?? ''} **${d?.name ?? m.id}** · Lv ${monsterLevel(h, m)}`;
           return m.hp > 0 ? `${name}  \`${bar(m.hp, m.maxHp, 8)}\` ${m.hp}/${m.maxHp}` : `~~${idx + 1}. ${d?.name ?? m.id}~~ 💀`;
         })
         .join('\n'),
@@ -95,7 +95,7 @@ export function huntButtons(char: Character): ActionRowBuilder<ButtonBuilder>[] 
   const attacks = h.monsters
     .map((m, idx) => ({ m, idx }))
     .filter(({ m }) => m.hp > 0)
-    .map(({ m, idx }) => btn(uid, `atk:${idx}`, `${idx + 1}. ${getMonster(m.id)?.name ?? m.id}`.slice(0, 80), ButtonStyle.Danger, '⚔️'));
+    .map(({ m, idx }) => btn(uid, `atk:${idx}`, `${idx + 1}. ${getMonster(m.id)?.name ?? m.id} · Lv ${monsterLevel(h, m)}`.slice(0, 80), ButtonStyle.Danger, '⚔️'));
   const usable = huntUsable(char).length;
   return [
     new ActionRowBuilder<ButtonBuilder>().addComponents(...attacks),

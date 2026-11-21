@@ -63,7 +63,7 @@ export const DOOR_HEX: Record<DoorColor, string> = {
   black: '#555555',
 };
 
-export const TIER_HEX: Record<Tier, string> = { easy: '#4caf50', normal: '#e3b341', hard: '#e5533d', epic: '#a265e0' };
+export const TIER_HEX: Record<Tier, string> = { easy: '#4caf50', normal: '#e3b341', hard: '#e5533d', epic: '#a265e0', legendary: '#f2b33d' };
 
 /** Hex → rgba string. */
 export function rgba(hex: string, a: number): string {

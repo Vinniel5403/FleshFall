@@ -13,6 +13,7 @@
   --t-normal: #e3b341;
   --t-hard: #e5533d;
   --t-epic: #a265e0;
+  --t-legendary: #f2b33d;
   --d-green: #3fa34d; --d-yellow: #e3c341; --d-gray: #9a9a9a; --d-orange: #e57a2b;
   --d-white: #e8e8e8; --d-blue: #3b6fd6; --d-purple: #8e44ad; --d-red: #c0392b; --d-black: #222;
   --radius: 14px;
@@ -98,8 +99,9 @@ main { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 16px; }
 .city[data-tier="normal"] { border-left-color: var(--t-normal); }
 .city[data-tier="hard"] { border-left-color: var(--t-hard); }
 .city[data-tier="epic"] { border-left-color: var(--t-epic); box-shadow: inset 0 0 40px rgba(162, 101, 224, .12); }
+.city[data-tier="legendary"] { border-left-color: var(--t-legendary); box-shadow: inset 0 0 40px rgba(242, 179, 61, .14); }
 .tier { font-size: 12px; font-weight: 600; }
-.tier.easy { color: var(--t-easy); } .tier.normal { color: var(--t-normal); } .tier.hard { color: var(--t-hard); } .tier.epic { color: var(--t-epic); }
+.tier.easy { color: var(--t-easy); } .tier.normal { color: var(--t-normal); } .tier.hard { color: var(--t-hard); } .tier.epic { color: var(--t-epic); } .tier.legendary { color: var(--t-legendary); }
 .shop { margin-top: 18px; }
 
 /* icons */

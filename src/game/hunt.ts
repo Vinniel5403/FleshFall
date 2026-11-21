@@ -9,12 +9,12 @@ import { applyOutcome, consume, evadeMod, gainItem, gearAtk, hitMod, hitParts, m
 import { bumpStreak, lootMult, rareBonus, streakLevels, streakMiasma, streakOf } from './expedition.js';
 import { chance, rand, startRun } from './engine.js';
 import { d20Success, levelDC, rollTag, type DiceRoll } from './dice.js';
-import { DECOR_CHANCE, DECOR_STREAK_STEP, KEEPSAKE_CHANCE, LOCAL_DROP_CHANCE, LOCAL_DROPS, RELIC_CHANCE, TIER_GEAR, pickByRarity, pickDecor, pickWeighted, prized } from './drops.js';
+import { DECOR_CHANCE, DECOR_STREAK_STEP, KEEPSAKE_CHANCE, LEGEND_CHANCE, LEGEND_DROPS, LOCAL_DROP_CHANCE, LOCAL_DROPS, RELIC_CHANCE, TIER_GEAR, pickByRarity, pickDecor, pickWeighted, prized } from './drops.js';
 import './catalog.js'; // rarities + live pools
 import { getItem, itemLabel, VINTAGE_IDS } from './items.js';
 import type { Character, Hunt, IconDoor, MonsterState, Outcome } from './types.js';
 import { DOORS, DUNGEON_RULES, isCrimsonMoon } from './world.js';
-import { currentZone, getZone, zoneLevel, type ZoneDef } from './zones.js';
+import { currentZone, getZone, huntBaseLevel, zoneLevel, type ZoneDef } from './zones.js';
 
 export interface MonsterDef {
   id: string;
@@ -97,11 +97,27 @@ export const MONSTERS: Record<string, MonsterDef> = {
 
 export const getMonster = (id: string) => MONSTERS[id];
 
-/** Every monster in a hunt is the level of the city it happens in — the hunter's own level never changes them. */
+/** A hunt's base level = the city's (+ trip streak) — the hunter's own level never changes it. Each monster rolls its own level around it (`levelSpread`). */
 export const huntLevel = (h: Hunt): number => h.lv ?? zoneLevel(getZone(h.zone));
 
-/** Level the next hunt here would be: city level + trip streak. */
-export const nextHuntLevel = (char: Character): number => zoneLevel(currentZone(char)) + streakLevels(char);
+/** Level the next hunt here would be: city level (or the hunter's, in a city that scales) + trip streak. */
+export const nextHuntLevel = (char: Character): number => huntBaseLevel(char, currentZone(char)) + streakLevels(char);
+
+/** Levels a monster may roll around a hunt's base level: ± √lv / 2, whole levels inside it (Lv 16 → 14–18, Lv 9 → 8–10, under Lv 4 → exact). */
+export function levelSpread(lv: number): [number, number] {
+  const s = Math.sqrt(lv) / 2;
+  return [Math.max(1, Math.ceil(lv - s - 1e-9)), Math.floor(lv + s + 1e-9)];
+}
+
+/** One monster's level: its own roll, or the hunt's level on old saves. */
+export const monsterLevel = (h: Hunt, m: MonsterState): number => m.lv ?? huntLevel(h);
+
+/** "Lv 14–18" for a hunt (the levels actually rolled), or the base level when they're all the same. */
+export function huntLevelLabel(h: Hunt): string {
+  const lvs = h.monsters.map((m) => monsterLevel(h, m));
+  const [lo, hi] = [Math.min(...lvs), Math.max(...lvs)];
+  return lo === hi ? `Lv ${lo}` : `Lv ${lo}–${hi}`;
+}
 
 /** ×1 at Lv 1, growing by `perLevel` for each level above it. */
 const scale = (lv: number, perLevel: number) => 1 + perLevel * (lv - 1);
@@ -146,13 +162,17 @@ export function startHunt(char: Character, safe = false): HuntStart {
     log.unshift(`-# ${line}`);
   }
   const lv = nextHuntLevel(char);
-  if (lv > zoneLevel(zone)) log.push(`👹 ยิ่งล่าลึก มอนยิ่งดุ — มอนรอบนี้ Lv ${lv} (เมือง Lv ${zoneLevel(zone)})`);
+  const [lo, hi] = levelSpread(lv);
   const monsters: MonsterState[] = Array.from({ length: 3 }, () => {
     const def = getMonster(pickWeighted(pool.map((m) => [m.id, zone.spawn?.[m.id] ?? 1])))!;
-    const hp = scaledHp(def, lv);
-    return { id: def.id, hp, maxHp: hp };
+    const mlv = rand(lo, hi);
+    const hp = scaledHp(def, mlv);
+    return { id: def.id, hp, maxHp: hp, lv: mlv };
   });
   const hunt: Hunt = { zone: zone.id, monsters, lv, door: pickDoor(zone), log, loot: {}, xp: 0 };
+  const base = huntBaseLevel(char, zone);
+  if (base > zoneLevel(zone)) log.push(`🌀 ที่นี่ไม่สนว่าเมืองเลเวลเท่าไหร่ — มอนโตตามคุณ (Lv ${base})`);
+  if (lv > base) log.push(`👹 ยิ่งล่าลึก มอนยิ่งดุ — มอนรอบนี้ ${huntLevelLabel(hunt)} (ปกติ Lv ${base})`);
   char.hunt = hunt;
   return { ok: true, hunt };
 }
@@ -176,10 +196,10 @@ const nameOf = (m: MonsterState) => {
 function monstersAttack(char: Character, h: Hunt): { lines: string[]; applied?: AppliedOutcome } {
   const lines: string[] = [];
   const crimson = isCrimsonMoon() && char.location !== 'rouge_land';
-  const lv = huntLevel(h);
-  const dc = levelDC(lv, char.level) + evadeMod(char);
   for (const m of alive(h)) {
     const def = getMonster(m.id)!;
+    const lv = monsterLevel(h, m);
+    const dc = levelDC(lv, char.level) + evadeMod(char);
     const roll = rand(1, 20);
     if (!d20Success(roll, 0, dc)) {
       lines.push(`-# ${nameOf(m)} พลาด \`${rollTag(roll, 0, dc)}\``);
@@ -204,7 +224,7 @@ const piles = (item: string) => ['material', 'consumable'].includes(getItem(item
 function rollLoot(char: Character, h: Hunt, m: MonsterState): string[] {
   const def = getMonster(m.id)!;
   const z = getZone(h.zone);
-  const lv = huntLevel(h);
+  const lv = monsterLevel(h, m);
   const got: string[] = [];
   const give = (item: string, n: number, rare: boolean) => {
     gainItem(char, item, n);
@@ -227,6 +247,9 @@ function rollLoot(char: Character, h: Hunt, m: MonsterState): string[] {
   const gear = TIER_GEAR[z?.tier ?? 'easy'];
   const piece = chance(gear.chance) ? pickByRarity(gear.items) : undefined;
   if (piece) carried.push(piece);
+  // a legend: Unknown Realm rarely, Epic cities far more rarely still
+  const legend = chance(LEGEND_CHANCE[z?.tier ?? 'easy'] ?? 0) ? pickByRarity(LEGEND_DROPS) : undefined;
+  if (legend) carried.push(legend);
   if (def.keepsake && chance(KEEPSAKE_CHANCE * lootMult(char))) carried.push(def.keepsake);
   for (const item of carried) give(item, 1, prized(item));
   h.xp += Math.max(1, Math.round(def.xp * scale(lv, balance.huntXpPerLevel) * xpGap(char.level, lv)));
@@ -283,7 +306,7 @@ export function attack(char: Character, idx: number): RoundResult {
   if (char.dying) return { lines: ['🩸 คุณกำลังจะตาย — เลือก 🥚 ใช้รกคืนชีพ หรือ ☠️ ยอมตาย ก่อน'], ended: 'dying' };
   if (!h || h.won || !target || target.hp <= 0) return { lines: ['เป้าหมายไม่อยู่แล้ว'] };
   const def = getMonster(target.id)!;
-  const foeLv = huntLevel(h);
+  const foeLv = monsterLevel(h, target);
   const ac = levelDC(char.level, foeLv);
   const lines: string[] = [];
 

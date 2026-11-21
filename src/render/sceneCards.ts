@@ -1,5 +1,5 @@
 /** Hunt battle card + scene banner (events / dungeon). Long prose stays in the embed text. */
-import { getMonster, huntLevel } from '../game/hunt.js';
+import { getMonster, huntLevelLabel, monsterLevel } from '../game/hunt.js';
 import { ICON_BY_DOOR } from '../game/icons.js';
 import { getItem } from '../game/items.js';
 import type { Character, DoorColor, IconDoor } from '../game/types.js';
@@ -96,7 +96,7 @@ export async function renderHuntCard(char: Character, ended?: string): Promise<B
   const ew = spaced(ctx, `HUNT · ${TIERS[tier].name.toUpperCase()}`, PAD, 62, 4);
   ctx.fillStyle = C.muted;
   font(ctx, 15, 400);
-  ctx.fillText(`มอน Lv ${h ? huntLevel(h) : zoneLevel(zone)} · คุณ Lv ${char.level}`, PAD + ew + 16, 62);
+  ctx.fillText(`มอน ${h ? huntLevelLabel(h) : `Lv ${zoneLevel(zone)}`} · คุณ Lv ${char.level}`, PAD + ew + 16, 62);
   ctx.fillStyle = C.bone;
   fitText(ctx, noEmoji(zone.name), PAD, 112, W - PAD * 2 - 200, 44, 700);
   crimsonWash(ctx, 0);
@@ -134,6 +134,11 @@ export async function renderHuntCard(char: Character, ended?: string): Promise<B
     ctx.fillStyle = C.bone;
     ctx.textAlign = 'center';
     ctx.fillText(String(i + 1), x + 30, y0 + 36);
+    // its own level (rolled around the hunt's)
+    font(ctx, 16, 700, 'Cinzel');
+    ctx.fillStyle = dead ? C.muted : monsterLevel(h!, m) > char.level ? C.crimson : C.flesh;
+    ctx.textAlign = 'right';
+    ctx.fillText(`Lv ${monsterLevel(h!, m)}`, x + cw - 20, y0 + 36);
 
     font(ctx, 22, 600);
     ctx.fillStyle = dead ? C.muted : C.bone;

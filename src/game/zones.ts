@@ -5,8 +5,8 @@ import { endTripSafe } from './expedition.js';
 import type { Character, IconDoor, Location, ZoneId } from './types.js';
 import { LOCATIONS } from './world.js';
 
-export type Continent = 'europe' | 'asia' | 'america' | 'south_america' | 'africa' | 'australia' | 'antarctica';
-export type Tier = 'easy' | 'normal' | 'hard' | 'epic';
+export type Continent = 'europe' | 'asia' | 'america' | 'south_america' | 'africa' | 'australia' | 'antarctica' | 'unknown';
+export type Tier = 'easy' | 'normal' | 'hard' | 'epic' | 'legendary';
 
 export interface ContinentDef {
   name: string;
@@ -24,6 +24,8 @@ export const CONTINENTS: Record<Continent, ContinentDef> = {
   africa: { name: 'Africa', emoji: '🦁', icon: 'Sophia', door: 'green' },
   australia: { name: 'Australia', emoji: '🦘', icon: 'Hastur', door: 'yellow' },
   antarctica: { name: 'Antarctica', emoji: '🐧', icon: 'Wendigo', door: 'white' },
+  /** Cities out of myth — on no real map. Purple = the one door colour no other continent claims. */
+  unknown: { name: 'Unknown Realm', emoji: '🌀', icon: 'Thanatos', door: 'purple' },
 };
 
 /** A tier is a band of city levels: it decides who spawns, which gear drops and how you fall. The numbers come from the city's own level. */
@@ -32,13 +34,16 @@ export interface TierDef {
   emoji: string;
   /** Lowest city level in the tier. */
   rec: number;
+  /** Monsters climb to the hunter's level when it's above the city's (the city level is then only the floor). */
+  scales?: boolean;
 }
 
 export const TIERS: Record<Tier, TierDef> = {
   easy: { name: 'Easy', emoji: '🟢', rec: 1 },
   normal: { name: 'Normal', emoji: '🟡', rec: 4 },
   hard: { name: 'Hard', emoji: '🔴', rec: 8 },
-  epic: { name: 'Epic', emoji: '🟣', rec: 12 },
+  epic: { name: 'Epic', emoji: '🟣', rec: 12, scales: true },
+  legendary: { name: 'Legendary', emoji: '🌟', rec: 50, scales: true },
 };
 
 /** Who spawns at each tier (monster id → pick weight). Depends on the place only — never on the hunter's level. */
@@ -47,6 +52,7 @@ const TIER_SPAWN: Record<Tier, Record<string, number>> = {
   normal: { starved_remnant: 2, rot_crawler: 2, stretched_shade: 2, maw_hound: 2, heretic: 2, spore_husk: 1 },
   hard: { rot_crawler: 1, stretched_shade: 1, maw_hound: 2, heretic: 2, spore_husk: 2, shifting_fiend: 1 },
   epic: { maw_hound: 2, heretic: 2, spore_husk: 2, shifting_fiend: 2 },
+  legendary: { maw_hound: 1, heretic: 1, spore_husk: 2, shifting_fiend: 3 },
 };
 
 export interface ZoneDef {
@@ -83,7 +89,8 @@ type CitySpec = [id: string, name: string, emoji: string, continent: Continent, 
 
 /**
  * Old Realm cities. Each gets a channel + 📍 role. Order = display order.
- * Levels climb inside a tier (Easy 1–3 · Normal 4–6 · Hard 8–10 · Epic 12, Australia 14, Antarctica 16).
+ * Levels climb inside a tier (Easy 1–3 · Normal 4–6 · Hard 8–10 · Epic 12, Australia 14, Antarctica 16 · Legendary 50).
+ * Epic and Legendary scale: their level is only the floor, monsters match a hunter above it (`huntBaseLevel`).
  */
 const CITIES: CitySpec[] = [
   // Europe
@@ -142,6 +149,14 @@ const CITIES: CitySpec[] = [
   // Australia / Antarctica
   ['australia', 'Australia', '🦘', 'australia', 'epic', 14, 'ทวีปทั้งทวีปที่แผ่นดินแดงฉานเงียบสนิท สัตว์ทุกตัวจ้องมองจากความมืด ความกลัวกลายเป็นอากาศ — ที่มั่นของ Hastur'],
   ['antarctica', 'Antarctica', '🧊', 'antarctica', 'epic', 16, 'ความหนาวที่ไม่ได้ฆ่า แต่ทำให้ทรมานไม่สิ้นสุด ใต้น้ำแข็งมีบางอย่างหิวโหย — ที่มั่นของ Wendigo'],
+  // Unknown Realm — cities out of myth; monsters never below Lv 50, and the only place legends drop often enough to hope for
+  ['atlantis', 'Atlantis', '🔱', 'unknown', 'legendary', 50, 'นครที่จมลงใต้มหาสมุทรโผล่ขึ้นมาหายใจอีกครั้ง ถนนยังเปียก ผู้คนในวิหารยังจมน้ำอยู่ทั้งที่ยืนบนบก'],
+  ['olympus', 'Olympus', '⛈️', 'unknown', 'legendary', 50, 'ยอดเขาเหนือเมฆที่บัลลังก์ทั้งสิบสองว่างเปล่า ฟ้าผ่าลงมาเป็นจังหวะเหมือนมีใครยังรอคำสั่ง'],
+  ['shangri_la', 'Shangri-La', '🏯', 'unknown', 'legendary', 50, 'หุบเขาที่ไม่มีใครแก่ลง ไม่มีใครตาย และไม่มีใครได้ออกไปอีกเลย ดอกไม้บานตลอดปีบนกองกระดูก'],
+  ['agartha', 'Agartha', '💎', 'unknown', 'legendary', 50, 'โลกกลวงใต้ขั้วโลก ดวงอาทิตย์สีแดงดวงเล็กแขวนอยู่กลางแผ่นดิน ผลึกบนผนังถ้ำเต้นตุบเหมือนหัวใจ'],
+  ['purgatory', 'Purgatory', '⛰️', 'unknown', 'legendary', 50, 'ภูเขาชำระบาปที่ทุกคนปีนไม่หยุด ยิ่งขึ้นสูงยิ่งเหลือเนื้อน้อยลง ไม่มีใครเห็นยอดเขา'],
+  ['limbo', 'Limbo', '🌫️', 'unknown', 'legendary', 50, 'ชายแดนระหว่างทุกสิ่ง วิญญาณยืนต่อแถวรอการตัดสินที่ไม่มีวันมาถึง หมอกกลืนเสียงจนได้ยินแต่ความคิดตัวเอง'],
+  ['gehenna', 'Gehenna', '🔥', 'unknown', 'legendary', 50, 'หุบเหวที่ไฟไม่เคยมอดแต่ไม่ให้ความร้อน มันหิว — เถ้าที่ปลิวมาคือคนที่เคยมาก่อนคุณ'],
 ];
 
 function cityZone([id, name, emoji, continent, tier, level, desc, image]: CitySpec): ZoneDef {
@@ -208,10 +223,17 @@ export function zoneLabel(z: ZoneDef): string {
 /** City level (monsters here are this level). */
 export const zoneLevel = (z: ZoneDef | undefined): number => z?.level ?? zoneTier(z).rec;
 
+/** Base level of this hunter's monsters here (before the trip streak): the city's, or theirs when it scales and they're above it. */
+export const huntBaseLevel = (char: Character, z: ZoneDef | undefined): number =>
+  zoneTier(z).scales ? Math.max(zoneLevel(z), char.level) : zoneLevel(z);
+
+/** "16" or "16+" — the city's level as players read it (+ = scales up with the hunter). */
+export const zoneLevelText = (z: ZoneDef | undefined): string => `${zoneLevel(z)}${z?.tier && zoneTier(z).scales ? '+' : ''}`;
+
 /** "🟡 Normal · Lv 5" */
 export function tierLabel(z: ZoneDef): string {
   const t = zoneTier(z);
-  return `${t.emoji} ${t.name} · Lv ${zoneLevel(z)}`;
+  return `${t.emoji} ${t.name} · Lv ${zoneLevelText(z)}`;
 }
 
 /** "🟢 Easy Lv 1–3 · 🟡 Normal Lv 4–6 · …" — legend for the travel pickers. */
@@ -220,7 +242,7 @@ export function tierLegend(): string {
     .map((id) => {
       const lv = mapCities().filter((z) => z.tier === id).map(zoneLevel);
       const [lo, hi] = [Math.min(...lv), Math.max(...lv)];
-      return `${TIERS[id].emoji} ${TIERS[id].name} Lv ${lo === hi ? lo : `${lo}–${hi}`}`;
+      return `${TIERS[id].emoji} ${TIERS[id].name} Lv ${lo === hi ? lo : `${lo}–${hi}`}${TIERS[id].scales ? '+' : ''}`;
     })
     .join(' · ');
 }

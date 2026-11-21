@@ -4,7 +4,7 @@
  * caller stores the patch and calls `refreshCatalog`.
  */
 import { imageUrl } from './account.js';
-import { basePlacement, CONTINENT_IDS, defaultRarity, placementOf, RARITIES, TIER_IDS } from './catalog.js';
+import { basePlacement, CONTINENT_IDS, defaultRarity, placementOf, RARITIES, TIER_IDS, TIER_SLOTS } from './catalog.js';
 import { baseItem, getItem, ITEMS, itemEffects } from './items.js';
 import type { Character, ItemDef, ItemPatch, ItemPlacement, ItemType, Rarity } from './types.js';
 import { CONTINENTS, TIERS } from './zones.js';
@@ -39,7 +39,7 @@ export function adminCatalog(patched: Set<string>) {
   return {
     items: Object.keys(ITEMS).map((id) => ({ ...adminItem(id), edited: patched.has(id) && !ITEMS[id]!.custom })),
     continents: CONTINENT_IDS.map((c) => ({ id: c, name: CONTINENTS[c].name, emoji: CONTINENTS[c].emoji })),
-    tiers: TIER_IDS.map((t) => ({ id: t, name: `${TIERS[t].emoji} ${TIERS[t].name}` })),
+    tiers: [...TIER_IDS.map((t) => ({ id: t, name: `${TIERS[t].emoji} ${TIERS[t].name}` })), { id: 'legend', name: '✨ ของตำนาน (Epic ยากมาก · Legendary)' }],
     rarities: RARITIES,
     types: ITEM_TYPES,
   };
@@ -88,7 +88,7 @@ function cleanWhere(v: unknown): ItemPlacement | null {
   return {
     shop: pick(o.shop, ['home', ...CONTINENT_IDS] as const),
     local: pick(o.local, CONTINENT_IDS),
-    tiers: pick(o.tiers, TIER_IDS),
+    tiers: pick(o.tiers, TIER_SLOTS),
     decor: pick(o.decor, ['any', ...CONTINENT_IDS] as const),
   };
 }

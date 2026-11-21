@@ -3,7 +3,7 @@
  * The code tables (shops.ts, drops.ts) are snapshotted here on load as the defaults; `refreshCatalog` rebuilds the
  * live tables in place from those defaults + `PLACEMENT_OVERRIDE`. Discord-free.
  */
-import { DECOR_COMMON, DECOR_LOCAL, LOCAL_DROPS, TIER_GEAR } from './drops.js';
+import { DECOR_COMMON, DECOR_LOCAL, LEGEND_DROPS, LOCAL_DROPS, TIER_GEAR } from './drops.js';
 import { applyItemPatches, baseItem, ITEMS, PLACEMENT_OVERRIDE, RARITY_WEIGHT } from './items.js';
 import { CONTINENT_STOCK, STOCK } from './shops.js';
 import type { ItemPatch, ItemPlacement, Rarity } from './types.js';
@@ -11,6 +11,8 @@ import { CONTINENTS, TIERS, type Continent, type Tier } from './zones.js';
 
 export const CONTINENT_IDS = Object.keys(CONTINENTS) as Continent[];
 export const TIER_IDS = Object.keys(TIERS) as Tier[];
+/** Tier boxes in a placement: the tiers + the legend pool. */
+export const TIER_SLOTS: (Tier | 'legend')[] = [...TIER_IDS, 'legend'];
 export const RARITIES: Rarity[] = ['common', 'uncommon', 'rare', 'legendary'];
 
 // ---------- defaults from the code (taken before anything is rebuilt) ----------
@@ -19,6 +21,7 @@ const BASE_STOCK = [...STOCK];
 const BASE_CONTINENT_STOCK = Object.fromEntries(CONTINENT_IDS.map((c) => [c, [...CONTINENT_STOCK[c]]])) as Record<Continent, string[]>;
 const BASE_LOCAL = Object.fromEntries(CONTINENT_IDS.map((c) => [c, LOCAL_DROPS[c].map(([id, w]) => [id, w] as const)])) as Record<Continent, (readonly [string, number])[]>;
 const BASE_TIER = Object.fromEntries(TIER_IDS.map((t) => [t, [...TIER_GEAR[t].items]])) as Record<Tier, string[]>;
+const BASE_LEGEND = [...LEGEND_DROPS];
 const BASE_DECOR_COMMON = [...DECOR_COMMON];
 const BASE_DECOR_LOCAL = Object.fromEntries(CONTINENT_IDS.map((c) => [c, [...DECOR_LOCAL[c]]])) as Record<Continent, string[]>;
 
@@ -27,7 +30,7 @@ export function basePlacement(id: string): ItemPlacement {
   return {
     shop: [...(BASE_STOCK.includes(id) ? (['home'] as const) : []), ...CONTINENT_IDS.filter((c) => BASE_CONTINENT_STOCK[c].includes(id))],
     local: CONTINENT_IDS.filter((c) => BASE_LOCAL[c].some(([x]) => x === id)),
-    tiers: TIER_IDS.filter((t) => BASE_TIER[t].includes(id)),
+    tiers: [...TIER_IDS.filter((t) => BASE_TIER[t].includes(id)), ...(BASE_LEGEND.includes(id) ? (['legend'] as const) : [])],
     decor: [...(BASE_DECOR_COMMON.includes(id) ? (['any'] as const) : []), ...CONTINENT_IDS.filter((c) => BASE_DECOR_LOCAL[c].includes(id))],
   };
 }
@@ -73,6 +76,7 @@ export function refreshCatalog(patches: ItemPatch[]): void {
     refill(DECOR_LOCAL[c], ordered(BASE_DECOR_LOCAL[c], (id) => !!ITEMS[id]!.decor && at(id).decor.includes(c)));
   }
   for (const t of TIER_IDS) refill(TIER_GEAR[t].items, ordered(BASE_TIER[t], (id) => at(id).tiers.includes(t)));
+  refill(LEGEND_DROPS, ordered(BASE_LEGEND, (id) => at(id).tiers.includes('legend')));
   refill(DECOR_COMMON, ordered(BASE_DECOR_COMMON, (id) => !!ITEMS[id]!.decor && at(id).decor.includes('any')));
 }
 

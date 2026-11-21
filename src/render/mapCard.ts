@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { Character } from '../game/types.js';
-import { CONTINENTS, currentZone, zoneLevel, ZONES, type Continent, type Tier } from '../game/zones.js';
+import { CONTINENTS, currentZone, zoneLevelText, ZONES, type Continent, type Tier } from '../game/zones.js';
 import { background, C, canvas, DOOR_HEX, font, logo, png, spaced, type Ctx } from './kit.js';
 
 /** [lat, lon] per city id. */
@@ -28,6 +28,10 @@ export const CITY_COORDS: Record<string, [number, number]> = {
   tanganyika: [-6.0, 29.5], rwanda: [-1.9, 30.1], kano: [12.0, 8.5], sahara: [23.0, 5.0],
   // Australia / Antarctica
   australia: [-25.3, 133.8], antarctica: [-78, 20],
+  // Unknown Realm — where the myths put them: Atlantis past Gibraltar, Agartha under the pole, Purgatory at Jerusalem's
+  // antipode (Dante), Limbo at Point Nemo (farthest from any shore), Gehenna in the Mariana Trench
+  atlantis: [31, -38], olympus: [40.1, 22.4], shangri_la: [27.8, 99.7], agartha: [-75, 110],
+  purgatory: [-31.8, -144.8], limbo: [-48.9, -123.4], gehenna: [11.4, 142.6],
 };
 
 /** Continent label anchors (in open water near each cluster). */
@@ -39,9 +43,10 @@ const LABELS: Record<Continent, [number, number]> = {
   africa: [-22, -2],
   australia: [-42, 112],
   antarctica: [-63, 40],
+  unknown: [-12, -150],
 };
 
-const TIER_R: Record<Tier, number> = { easy: 5, normal: 6.5, hard: 8, epic: 10 };
+const TIER_R: Record<Tier, number> = { easy: 5, normal: 6.5, hard: 8, epic: 10, legendary: 11 };
 
 const LAND_FILE = fileURLToPath(new URL('../../assets/map/land-110m.json', import.meta.url));
 let land: [number, number][][] | undefined;
@@ -222,7 +227,7 @@ export async function renderMapCard(char: Character, focus?: Continent): Promise
       const x0 = px(lon);
       const y0 = py(lat);
       const r = TIER_R[z.tier ?? 'easy'] + (z.id === here.id && !char.traveling ? 20 : 6); // clear the "you are here" ring
-      const name = `${z.name} · Lv ${zoneLevel(z)}`;
+      const name = `${z.name} · Lv ${zoneLevelText(z)}`;
       const w = ctx.measureText(name).width;
       const hgt = 16;
       // try right, left, above, below, then further out
@@ -233,7 +238,8 @@ export async function renderMapCard(char: Character, focus?: Continent): Promise
       let pos = tries[0]!;
       for (const t of tries) {
         const b: Box = [t[0] - 2, t[1] - hgt, t[0] + w + 2, t[1] + 4];
-        if (!placed.some((p) => hit(p, b))) {
+        const inside = b[0] >= MX && b[2] <= MX + MW && b[1] >= MY && b[3] <= MY + MH;
+        if (inside && !placed.some((p) => hit(p, b))) {
           pos = t;
           break;
         }

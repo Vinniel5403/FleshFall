@@ -52,5 +52,6 @@ export const balance = {
   dyingMs: 30 * 60_000,
   /** Outsiders (reachedRougeLand=false) may walk into Rouge Land on their own from this level; before that only red door → Cypress → ferryman. */
   rougeLandUnlockLevel: 10,
-  xpForLevel: (level: number) => 50 + (level - 1) * 35,
+  /** XP to clear `level`. The square term outgrows monster XP (linear in city level), so later levels take more hunts: ~3 at Lv 1 → ~13 at Lv 15. Was linear (a flat ~3 hunts every level). */
+  xpForLevel: (level: number) => 50 + 35 * (level - 1) + 10 * (level - 1) ** 2,
 };

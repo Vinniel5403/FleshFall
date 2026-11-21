@@ -46,13 +46,15 @@ export interface MonsterState {
   id: string;
   hp: number;
   maxHp: number;
+  /** This monster's own level (hunt level ± `levelSpread`). Missing on old saves → the hunt's level. */
+  lv?: number;
 }
 
 /** Active hunt: 3 monsters spawned in a zone. door = lucky dungeon door revealed after victory. */
 export interface Hunt {
   zone: ZoneId;
   monsters: MonsterState[];
-  /** Monster level for this hunt = city level + trip streak bonus. Missing on old saves → city level. */
+  /** Base monster level for this hunt = city level + trip streak bonus (each monster rolls around it). Missing on old saves → city level. */
   lv?: number;
   door?: IconDoor;
   log: string[];
@@ -269,8 +271,8 @@ export interface ItemPlacement {
   shop: ('home' | Continent)[];
   /** local goods a monster may carry (per kill, LOCAL_DROPS) */
   local: Continent[];
-  /** gear that fits the city tier (per kill, TIER_GEAR) */
-  tiers: Tier[];
+  /** gear that fits the city tier (per kill, TIER_GEAR); 'legend' = the legend pool (LEGEND_DROPS, epic + legendary cities) */
+  tiers: (Tier | 'legend')[];
   /** decoration pieces found searching after a hunt: 'any' = every city, continent = only there */
   decor: ('any' | Continent)[];
 }

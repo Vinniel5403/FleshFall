@@ -47,7 +47,7 @@ export function llmsFullTxt(): string {
   out.push("", "## Old Realm — continents & cities", "");
   for (const c of world.continents) {
     out.push(`### ${c.emoji} ${c.name} (Icon: ${c.icon}, ประตู ${world.doors[c.door]?.name ?? c.door})`, "");
-    for (const city of c.cities) out.push(`- ${city.emoji} ${city.name} [${world.tiers[city.tier]?.name ?? city.tier} · Lv ${city.level}]: ${city.desc}`);
+    for (const city of c.cities) out.push(`- ${city.emoji} ${city.name} [${world.tiers[city.tier]?.name ?? city.tier} · Lv ${city.level}${world.tiers[city.tier]?.scales ? "+ (scales to your level)" : ""}]: ${city.desc}`);
     out.push("");
   }
   out.push("## Bestiary", "");
