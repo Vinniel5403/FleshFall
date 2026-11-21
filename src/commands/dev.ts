@@ -1,7 +1,7 @@
 import { MessageFlags, SlashCommandBuilder, type ChatInputCommandInteraction } from 'discord.js';
 import { addItem, isFallen, loadCharacter, saveCharacter } from '../game/character.js';
 import { isDev } from '../game/dev.js';
-import { autoHunt, fullHeal, raiseLevel } from '../game/devTools.js';
+import { autoHunt, fullHeal, raiseLevel, unFiend } from '../game/devTools.js';
 import { inField } from '../game/expedition.js';
 import { ITEMS, getItem, itemLabel } from '../game/items.js';
 import type { Character } from '../game/types.js';
@@ -46,7 +46,13 @@ export const dev: Command = {
     .addSubcommand((s) =>
       s
         .setName('heal')
-        .setDescription('ฟื้นเลือด/แรง/สติเต็ม ลุกจากสภาพล้ม และแก้ Fiend กลับเป็นคน')
+        .setDescription('ฟื้นเลือด/แรง/สติเต็ม และลุกจากสภาพล้ม')
+        .addUserOption((o) => o.setName('user').setDescription('ใคร (ค่าเริ่มต้น: ตัวเอง)')),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('human')
+        .setDescription('แก้ Fiend กลับเป็นคน (ความเป็นมนุษย์ 50 กลับ Rouge Land)')
         .addUserOption((o) => o.setName('user').setDescription('ใคร (ค่าเริ่มต้น: ตัวเอง)')),
     )
     .addSubcommand((s) =>
@@ -79,7 +85,7 @@ export const dev: Command = {
       if (!char) return i.reply({ content: 'คุณยังไม่มีตัวละคร', flags: ephemeral });
       const road = travelNotice(char);
       if (road) return i.reply({ content: road, flags: ephemeral });
-      if (char.fiend || isFallen(char)) return i.reply({ content: 'ตัวละครล้มอยู่หรือเป็น Fiend — `/dev heal` ก่อน', flags: ephemeral });
+      if (char.fiend || isFallen(char)) return i.reply({ content: 'ตัวละครล้มอยู่หรือเป็น Fiend — `/dev heal` / `/dev human` ก่อน', flags: ephemeral });
       const count = i.options.getInteger('count') ?? 10;
       const r = autoHunt(char, count, { deep: i.options.getBoolean('deep') ?? true, heal: i.options.getBoolean('heal') ?? false, real: i.options.getBoolean('real') ?? false });
       saveCharacter(char);
@@ -110,6 +116,12 @@ export const dev: Command = {
       fullHeal(char);
       saveCharacter(char);
       return i.reply({ content: `💚 ฟื้นเต็ม${who(i, char)} — 🩸 ${char.hp}/${char.maxHp} · ⚡ ${char.stamina}/${char.maxStamina} · 🧠 ${char.sanity}`, flags: ephemeral });
+    }
+
+    if (sub === 'human') {
+      if (!unFiend(char)) return i.reply({ content: `${char.name} ยังเป็นคนอยู่`, flags: ephemeral });
+      saveCharacter(char);
+      return i.reply({ content: `🕊️ ${char.name} กลับเป็นคนแล้ว — ความเป็นมนุษย์ ${char.humanity} · อยู่ Rouge Land`, flags: ephemeral });
     }
 
     if (sub === 'level') {

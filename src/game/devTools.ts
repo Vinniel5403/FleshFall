@@ -86,16 +86,8 @@ export function raiseLevel(char: Character, level: number): AppliedOutcome | nul
   return applyOutcome(char, { text: '', xp: levelXp(char.level, level) - char.xp });
 }
 
-/** Full HP/stamina/sanity, back on their feet if downed or dying, human again if a Fiend (humanity ≥ 50). */
+/** Full HP/stamina/sanity and back on their feet if downed or dying. */
 export function fullHeal(char: Character): void {
-  if (char.fiend) {
-    char.fiend = false;
-    char.location = 'rouge_land';
-    delete char.zone;
-    delete char.traveling;
-    delete char.hunt;
-  }
-  char.humanity = Math.max(char.humanity, 50);
   char.hp = char.maxHp;
   char.stamina = char.maxStamina;
   char.sanity = 100;
@@ -103,3 +95,17 @@ export function fullHeal(char: Character): void {
   delete char.dying;
 }
 
+
+/** Fiend → human again (like Sophia's rite): humanity 50, back in Rouge Land. Returns false if not a Fiend. */
+export function unFiend(char: Character): boolean {
+  if (!char.fiend) return false;
+  char.fiend = false;
+  char.humanity = 50;
+  char.location = 'rouge_land';
+  delete char.zone;
+  delete char.traveling;
+  delete char.hunt;
+  delete char.run;
+  delete char.pendingEvent;
+  return true;
+}
