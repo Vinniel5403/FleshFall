@@ -126,7 +126,8 @@ function pickDoor(zone: ZoneDef): IconDoor | undefined {
 
 export type HuntStart = { ok: true; hunt: Hunt } | { ok: false; error: string };
 
-export function startHunt(char: Character): HuntStart {
+/** `safe` (Dev auto-hunt) skips the trip-streak Miasma. */
+export function startHunt(char: Character, safe = false): HuntStart {
   const zone = currentZone(char);
   const pool = zone.monsters.map(getMonster).filter((m): m is MonsterDef => !!m);
   if (pool.length === 0) return { ok: false, error: `ไม่มีอะไรให้ล่าที่ ${zone.name}` };
@@ -135,7 +136,7 @@ export function startHunt(char: Character): HuntStart {
   }
   if (!isDev(char)) char.stamina -= balance.huntStaminaCost;
   const log = ['ความเคลื่อนไหวรอบตัว... มีบางอย่างพุ่งออกมา!'];
-  const miasma = streakMiasma(char);
+  const miasma = safe ? 0 : streakMiasma(char);
   if (miasma) {
     // deeper into the trip, the air itself is rotting
     const a = applyOutcome(char, { text: '', miasma });

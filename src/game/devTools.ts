@@ -22,7 +22,8 @@ export interface AutoHuntReport {
 const MAX_ROUNDS = 200;
 
 /**
- * Run `count` hunts back to back in the current city. Default = forced win (`forceWin`: real loot/XP, no dice);
+ * Run `count` hunts back to back in the current city. Default = forced win (`forceWin`: real loot/XP, no dice) with no
+ * costs — no streak Miasma, humanity kept (level-ups would otherwise turn a 100-hunt run into a Fiend).
  * `real` fights it out instead, always hitting the weakest monster still standing, and stops when you fall.
  */
 export function autoHunt(char: Character, count: number, opts: { deep?: boolean; heal?: boolean; real?: boolean } = {}): AutoHuntReport {
@@ -36,12 +37,18 @@ export function autoHunt(char: Character, count: number, opts: { deep?: boolean;
   for (let n = 0; n < count; n++) {
     if (!opts.deep && char.trip) char.trip.streak = 0;
     if (opts.heal) char.hp = char.maxHp;
-    const s = startHunt(char);
+    const humanity = char.humanity;
+    const s = startHunt(char, !opts.real);
     if (!s.ok) {
       r.stop = s.error;
       break;
     }
-    let ended = opts.real ? undefined : forceWin(char).ended;
+    let ended: string | undefined;
+    if (!opts.real) {
+      char.humanity = 100; // no Fiend mid-hunt from level-ups
+      ended = forceWin(char).ended;
+      char.humanity = humanity;
+    }
     for (let round = 0; round < MAX_ROUNDS && !ended; round++) {
       const h = char.hunt!;
       const idx = h.monsters.reduce((best, m, i) => (m.hp > 0 && (best < 0 || m.hp < h.monsters[best]!.hp) ? i : best), -1);
@@ -79,8 +86,16 @@ export function raiseLevel(char: Character, level: number): AppliedOutcome | nul
   return applyOutcome(char, { text: '', xp: levelXp(char.level, level) - char.xp });
 }
 
-/** Full HP/stamina/sanity and back on their feet if downed or dying. */
+/** Full HP/stamina/sanity, back on their feet if downed or dying, human again if a Fiend (humanity ≥ 50). */
 export function fullHeal(char: Character): void {
+  if (char.fiend) {
+    char.fiend = false;
+    char.location = 'rouge_land';
+    delete char.zone;
+    delete char.traveling;
+    delete char.hunt;
+  }
+  char.humanity = Math.max(char.humanity, 50);
   char.hp = char.maxHp;
   char.stamina = char.maxStamina;
   char.sanity = 100;
