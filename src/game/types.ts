@@ -245,7 +245,7 @@ export interface ItemDef {
   blast?: [number, number];
   /** The room catalog id it places (web/src/data/rooms.json) — what makes an item placeable in the private room. */
   furniture?: string;
-  /** Room-decoration collectible found on hunts (drops.ts). Placeable once its art exists and `furniture` is set. */
+  /** Room-decoration collectible found on hunts (drops.ts). Placeable as an emoji sticker (`decorFurnitureId`) until real art exists. */
   decor?: boolean;
 }
 

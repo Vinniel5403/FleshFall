@@ -193,6 +193,14 @@ const list: ItemDef[] = [
     description: 'ตราของรูปบูชา — ถวายที่ศาล Icon ท้ายดันเจียนเพื่อเลื่อนขั้นพร · หรือกำไว้ท่อง First Verses ได้ทุกที่ (+6 สติ, +4 ความเป็นมนุษย์)' },
 ];
 
+/**
+ * Decoration pieces place in the private room right away: until real art exists they use an emoji sticker built by
+ * `npm run web:rooms` under this catalog id (keep in sync with decorId in web/scripts/build-rooms.mts). Real art later
+ * keeps the same id (rooms.json item `"id"` override), so placed pieces survive the swap.
+ */
+export const decorFurnitureId = (itemId: string) => `decor-${itemId.replace(/_/g, '-')}`;
+for (const i of list) if (i.decor) i.furniture ??= decorFurnitureId(i.id);
+
 export const ITEMS: Record<string, ItemDef> = Object.fromEntries(list.map((i) => [i.id, i]));
 
 export function getItem(id: string): ItemDef | undefined {
