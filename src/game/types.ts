@@ -48,6 +48,8 @@ export interface MonsterState {
   maxHp: number;
   /** This monster's own level (hunt level ± `levelSpread`). Missing on old saves → the hunt's level. */
   lv?: number;
+  /** Rotting (Thanatos gift): loses 5% max HP every round. */
+  rot?: boolean;
 }
 
 /** Active hunt: 3 monsters spawned in a zone. door = lucky dungeon door revealed after victory. */
@@ -61,6 +63,8 @@ export interface Hunt {
   loot: Record<string, number>;
   xp: number;
   won?: boolean;
+  /** Loki gift's re-roll already used this hunt. */
+  reroll?: boolean;
 }
 
 /** Character image slots (website uploads). Defined in account.ts IMAGE_SLOTS. */
@@ -142,6 +146,8 @@ export interface MarketOrder {
 export interface Trip {
   loot: Record<string, number>;
   streak: number;
+  /** Talent second_wind already saved you this trip. */
+  secondWind?: boolean;
 }
 
 /** Meal buff from a Bar-only dish. `servedBy` = Maid who served it (stronger + longer). */
@@ -198,6 +204,17 @@ export interface Character {
   gearMerged?: Record<string, number>;
   /** Blessing tier per Icon (0–5), earned at Icon shrines. */
   blessings?: Partial<Record<IconId, number>>;
+  /** Growth system version (growth.ts `migrateGrowth`): missing = old auto-stat saves, refunded on load. */
+  growthV?: number;
+  /** Stat points waiting to be spent (1 per level, 2 every 5th). */
+  statPoints?: number;
+  /** Talent picks waiting (1 every 5 levels) + the 3 on offer for the next one (kept so re-opening never rerolls). */
+  talentPicks?: number;
+  talentOffer?: string[];
+  /** Talents taken: id → times (growth.ts TALENTS). */
+  talents?: Record<string, number>;
+  /** Icon gifts received at shrines (growth.ts GIFTS), one per Icon. */
+  gifts?: IconId[];
   /** Character art uploaded on the website (portrait, full art, sheet, gallery). */
   images?: CharImage[];
   /** Animated paper-doll sprite from the player's PSD. */

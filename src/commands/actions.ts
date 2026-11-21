@@ -1,5 +1,6 @@
 import { isDev } from '../game/dev.js';
 import { feed } from '../game/feed.js';
+import { talentLv } from '../game/growth.js';
 /**
  * Shared player actions used by both slash commands and menu-panel buttons.
  * Each returns an ActionResult; callers decide reply vs update and visibility.
@@ -123,7 +124,7 @@ export function equipItem(char: Character, id: string): ActionResult {
 import { CONTINENT_STOCK, STOCK } from '../game/shops.js';
 export { CONTINENT_STOCK, STOCK };
 
-export const buyPrice = (c: Character, id: string) => Math.ceil((getItem(id)?.value ?? 0) * (c.role === 'patron' ? 0.75 : 1));
+export const buyPrice = (c: Character, id: string) => Math.ceil((getItem(id)?.value ?? 0) * ((c.role === 'patron' ? 0.75 : 1) - 0.1 * talentLv(c, 'haggler')));
 /** Field merchants lowball: selling out in the Old Realm pays 70%. Bring it home for the full price. */
 export const FIELD_SELL_MULT = 0.7;
 
@@ -285,7 +286,7 @@ export function cookRecipe(char: Character, recipeId: string): ActionResult {
       resultEmbed(char, `💥 ${r.name} ล้มเหลว`, ['เนื้อเน่าเดือดพลุ่งพล่าน Miasma ฟุ้งเต็มครัว — มีแค่คนของบาร์เท่านั้นที่ปรุงได้อย่างปลอดภัย', '', ...a.lines], COLORS.blood),
     );
   }
-  const qty = isBar && chance(0.3) ? 2 : 1;
+  const qty = isBar && chance(talentLv(char, 'house_special') ? 0.6 : 0.3) ? 2 : 1;
   addItem(char, r.makes, qty);
   const xp = applyOutcome(char, { text: '', xp: isBar ? 12 : 6 });
   saveCharacter(char);
@@ -589,7 +590,7 @@ export function serveFood(maid: Character, guest: Character, itemId: string): Ac
   removeItem(maid, itemId);
   addItem(guest, itemId);
   const ate = consume(guest, itemId, maid.name) ?? [];
-  const tip = SERVE_TIP * (guest.role === 'patron' ? 2 : 1);
+  const tip = SERVE_TIP * (guest.role === 'patron' ? 2 : 1) * (talentLv(maid, 'gracious') ? 2 : 1);
   maid.flesh += tip;
   const xp = applyOutcome(maid, { text: '', xp: 10 });
   saveCharacter(maid);

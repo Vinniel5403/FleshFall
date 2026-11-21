@@ -22,8 +22,8 @@ export const balance = {
   travelMs: Number(process.env.TRAVEL_MINUTES ?? 30) * 60_000,
   huntStaminaCost: 2,
   /** Monsters are the city's level. Per level above 1 they gain this share of their base hp / damage / xp, and drop this much more meat & supplies. */
-  huntHpPerLevel: 0.2,
-  huntDmgPerLevel: 0.15,
+  huntHpPerLevel: 0.25,
+  huntDmgPerLevel: 0.2,
   huntXpPerLevel: 0.25,
   huntLootPerLevel: 0.15,
   /** Every hunt won this trip makes the next hunt's monsters this many levels higher (no cap) — hp/dmg/to-hit/xp/loot all follow. Resets at home. */

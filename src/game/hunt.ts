@@ -5,7 +5,8 @@ import { feed } from './feed.js';
  * Lucky hunts reveal a dungeon door after victory.
  */
 import { balance } from '../config.js';
-import { applyOutcome, consume, evadeMod, gainItem, gearAtk, hitMod, hitParts, mergeDmg, removeItem, stopped, type AppliedOutcome } from './character.js';
+import { applyOutcome, consume, critFrom, evadeMod, extraStrike, gainItem, gearAtk, hitMod, hitParts, mergeDmg, removeItem, stopped, strDmg, type AppliedOutcome } from './character.js';
+import { hasGift, talentLv } from './growth.js';
 import { bumpStreak, lootMult, rareBonus, streakLevels, streakMiasma, streakOf } from './expedition.js';
 import { chance, rand, startRun } from './engine.js';
 import { d20Success, levelDC, rollTag, type DiceRoll } from './dice.js';
@@ -233,8 +234,8 @@ function rollLoot(char: Character, h: Hunt, m: MonsterState): string[] {
     got.push(itemLabel(item, n));
   };
   // its body: more of it in higher cities and deeper into a streak
-  const mult = scale(lv, balance.huntLootPerLevel) * lootMult(char);
-  for (const d of [...def.drops, { item: 'hunted_flesh', chance: char.role === 'hound' ? 0.45 : 0.08 }]) {
+  const mult = scale(lv, balance.huntLootPerLevel) * lootMult(char) * (1 + 0.1 * talentLv(char, 'scavenger'));
+  for (const d of [...def.drops, { item: 'hunted_flesh', chance: (char.role === 'hound' ? 0.45 : 0.08) + 0.15 * talentLv(char, 'bloodhound') }]) {
     const p = d.chance < 0.3 ? d.chance + rareBonus(char) : d.chance;
     if (!chance(p)) continue;
     const n = piles(d.item) ? Math.max(1, Math.round((d.qty ? rand(d.qty[0], d.qty[1]) : 1) * mult)) : 1;
@@ -260,7 +261,7 @@ function rollLoot(char: Character, h: Hunt, m: MonsterState): string[] {
 function salvage(char: Character, h: Hunt): string[] {
   const z = getZone(h.zone);
   const found: string[] = [];
-  const relic = chance(RELIC_CHANCE) ? pickByRarity(VINTAGE_IDS) : undefined;
+  const relic = chance(RELIC_CHANCE * (1 + talentLv(char, 'old_world'))) ? pickByRarity(VINTAGE_IDS) : undefined;
   if (relic) found.push(relic);
   if (chance(DECOR_CHANCE[z?.tier ?? 'easy'] + DECOR_STREAK_STEP * Math.min(streakOf(char), 8))) {
     const id = pickDecor(z?.continent);
@@ -300,6 +301,36 @@ function endIfFallen(char: Character, a: AppliedOutcome | undefined): RoundResul
 }
 
 /** Attack monster at index, then survivors strike back. */
+/** One swing at `target` with the d20 already rolled: damage, crit, Thanatos rot, Beelzebub's feast on a kill. */
+function strike(char: Character, h: Hunt, target: MonsterState, roll: number, lines: string[], label = '⚔️'): boolean {
+  const mod = hitMod(char);
+  const ac = levelDC(char.level, monsterLevel(h, target));
+  if (!d20Success(roll, mod, ac)) {
+    lines.push(`${label} \`${rollTag(roll, mod, ac)}\` ฟาดพลาด ${nameOf(target)}`);
+    return false;
+  }
+  const crit = roll >= critFrom(char);
+  let dmg = rand(1, 6) + Math.floor(char.level / 2) + gearAtk(char) + mergeDmg(char) + strDmg(char);
+  if (crit) dmg *= 2;
+  if (hasGift(char, 'belphegor') && char.hp < char.maxHp * 0.3) dmg = Math.ceil(dmg * 1.5);
+  target.hp = Math.max(0, target.hp - dmg);
+  if (hasGift(char, 'thanatos')) target.rot = true;
+  lines.push(`${label} \`${rollTag(roll, mod, ac)}\` ${crit ? '**คริติคอล!** ' : ''}ฟาด ${nameOf(target)} **-${dmg}**`);
+  if (target.hp === 0) fell(char, h, target, lines);
+  return true;
+}
+
+function fell(char: Character, h: Hunt, m: MonsterState, lines: string[], how = 'ล้มลง'): void {
+  const got = rollLoot(char, h, m);
+  lines.push(`💀 ${nameOf(m)} ${how}${got.length ? ` — ได้ ${got.join(', ')}` : ''}`);
+  if (hasGift(char, 'beelzebub') && char.hp < char.maxHp) {
+    const heal = Math.min(char.maxHp - char.hp, Math.ceil(char.maxHp * 0.1));
+    char.hp += heal;
+    lines.push(`-# 🍖 ความหิวที่อิ่มไม่เป็น — 🩸 +${heal}`);
+  }
+}
+
+/** Attack monster at index (ว่องไว may give a second swing), rot ticks, then survivors strike back. */
 export function attack(char: Character, idx: number): RoundResult {
   const h = char.hunt;
   const target = h?.monsters[idx];
@@ -310,32 +341,46 @@ export function attack(char: Character, idx: number): RoundResult {
   const ac = levelDC(char.level, foeLv);
   const lines: string[] = [];
 
-  const roll = rand(1, 20);
+  if (hasGift(char, 'sophia') && char.hp < char.maxHp) {
+    const heal = Math.min(char.maxHp - char.hp, Math.ceil(char.maxHp * 0.05));
+    char.hp += heal;
+    lines.push(`-# 🌱 ครรภ์ที่ไม่หยุดงอก — 🩸 +${heal}`);
+  }
+
   const mod = hitMod(char);
-  const hit = d20Success(roll, mod, ac);
+  const rolls = [rand(1, 20)];
+  // Loki's gift: a miss gets one more throw per hunt
+  if (!d20Success(rolls[0]!, mod, ac) && hasGift(char, 'loki') && !h.reroll) {
+    h.reroll = true;
+    lines.push(`🎭 ลูกเต๋าที่สอง — ทอยใหม่ (${rolls[0]} → ?)`);
+    rolls.push(rand(1, 20));
+  }
+  const roll = rolls[rolls.length - 1]!;
+  const crit = roll >= critFrom(char);
   const dice: DiceRoll = {
     label: `โจมตี ${def.name}`,
     mod,
-    modLabel: 'พละ',
+    modLabel: 'สัมผัส',
     parts: hitParts(char),
     target: ac,
     targetNote: `คุณ Lv ${char.level} · มอน Lv ${foeLv}`,
-    rolls: [roll],
-    success: hit,
-    win: roll === 20 ? 'คริติคอล!' : 'โดน!',
+    rolls,
+    success: d20Success(roll, mod, ac),
+    win: crit ? 'คริติคอล!' : 'โดน!',
     lose: 'พลาด',
   };
-  if (hit) {
-    let dmg = rand(1, 6) + Math.floor(char.level / 2) + gearAtk(char) + mergeDmg(char) + Math.floor(char.stats.str / 2);
-    if (roll === 20) dmg *= 2;
-    target.hp = Math.max(0, target.hp - dmg);
-    lines.push(`⚔️ \`${rollTag(roll, mod, ac)}\` ${roll === 20 ? '**คริติคอล!** ' : ''}ฟาด ${nameOf(target)} **-${dmg}**`);
-    if (target.hp === 0) {
-      const got = rollLoot(char, h, target);
-      lines.push(`💀 ${nameOf(target)} ล้มลง${got.length ? ` — ได้ ${got.join(', ')}` : ''}`);
-    }
-  } else {
-    lines.push(`⚔️ \`${rollTag(roll, mod, ac)}\` ฟาดพลาด ${nameOf(target)}`);
+  strike(char, h, target, roll, lines);
+
+  // ว่องไว: sometimes a second swing (same target, or the next one standing)
+  const next = target.hp > 0 ? target : alive(h)[0];
+  if (next && chance(extraStrike(char))) strike(char, h, next, rand(1, 20), lines, '💨 ตีซ้ำ!');
+
+  // Thanatos' rot eats whatever it touched
+  for (const m of alive(h).filter((x) => x.rot)) {
+    const d = Math.max(1, Math.ceil(m.maxHp * 0.05));
+    m.hp = Math.max(0, m.hp - d);
+    lines.push(`-# 🦠 ${nameOf(m)} เน่า **-${d}**`);
+    if (m.hp === 0) fell(char, h, m, lines, 'เน่าสลาย');
   }
 
   const won = finishIfWon(char, h, lines);

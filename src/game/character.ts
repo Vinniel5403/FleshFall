@@ -10,6 +10,7 @@ import { ROLES } from './roles.js';
 import { CHAR_VERSION, type BuffDef, type Character, type IconId, type Outcome, type RoleId, type StatKey } from './types.js';
 import { isCrimsonMoon, LOCATIONS } from './world.js';
 import { arrivalText, currentZone, resolveTravel, startTravel } from './zones.js';
+import { GIFTS, GROWTH_VERSION, growOnLevel, hasGift, migrateGrowth, talentLv } from './growth.js';
 
 /** Build a fresh character without saving it (web demo, sims). */
 export function newCharacter(userId: string, name: string, role: RoleId, icon: IconId): Character {
@@ -47,6 +48,7 @@ export function newCharacter(userId: string, name: string, role: RoleId, icon: I
     breakdowns: 0,
     eventsCompleted: 0,
     dungeonsCleared: 0,
+    growthV: GROWTH_VERSION,
   };
   if (r.weapon) addItem(char, r.weapon), (char.equipped.weapon = r.weapon);
   if (r.armor) addItem(char, r.armor), (char.equipped.armor = r.armor);
@@ -67,6 +69,7 @@ export function loadCharacter(userId: string): Character | undefined {
     db.deleteCharacter(userId);
     return undefined;
   }
+  migrateGrowth(char);
   regen(char);
   resolveTravel(char);
   resolveFall(char);
@@ -153,7 +156,7 @@ export const mergeDmg = (char: Character) => mergeBonus(mergeCopies(char, char.e
 
 export function gearDef(char: Character): number {
   const a = char.equipped.armor;
-  return (a ? (getItem(a)?.def ?? 0) + (char.gearLevels?.[a] ?? 0) : 0) + (mods(char.icon).dmgReduction ?? 0) + buffAmount(char, 'def');
+  return (a ? (getItem(a)?.def ?? 0) + (char.gearLevels?.[a] ?? 0) : 0) + (mods(char.icon).dmgReduction ?? 0) + buffAmount(char, 'def') + (hasGift(char, 'wendigo') ? 3 : 0);
 }
 
 /** Bonuses that come and go (Icon, meal, cornered, Hound out hunting, hallucinations) — shared by event checks and combat. */
@@ -175,27 +178,42 @@ const total = (parts: DicePart[]) => parts.reduce((s, [, v]) => s + v, 0);
 export function statParts(char: Character, stat: StatKey): DicePart[] {
   return shown([
     [`ค่า${STAT_LABEL[stat]}`, char.stats[stat]],
-    ['เลเวล', Math.floor(char.level / 3)],
     ['อาวุธ', stat === 'str' ? gearAtk(char) : 0],
+    ['สัญชาตญาณ', talentLv(char, 'instinct')],
     ...sideParts(char, stat),
   ]);
 }
 
 export const statMod = (char: Character, stat: StatKey): number => total(statParts(char, stat));
 
+/** A stat with what comes and goes on top (Icon, meal, cornered, Hound, hallucinations). */
+export const effStat = (char: Character, stat: StatKey) => Math.max(0, char.stats[stat] + total(sideParts(char, stat)));
+
 /**
- * To-hit bonus in a hunt: half of STR (rounded up) + the situational bonuses.
+ * To-hit bonus in a hunt: a third of สัมผัส + the situational bonuses — seeing where to strike.
  * No level and no weapon here — level already sets the target (`levelDC`), the weapon adds damage.
  */
 export function hitParts(char: Character): DicePart[] {
-  return shown([['ครึ่งค่าพละ', Math.ceil(char.stats.str / 2)], ...sideParts(char, 'str')]);
+  return shown([['สัมผัส ÷ 3', Math.floor(char.stats.int / 3)], ...sideParts(char, 'int')]);
 }
+
+/** Hunt damage from พละ (+1 per 2) and talents. */
+export const strDmg = (char: Character) => Math.floor(effStat(char, 'str') / 2) + 2 * talentLv(char, 'heavy_hand');
+
+/** Lowest d20 face that crits on a hit: 20, one lower per 8 สัมผัส, hawk_eye, Hastur's gift. Never below 15 (30%). */
+export const critFrom = (char: Character) =>
+  Math.max(15, 20 - Math.floor(effStat(char, 'int') / 8) - talentLv(char, 'hawk_eye') - (hasGift(char, 'hastur') ? 2 : 0));
+
+/** Chance to strike a second time in a round, from ว่องไว: agi / (agi + 60) — always grows, never reaches 100%. */
+export const extraStrike = (char: Character) => {
+  const a = effStat(char, 'agi');
+  return a / (a + 60);
+};
 
 export const hitMod = (char: Character): number => total(hitParts(char));
 
 /** Dodge in a hunt: half of AGI (rounded up, same situational bonuses), 0–5 — added to what a monster must roll. */
-export const evadeMod = (char: Character): number =>
-  Math.min(5, Math.max(0, Math.ceil((char.stats.agi + total(sideParts(char, 'agi'))) / 2)));
+export const evadeMod = (char: Character): number => Math.floor(0.8 * Math.sqrt(effStat(char, 'agi'))) + talentLv(char, 'quick_feet');
 
 export function seesHints(char: Character): boolean {
   return char.role === 'survivor' || !!mods(char.icon).seesHints;
@@ -317,6 +335,11 @@ export function applyOutcome(char: Character, o: Outcome): AppliedOutcome {
     res.becameFiend = true;
     return res;
   }
+  if (char.hp <= 0 && talentLv(char, 'second_wind') && char.trip && !char.trip.secondWind && fallMode(char) !== 'dead') {
+    char.trip.secondWind = true;
+    char.hp = 1;
+    lines.push('🫁 **ลมหายใจที่สอง** — ร่างที่ควรล้มลุกขึ้นยืนอีกครั้ง (เนื้อกาย 1)');
+  }
   if (char.hp <= 0) {
     const mode = fallMode(char);
     if (mode === 'downed') {
@@ -353,7 +376,7 @@ export function changeHumanity(char: Character, delta: number, lines: string[]):
 function changeSanity(char: Character, delta: number, crimson: boolean, lines: string[], label = '🧠'): void {
   const m = mods(char.icon);
   let d = delta;
-  if (d < 0) d = Math.round(d * (m.sanityLossMult ?? 1) * (crimson ? 1.5 : 1)) || -1;
+  if (d < 0) d = Math.round(d * (m.sanityLossMult ?? 1) * (crimson ? 1.5 : 1) * (1 - 0.2 * talentLv(char, 'iron_mind'))) || -1;
   const before = char.sanity;
   char.sanity = Math.max(0, Math.min(100, char.sanity + d));
   const real = char.sanity - before;
@@ -368,10 +391,8 @@ function levelUp(char: Character, lines: string[]): void {
   char.maxStamina += 1;
   char.hp = char.maxHp;
   char.stamina = char.maxStamina;
-  const main = (Object.entries(ROLES[char.role].stats) as [StatKey, number][]).sort((a, b) => b[1] - a[1])[0]![0];
-  char.stats[main] += 1;
-  lines.push(`🆙 **เลเวล ${char.level}!** — พลังจาก ${ICONS[char.icon].name} ไหลเข้าสู่ร่าง`);
-  changeHumanity(char, -2, lines);
+  // no stat of its own and no humanity cost: the player spends the points (growth.ts)
+  lines.push(`🆙 **เลเวล ${char.level}!** — พลังจาก ${ICONS[char.icon].name} ไหลเข้าสู่ร่าง`, ...growOnLevel(char));
   if (!char.reachedRougeLand && char.level >= balance.rougeLandUnlockLevel) {
     char.reachedRougeLand = true;
     lines.push('🩸 **Rouge Land เปิดรับคุณแล้ว** — ร่างนี้แกร่งพอจะเดินเข้าแผ่นดินสีแดงได้เอง กด 🏠 เมื่อพร้อม');

@@ -9,6 +9,7 @@ import { streakText } from './game/expedition.js';
 import { exitOptions, visibleChoices } from './game/engine.js';
 import { ICON_BY_DOOR, ICONS } from './game/icons.js';
 import { blessingsText, shrineNote } from './game/blessings.js';
+import { pendingText, talentsText } from './game/growth.js';
 import { itemLabel } from './game/items.js';
 import { maidGrade, ROLES } from './game/roles.js';
 import type { Character, GameEventDef } from './game/types.js';
@@ -117,6 +118,8 @@ export function profilePayload(char: Character): Promise<ImagePayload> {
     isCrimsonMoon() ? '🌕 **Crimson Moon กำลังส่องแสง**' : null,
     activeBuff(char) ? `🍽️ ${buffLabel(char)} — หมด <t:${Math.ceil(activeBuff(char)!.until / 1000)}:R>` : null,
     streakText(char),
+    pendingText(char) ? `**${pendingText(char)}** — กด 🆙 ด้านล่าง` : null,
+    talentsText(char) ? `**🌟 พรสวรรค์**\n${talentsText(char)}` : null,
     blessingsText(char) ? `**✨ พรเทพ**\n${blessingsText(char)}` : null,
     char.mutations.length ? `**🧬 การกลายพันธุ์**\n${char.mutations.map((m) => `• ${m}`).join('\n')}` : null,
     char.role === 'bar' ? `-# ⏰ Closing Shift ${String(closingShiftHour(char.userId)).padStart(2, '0')}:00 น.` : null,

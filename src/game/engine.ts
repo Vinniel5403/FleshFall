@@ -1,5 +1,6 @@
 import { balance } from '../config.js';
 import { applyOutcome, changeHumanity, itemCount, removeItem, statMod, statParts, stopped, type AppliedOutcome } from './character.js';
+import { talentLv } from './growth.js';
 import { EVENTS, EVENTS_BY_ID } from './events/index.js';
 import { rollIconDungeon, receiveBlessing } from './blessings.js';
 import { feed } from './feed.js';
@@ -90,7 +91,7 @@ export function getEvent(id: string): GameEventDef | undefined {
 
 /** Explore outside a dungeon: usually finds nothing (`balance.exploreEmptyChance`), else starts an event. Caller saves. */
 export function startExplore(char: Character): GameEventDef | undefined {
-  const ev = pickEvent(char, balance.exploreEmptyChance);
+  const ev = pickEvent(char, Math.max(0, balance.exploreEmptyChance - 0.15 * talentLv(char, 'pathfinder')));
   return ev && startEvent(char, ev);
 }
 

@@ -24,7 +24,9 @@ import {
 } from 'discord.js';
 import { itemCount, saveCharacter } from '../game/character.js';
 import { getItem, itemEffects, itemLabel } from '../game/items.js';
-import type { Character } from '../game/types.js';
+import type { Character, StatKey } from '../game/types.js';
+import { pickTalent, spendPoints, talentOffer } from '../game/growth.js';
+import { growthButton, growthView } from './growth.js';
 import { CONTINENTS, citiesByContinent, currentZone, riskLabel, tierLabel, travelNotice, ZONES, type Continent } from '../game/zones.js';
 import {
   autoSrc,
@@ -347,9 +349,9 @@ function upgradeRow(char: Character) {
 /** Last panel reply per user. Opening a new one deletes it, so only one ephemeral view stays on screen. */
 const lastView = new Map<string, ButtonInteraction>();
 /** Buttons inside an already-open view: they edit it in place instead of opening a new one. */
-const IN_PLACE = new Set(['upg', 'go', 'buyq', 'sellq']);
+const IN_PLACE = new Set(['upg', 'go', 'buyq', 'sellq', 'pt']);
 /** Still usable on the road: looking at yourself, and what you carry. */
-const ON_ROAD = new Set(['profile', 'inv', 'use', 'equip', 'rest', 'pray']);
+const ON_ROAD = new Set(['profile', 'inv', 'use', 'equip', 'rest', 'pray', 'talent']);
 
 /** On the road every other panel action answers with the same plain notice — no map, no pickers (null = go ahead). */
 const roadBlock = (char: Character, action = '') => (ON_ROAD.has(action) ? null : travelNotice(char));
@@ -380,7 +382,21 @@ async function openPanelView(i: ButtonInteraction): Promise<unknown> {
     saveCharacter(char); // persist regen
     await i.deferReply({ flags: ephemeral }); // card render can exceed the 3s window on small hosts
     if (action === 'inv') return i.editReply({ ...(await inventoryPayload(char)), components: inventoryRows(char) });
-    return i.editReply(await profilePayload(char));
+    return i.editReply({ ...(await profilePayload(char)), components: [new ActionRowBuilder<ButtonBuilder>().addComponents(growthButton(char))] });
+  }
+
+  // growth works anywhere — on the road, fallen, even mid-hunt (the new numbers apply on the next swing)
+  if (action === 'grow' || action === 'pt') {
+    const char = await requireCharacter(i);
+    if (!char) return;
+    if (action === 'grow') {
+      talentOffer(char); // roll the offer once, before saving
+      saveCharacter(char);
+      return i.reply({ ...growthView(char), flags: ephemeral });
+    }
+    const r = spendPoints(char, arg as StatKey, Number(qtyArg) || 1);
+    saveCharacter(char);
+    return i.update(growthView(char, r.ok ? r.text : `⚠️ ${r.text}`));
   }
 
   const char = await requireActive(i);
@@ -494,6 +510,11 @@ export async function handlePanelSelect(i: StringSelectMenuInteraction): Promise
   const road = roadBlock(active, action);
   if (road) return i.update(noticeOnly(road));
   if (action?.startsWith('mkt')) return marketSelect(i, active, action);
+  if (action === 'talent') {
+    const r = pickTalent(active, value);
+    saveCharacter(active);
+    return i.update(growthView(active, r.ok ? r.text : `⚠️ ${r.text}`));
+  }
 
   switch (action) {
     case 'travelc':

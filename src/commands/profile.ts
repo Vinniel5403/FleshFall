@@ -1,4 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
+import { growthButton } from '../interactions/growth.js';
 import { assignHandles, imageUrl, nameHandle, pickImage, profileSlug } from '../game/account.js';
 import { db } from '../db/index.js';
 import { loadCharacter, saveCharacter } from '../game/character.js';
@@ -29,8 +30,9 @@ function findByName(q: string): Character[] {
 const webHandle = (char: Character) =>
   assignHandles(db.allCharacters().filter((c) => /^\d+$/.test(c.userId))).get(char.userId) ?? nameHandle(char.name);
 
-function profileLinks(char: Character): ActionRowBuilder<ButtonBuilder>[] {
+function profileLinks(char: Character, self = false): ActionRowBuilder<ButtonBuilder>[] {
   const row = new ActionRowBuilder<ButtonBuilder>();
+  if (self) row.addComponents(growthButton(char));
   const sheet = pickImage(char, ['sheet']);
   const sheetUrl = sheet && imageUrl(sheet.key);
   if (sheetUrl) row.addComponents(new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel('ชีทตัวละคร').setEmoji('📜').setURL(sheetUrl));
@@ -71,7 +73,7 @@ export const profile: Command = {
     const self = char.userId === i.user.id;
     if (self) saveCharacter(char); // persist regen (own character only)
     await i.deferReply(); // card render can exceed the 3s window on small hosts
-    return i.editReply({ ...(await profilePayload(char)), components: profileLinks(char) });
+    return i.editReply({ ...(await profilePayload(char)), components: profileLinks(char, self) });
   },
 };
 
