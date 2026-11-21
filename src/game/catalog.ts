@@ -32,7 +32,8 @@ export function basePlacement(id: string): ItemPlacement {
   };
 }
 
-export const placementOf = (id: string): ItemPlacement => PLACEMENT_OVERRIDE[id] ?? basePlacement(id);
+const NOWHERE: ItemPlacement = { shop: [], local: [], tiers: [], decor: [] };
+export const placementOf = (id: string): ItemPlacement => (ITEMS[id]?.retired ? NOWHERE : (PLACEMENT_OVERRIDE[id] ?? basePlacement(id)));
 
 /**
  * Rarity when nobody set one: decoration by how local it is, continent goods by their old pick weight,

@@ -48,7 +48,7 @@ export function world() {
 
 export const icons = () => Object.values(ICONS).map(({ mods: _m, ...rest }) => rest);
 export const roles = () => Object.values(ROLES).map(({ id, name, emoji, short, perks, stats, maxHp, maxStamina }) => ({ id, name, emoji, short, perks, stats, maxHp, maxStamina }));
-export const items = () => Object.values(ITEMS).map(publicItem);
+export const items = () => Object.values(ITEMS).filter((d) => !d.retired).map(publicItem);
 export const bestiary = () => Object.values(MONSTERS);
 export const imageSlots = () => Object.values(IMAGE_SLOTS);
 

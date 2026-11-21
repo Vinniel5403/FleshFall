@@ -20,7 +20,7 @@ export async function PUT(req: Request) {
   }
 }
 
-/** Delete a custom item for good (json: { id }) — the bot strips it from every player; its art leaves R2. */
+/** Delete an item (json: { id }) — the bot strips it from every player; a custom one is gone (art leaves R2), a code one is retired (`item` comes back). */
 export async function DELETE(req: Request) {
   if (!sameOrigin(req)) return jsonError(403, "forbidden");
   const s = await getSession();
@@ -28,10 +28,10 @@ export async function DELETE(req: Request) {
   const { id } = (await req.json().catch(() => ({}))) as { id?: unknown };
   if (typeof id !== "string") return jsonError(400, "ข้อมูลไม่ถูกต้อง");
   try {
-    const r = await botAdmin<{ deleted: string; players: number }>("admin/item/delete", { userId: s.uid, id });
+    const r = await botAdmin<{ deleted: string; players: number; item?: AdminItem }>("admin/item/delete", { userId: s.uid, id });
     if (r.status !== 200) return jsonError(r.status, r.data.error ?? "ลบไม่สำเร็จ");
     if (r.data.evicted?.length) await deleteObjects(r.data.evicted);
-    return Response.json({ deleted: r.data.deleted, players: r.data.players });
+    return Response.json({ deleted: r.data.deleted, players: r.data.players, item: r.data.item });
   } catch {
     return jsonError(503, BOT_DOWN);
   }

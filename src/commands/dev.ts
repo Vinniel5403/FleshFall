@@ -72,7 +72,7 @@ export const dev: Command = {
 
   async autocomplete(i) {
     const q = i.options.getFocused().toLowerCase();
-    const hits = Object.values(ITEMS).filter((d) => !q || d.name.toLowerCase().includes(q) || d.id.includes(q));
+    const hits = Object.values(ITEMS).filter((d) => !d.retired).filter((d) => !q || d.name.toLowerCase().includes(q) || d.id.includes(q));
     return i.respond(hits.slice(0, 25).map((d) => ({ name: `${d.emoji} ${d.name} · ${d.type}`.slice(0, 100), value: d.id })));
   },
 

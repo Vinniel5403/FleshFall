@@ -61,7 +61,7 @@ export const namedItem = (id: string) => {
 export function roomArt() {
   const out: { id: string; name: string; room: string; src: string; x: number; y: number; w: number; h: number }[] = [];
   for (const d of Object.values(ITEMS)) {
-    const src = d.furniture && d.image && imageUrl(d.image);
+    const src = !d.retired && d.furniture && d.image && imageUrl(d.image);
     if (!src || !d.furniture) continue;
     const [iw, ih] = d.imageSize ?? [1, 1];
     const h = Math.min(1, (d.sizeCm ?? DEFAULT_CM) / ROOM.cm);

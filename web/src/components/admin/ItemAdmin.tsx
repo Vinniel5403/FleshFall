@@ -130,12 +130,12 @@ function AdminBody() {
     }
   };
   const reset = async () => {
-    if (!draft || !confirm(`รีเซ็ต ${draft.name} กลับเป็นค่าในโค้ด? (รูปที่อัปยังอยู่)`)) return;
+    if (!draft || !confirm(draft.retired ? `กู้คืน ${draft.name}? (กลับเป็นค่าในโค้ด รูปที่อัปยังอยู่)` : `รีเซ็ต ${draft.name} กลับเป็นค่าในโค้ด? (รูปที่อัปยังอยู่)`)) return;
     setBusy(true);
     try {
       const r = await api<{ item: AdminItem }>("/api/admin/item/reset", jsonInit("POST", { id: draft.id }));
       upsert({ ...r.item, edited: false });
-      toast.ok("รีเซ็ตแล้ว");
+      toast.ok(draft.retired ? "กู้คืนแล้ว" : "รีเซ็ตแล้ว");
     } catch (e) {
       toast.err((e as Error).message);
     } finally {
@@ -163,13 +163,20 @@ function AdminBody() {
     }
   };
   const remove = async () => {
-    if (!draft || !confirm(`ลบ ${draft.name} ถาวร?\nของชิ้นนี้จะหายจากผู้เล่นทุกคน (กระเป๋า ของรอรับ ที่สวมอยู่ ห้อง) และออเดอร์ในตลาด — ย้อนกลับไม่ได้`)) return;
+    if (!draft) return;
+    const warn = draft.custom
+      ? `ลบ ${draft.name} ถาวร?\nของชิ้นนี้จะหายจากผู้เล่นทุกคน (กระเป๋า ของรอรับ ที่สวมอยู่ ห้อง) และออเดอร์ในตลาด — ย้อนกลับไม่ได้`
+      : `ลบ ${draft.name}?\nของชิ้นนี้จะหายจากผู้เล่นทุกคน (กระเป๋า ของรอรับ ที่สวมอยู่ ห้อง) และออเดอร์ในตลาด และจะไม่มีใครได้อีกจากทุกทาง (ร้าน ดรอป เหตุการณ์ สูตรอาหาร)\nกู้คืนไอเทมได้ภายหลัง แต่ของที่ผู้เล่นเสียไปจะไม่กลับมา`;
+    if (!confirm(warn)) return;
     setBusy(true);
     try {
-      const r = await api<{ deleted: string; players: number }>("/api/admin/item", jsonInit("DELETE", { id: draft.id }));
-      setCat((c) => (c ? { ...c, items: c.items.filter((x) => x.id !== r.deleted) } : c));
-      setSel(null);
-      setDraft(null);
+      const r = await api<{ deleted: string; players: number; item?: AdminItem }>("/api/admin/item", jsonInit("DELETE", { id: draft.id }));
+      if (r.item) upsert({ ...r.item, edited: true });
+      else {
+        setCat((c) => (c ? { ...c, items: c.items.filter((x) => x.id !== r.deleted) } : c));
+        setSel(null);
+        setDraft(null);
+      }
       toast.ok(`ลบ ${draft.name} แล้ว${r.players ? ` (เอาออกจากผู้เล่น ${r.players} คน)` : ""}`);
     } catch (e) {
       toast.err((e as Error).message);
@@ -240,14 +247,14 @@ function AdminBody() {
         <ul className="adm-list" aria-label="ไอเทมทั้งหมด">
           {list.map((it) => (
             <li key={it.id}>
-              <button type="button" className={`adm-row${sel === it.id ? " on" : ""}`} onClick={() => open(it)}>
+              <button type="button" className={`adm-row${sel === it.id ? " on" : ""}${it.retired ? " gone" : ""}`} onClick={() => open(it)}>
                 <Icon it={it} />
                 <span className="adm-row-name">
                   {it.name}
                   <small>{it.id}</small>
                 </span>
                 <span className="adm-row-meta">
-                  <span className={`adm-rar r-${it.rarity}`}>{RARITY_LABEL[it.rarity]}</span>
+                  {it.retired ? <span className="adm-rar r-gone">ลบแล้ว</span> : <span className={`adm-rar r-${it.rarity}`}>{RARITY_LABEL[it.rarity]}</span>}
                   <small>
                     {TYPE_LABEL[it.type]}
                     {it.decor ? " · แต่งห้อง" : ""} · 🥩{it.value}
@@ -329,6 +336,7 @@ function Editor(props: {
         props.save();
       }}
     >
+      {d.retired && <p className="adm-gone">🗑️ ไอเทมนี้ถูกลบแล้ว — ไม่มีใครได้จากทุกทาง กด "กู้คืนไอเทม" เพื่อเอากลับมา</p>}
       <header className="adm-head">
         <Icon it={d} big />
         <div>
@@ -456,17 +464,25 @@ function Editor(props: {
       </section>
 
       <footer className="adm-foot">
-        {!isNew && d.custom && (
+        {!isNew && !d.retired && (
           <button type="button" className="st-btn danger sm adm-del" onClick={props.remove} disabled={busy}>
             ลบไอเทม
           </button>
         )}
-        {!isNew && !d.custom && d.edited && (
-          <button type="button" className="st-btn ghost sm" onClick={props.reset} disabled={busy}>
-            รีเซ็ตเป็นค่าในโค้ด
+        {d.retired ? (
+          <button type="button" className="st-btn primary" onClick={props.reset} disabled={busy}>
+            กู้คืนไอเทม
           </button>
+        ) : (
+          !isNew &&
+          !d.custom &&
+          d.edited && (
+            <button type="button" className="st-btn ghost sm" onClick={props.reset} disabled={busy}>
+              รีเซ็ตเป็นค่าในโค้ด
+            </button>
+          )
         )}
-        <button type="submit" className="st-btn primary" disabled={busy}>
+        <button type="submit" className="st-btn primary" disabled={busy} hidden={d.retired}>
           {busy ? <Spinner /> : isNew ? "สร้างไอเทม" : "บันทึก"}
         </button>
       </footer>

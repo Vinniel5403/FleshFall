@@ -258,6 +258,8 @@ export interface ItemDef {
   sizeCm?: number;
   /** Made on the admin page (not in items.ts). */
   custom?: boolean;
+  /** Deleted on the admin page (code items can't really go): nobody can gain it, it's out of every shop, pool and list. */
+  retired?: boolean;
 }
 
 export type Rarity = 'common' | 'uncommon' | 'rare' | 'legendary';

@@ -283,8 +283,8 @@ export function applyItemPatches(patches: ItemPatch[]): void {
     ITEMS[p.id] = { ...(cur ?? ({} as ItemDef)), ...p };
     if (where) PLACEMENT_OVERRIDE[p.id] = where;
   }
-  const all = Object.values(ITEMS);
-  for (const i of all) if ((i.decor || i.type === 'furniture') && !i.furniture) i.furniture = decorFurnitureId(i.id);
+  const all = Object.values(ITEMS).filter((i) => !i.retired);
+  for (const i of Object.values(ITEMS)) if ((i.decor || i.type === 'furniture') && !i.furniture) i.furniture = decorFurnitureId(i.id);
   refill(TRADEABLE_IDS, all.filter((i) => i.value > 0).map((i) => i.id));
   refill(VINTAGE_IDS, all.filter((i) => i.type === 'vintage' && !i.decor).map((i) => i.id));
   refill(DECOR_IDS, all.filter((i) => i.decor).map((i) => i.id));

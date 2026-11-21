@@ -102,6 +102,8 @@ export interface AdminItem {
   imageSize?: [number, number];
   sizeCm?: number;
   custom: boolean;
+  /** deleted code item (custom ones vanish instead) — restore with reset */
+  retired?: boolean;
   edited?: boolean;
   effects: string;
   special: string[];

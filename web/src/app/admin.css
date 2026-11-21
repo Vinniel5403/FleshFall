@@ -63,3 +63,6 @@
   .adm-list { max-height: 45vh; }
 }
 .adm-del { margin-right: auto; }
+.adm-row.gone { opacity: .5; }
+.r-gone { color: #ff8a9a; }
+.adm-gone { margin: 0; padding: 10px 12px; border: 1px solid rgba(224, 30, 55, .5); background: rgba(163, 18, 27, .14); color: #ffc2ca; font-size: 13.5px; }

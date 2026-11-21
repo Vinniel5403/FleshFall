@@ -5,7 +5,7 @@ import { db } from '../db/index.js';
 import type { DicePart } from './dice.js';
 import { endTripSafe, inField, loseTrip, tripGain } from './expedition.js';
 import { ICONS, mods } from './icons.js';
-import { getItem, itemLabel } from './items.js';
+import { getItem, itemLabel, ITEMS } from './items.js';
 import { ROLES } from './roles.js';
 import { CHAR_VERSION, type BuffDef, type Character, type IconId, type Outcome, type RoleId, type StatKey } from './types.js';
 import { isCrimsonMoon, LOCATIONS } from './world.js';
@@ -102,6 +102,7 @@ export function gainItem(char: Character, id: string, qty = 1): void {
 }
 
 export function addItem(char: Character, id: string, qty = 1): void {
+  if (qty > 0 && ITEMS[id]?.retired) return; // deleted on the admin page: events/recipes/shops can't hand it out
   const n = itemCount(char, id) + qty;
   if (n <= 0) {
     delete char.inventory[id];

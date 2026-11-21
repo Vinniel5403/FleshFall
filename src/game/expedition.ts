@@ -9,7 +9,7 @@
  * Pure data helpers — no imports from character.ts (zones.ts uses this on arrival).
  */
 import { balance } from '../config.js';
-import { itemLabel } from './items.js';
+import { getItem, itemLabel } from './items.js';
 import { feed } from './feed.js';
 import type { Character } from './types.js';
 
@@ -28,7 +28,7 @@ export const tripLines = (char: Character) => Object.entries(char.trip?.loot ?? 
 
 /** Add to this round's pending haul. */
 export function tripGain(char: Character, id: string, qty: number): void {
-  if (qty <= 0) return;
+  if (qty <= 0 || getItem(id)?.retired) return;
   const t = (char.trip ??= { loot: {}, streak: 0 });
   t.loot[id] = (t.loot[id] ?? 0) + qty;
 }

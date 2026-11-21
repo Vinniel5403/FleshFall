@@ -41,7 +41,7 @@ export function saveItem(b: Record<string, unknown>): Reply {
   return ok({ item: adminItem(id) });
 }
 
-/** Code item back to how items.ts has it (keeps uploaded art). */
+/** Code item back to how items.ts has it (keeps uploaded art) — also un-retires a deleted one. */
 export function resetItem(b: Record<string, unknown>): Reply {
   const id = typeof b.id === 'string' ? b.id : '';
   const cur = patches().get(id);
@@ -72,14 +72,15 @@ export function setItemImage(b: Record<string, unknown>): Reply {
 }
 
 /**
- * Delete a custom item for good: off every character (inventory, trip haul, equipment, room) and out of the
- * market (sell orders vanish with their items; buy orders give the escrowed flesh back). Code items can't be deleted.
+ * Delete an item: off every character (inventory, trip haul, equipment, room) and out of the market (sell orders
+ * vanish with their items; buy orders give the escrowed flesh back). A custom item is gone for good; a code item is
+ * retired instead (`ItemDef.retired`: nobody can gain it, out of every shop/pool) — `resetItem` brings it back.
  */
 export function deleteItem(b: Record<string, unknown>): Reply {
   const id = typeof b.id === 'string' ? b.id : '';
   const d = ITEMS[id];
   if (!d) return fail(404, 'ไม่พบไอเทมนี้');
-  if (!d.custom) return fail(400, 'ไอเทมในโค้ดลบไม่ได้ — เอาออกจากร้าน/ดรอปแทน');
+  if (d.retired) return fail(400, 'ไอเทมนี้ถูกลบไปแล้ว');
   let players = 0;
   for (const c of db.allCharacters()) {
     if (!purgeItem(c, id)) continue;
@@ -94,6 +95,11 @@ export function deleteItem(b: Record<string, unknown>): Reply {
     }
     db.deleteOrder(o.id);
   }
-  store(id, null);
-  return ok({ deleted: id, players, evicted: d.image ? [d.image] : [] });
+  if (d.custom) {
+    store(id, null);
+    return ok({ deleted: id, players, evicted: d.image ? [d.image] : [] });
+  }
+  // code items stay defined (events, recipes and the forge name them) but retired: nobody can gain one again
+  store(id, { ...(patches().get(id) ?? { id }), retired: true });
+  return ok({ deleted: id, players, item: adminItem(id), evicted: [] });
 }
