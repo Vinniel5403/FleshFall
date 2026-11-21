@@ -2,6 +2,7 @@ import { buy, cook, sell, shop } from './economy.js';
 import { explore, pray, rest, travel } from './explore.js';
 import { equip, inventory, use } from './inventory.js';
 import { arrive } from './arrive.js';
+import { dev } from './dev.js';
 import { duel } from './duel.js';
 import { market, serve } from './market.js';
 import { revive } from './revive.js';
@@ -36,6 +37,7 @@ export const commands: Command[] = [
   duel,
   market,
   serve,
+  dev,
 ];
 
 export const commandMap = new Map(commands.map((c) => [c.data.name, c]));
