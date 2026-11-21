@@ -317,6 +317,19 @@ export function attack(char: Character, idx: number): RoundResult {
   return { lines, applied: back.applied, ended: endIfFallen(char, back.applied), dice };
 }
 
+/** Dev: every monster still standing drops dead — same loot/XP/salvage/streak as a real win, no dice, no strikes back. */
+export function forceWin(char: Character): RoundResult {
+  const h = char.hunt;
+  if (!h || h.won) return { lines: ['การต่อสู้จบไปแล้ว'] };
+  const lines: string[] = [];
+  for (const m of alive(h)) {
+    m.hp = 0;
+    const got = rollLoot(char, h, m);
+    lines.push(`💀 ${nameOf(m)} ล้มลง${got.length ? ` — ได้ ${got.join(', ')}` : ''}`);
+  }
+  return { lines, ended: finishIfWon(char, h, lines) };
+}
+
 /** Consumables in the inventory that can be used mid-fight (trip loot isn't usable until home). */
 export function huntUsable(char: Character): { id: string; qty: number }[] {
   return Object.entries(char.inventory)

@@ -29,10 +29,11 @@ export const dev: Command = {
     .addSubcommand((s) =>
       s
         .setName('hunt')
-        .setDescription('ล่าอัตโนมัติทันทีหลายรอบในเมืองที่อยู่')
-        .addIntegerOption((o) => o.setName('count').setDescription('จำนวนรอบ (ค่าเริ่มต้น 10)').setMinValue(1).setMaxValue(50))
+        .setDescription('ล่าทันทีหลายรอบในเมืองที่อยู่ — ชนะทุกรอบ ได้ของ/XP จริง')
+        .addIntegerOption((o) => o.setName('count').setDescription('จำนวนรอบ (ค่าเริ่มต้น 10)').setMinValue(1).setMaxValue(100))
         .addBooleanOption((o) => o.setName('deep').setDescription('ให้มอนเลเวลไต่ขึ้นตามรอบที่ล่าติดกัน เหมือนเล่นจริง (ค่าเริ่มต้น: ไม่)'))
-        .addBooleanOption((o) => o.setName('heal').setDescription('ฮีลเต็มก่อนทุกรอบ (ค่าเริ่มต้น: ไม่)')),
+        .addBooleanOption((o) => o.setName('real').setDescription('สู้จริงด้วยลูกเต๋า แพ้ได้ (ค่าเริ่มต้น: ไม่ = ชนะแน่นอน)'))
+        .addBooleanOption((o) => o.setName('heal').setDescription('ใช้กับ real: ฮีลเต็มก่อนทุกรอบ (ค่าเริ่มต้น: ไม่)')),
     )
     .addSubcommand((s) =>
       s
@@ -80,7 +81,7 @@ export const dev: Command = {
       if (road) return i.reply({ content: road, flags: ephemeral });
       if (char.fiend || isFallen(char)) return i.reply({ content: 'ตัวละครล้มอยู่หรือเป็น Fiend — `/dev heal` ก่อน', flags: ephemeral });
       const count = i.options.getInteger('count') ?? 10;
-      const r = autoHunt(char, count, { deep: i.options.getBoolean('deep') ?? false, heal: i.options.getBoolean('heal') ?? false });
+      const r = autoHunt(char, count, { deep: i.options.getBoolean('deep') ?? false, heal: i.options.getBoolean('heal') ?? false, real: i.options.getBoolean('real') ?? false });
       saveCharacter(char);
       const loot = Object.entries(r.loot).map(([id, n]) => itemLabel(id, n));
       const lines = [

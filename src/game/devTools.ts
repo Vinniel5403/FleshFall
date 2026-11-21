@@ -4,7 +4,7 @@
  */
 import { applyOutcome, type AppliedOutcome } from './character.js';
 import { inField } from './expedition.js';
-import { attack, leaveHunt, startHunt } from './hunt.js';
+import { attack, forceWin, leaveHunt, startHunt } from './hunt.js';
 import { balance } from '../config.js';
 import type { Character } from './types.js';
 
@@ -21,8 +21,11 @@ export interface AutoHuntReport {
 
 const MAX_ROUNDS = 200;
 
-/** Fight `count` hunts back to back in the current city, always hitting the weakest monster still standing. */
-export function autoHunt(char: Character, count: number, opts: { deep?: boolean; heal?: boolean } = {}): AutoHuntReport {
+/**
+ * Run `count` hunts back to back in the current city. Default = forced win (`forceWin`: real loot/XP, no dice);
+ * `real` fights it out instead, always hitting the weakest monster still standing, and stops when you fall.
+ */
+export function autoHunt(char: Character, count: number, opts: { deep?: boolean; heal?: boolean; real?: boolean } = {}): AutoHuntReport {
   const r: AutoHuntReport = { wins: 0, doors: 0, stop: '', xp: 0, levels: 0, loot: {} };
   const bagBefore = { ...(inField(char) ? char.trip?.loot : char.inventory) };
   const startLv = char.level;
@@ -38,7 +41,7 @@ export function autoHunt(char: Character, count: number, opts: { deep?: boolean;
       r.stop = s.error;
       break;
     }
-    let ended: string | undefined;
+    let ended = opts.real ? undefined : forceWin(char).ended;
     for (let round = 0; round < MAX_ROUNDS && !ended; round++) {
       const h = char.hunt!;
       const idx = h.monsters.reduce((best, m, i) => (m.hp > 0 && (best < 0 || m.hp < h.monsters[best]!.hp) ? i : best), -1);
