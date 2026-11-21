@@ -197,7 +197,7 @@ export function hitParts(char: Character): DicePart[] {
   return shown([['สัมผัส ÷ 3', Math.floor(char.stats.int / 3)], ...sideParts(char, 'int')]);
 }
 
-/** Hunt damage from พละ (+1 per 2) and talents. */
+/** Hunt damage from พละกำลัง (+1 per 2) and talents. */
 export const strDmg = (char: Character) => Math.floor(effStat(char, 'str') / 2) + 2 * talentLv(char, 'heavy_hand');
 
 /** Lowest d20 face that crits on a hit: 20, one lower per 8 สัมผัส, hawk_eye, Hastur's gift. Never below 15 (30%). */
@@ -214,6 +214,14 @@ export const hitMod = (char: Character): number => total(hitParts(char));
 
 /** Dodge in a hunt: half of AGI (rounded up, same situational bonuses), 0–5 — added to what a monster must roll. */
 export const evadeMod = (char: Character): number => Math.floor(0.8 * Math.sqrt(effStat(char, 'agi'))) + talentLv(char, 'quick_feet');
+
+/** What a stat does in a hunt right now, in plain words ("ดาเมจ +3", "หลบ +2 · ตีซ้ำ 13%", "ตีโดน +2 · คริเมื่อทอย 19–20"). */
+export function statEffect(char: Character, s: StatKey): string {
+  if (s === 'str') return `ดาเมจ +${strDmg(char)}`;
+  if (s === 'agi') return `หลบ +${evadeMod(char)} · ตีซ้ำ ${Math.round(extraStrike(char) * 100)}%`;
+  const c = critFrom(char);
+  return `ตีโดน +${hitMod(char)} · คริเมื่อทอย ${c === 20 ? '20' : `${c}–20`}`;
+}
 
 export function seesHints(char: Character): boolean {
   return char.role === 'survivor' || !!mods(char.icon).seesHints;
@@ -243,7 +251,7 @@ export interface AppliedOutcome {
 /** The step stopped the character (death, knocked out, dying choice, breakdown, Fiend) — stop the current flow. */
 export const stopped = (a: AppliedOutcome) => a.died || !!a.downed || !!a.dying || a.brokeDown || a.becameFiend;
 
-const STAT_LABEL: Record<StatKey, string> = { str: 'พละ', agi: 'ว่องไว', int: 'สัมผัส' };
+const STAT_LABEL: Record<StatKey, string> = { str: 'พละกำลัง', agi: 'ว่องไว', int: 'สัมผัส' };
 
 const MUTATIONS = [
   'ดวงตาดวงที่สามงอกบนหน้าผาก',
@@ -606,7 +614,7 @@ export function applyBuff(char: Character, itemId: string, servedBy?: string, no
   return `🍽️ ${buffLabel(char)} นาน ${minutes} นาที${servedBy ? ` — เสิร์ฟโดย ${servedBy}` : ''}`;
 }
 
-/** "บัฟ พละ +3" for the active buff ('' if none). */
+/** "บัฟ พละกำลัง +3" for the active buff ('' if none). */
 export function buffLabel(char: Character): string {
   const b = activeBuff(char);
   if (!b) return '';

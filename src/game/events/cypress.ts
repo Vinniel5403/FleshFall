@@ -71,7 +71,7 @@ export const CYPRESS_EVENTS: GameEventDef[] = [
         label: 'ค้นแท่นบูชา',
         emoji: '🔍',
         style: 'primary',
-        hint: 'สัมผัส DC 12',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('int', 12);
           return r.success
@@ -100,7 +100,7 @@ export const CYPRESS_EVENTS: GameEventDef[] = [
         label: 'จ้องกลับ',
         emoji: '👁️',
         style: 'danger',
-        hint: 'สัมผัส DC 16 — รางวัลสูง เสี่ยงสติแตก',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 16 ขึ้นไป — รางวัลสูง เสี่ยงสติแตก',
         resolve: ({ check }) => {
           const r = check('int', 16);
           return r.success

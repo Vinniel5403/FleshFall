@@ -41,7 +41,7 @@ export const DUNGEON_RULES: Record<IconDoor, { depth: [number, number]; retreat:
   purple: { depth: [3, 4], retreat: 'free', note: 'Miasma ของ Thanatos เนื้อสดเน่าทันทีที่สัมผัส' },
 };
 
-export const STAT_NAMES: Record<StatKey, string> = { str: 'พละ', agi: 'ว่องไว', int: 'สัมผัส' };
+export const STAT_NAMES: Record<StatKey, string> = { str: 'พละกำลัง', agi: 'ว่องไว', int: 'สัมผัส' };
 
 // ---------- Crimson Moon ----------
 

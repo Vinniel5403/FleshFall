@@ -114,7 +114,7 @@ export const ICONS: Record<IconId, IconDef> = {
     door: 'purple',
     doorName: 'ประตูสีม่วง',
     concept: '"ไม่มีสิ่งใดคงอยู่"',
-    blessing: 'ต้านทาน Miasma สมบูรณ์ · คำสาปเน่า พละ +2',
+    blessing: 'ต้านทาน Miasma สมบูรณ์ · คำสาปเน่า พละกำลัง +2',
     repercussion: 'ร่างกายไม่ฟื้นฟูเอง — พักไม่ได้เนื้อกายคืน ต้องใช้ยา/เล่นแร่แปรธาตุ',
     mods: { miasmaImmune: true, checkBonus: { str: 2 }, noNaturalHeal: true },
   },

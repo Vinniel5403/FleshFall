@@ -118,8 +118,8 @@ export function duelAct(d: Duel, action: DuelAction): DuelStep {
     dice = {
       label: `${me.name} ${smash ? 'ทุ่มสุดตัวใส่' : 'ฟาด'} ${foe.name}`,
       mod: toHit,
-      modLabel: 'พละ',
-      parts: smash ? [['พละ', me.toHit], ['ทุ่มสุดตัว', -4]] : [['พละ', me.toHit]],
+      modLabel: 'พละกำลัง',
+      parts: smash ? [['พละกำลัง', me.toHit], ['ทุ่มสุดตัว', -4]] : [['พละกำลัง', me.toHit]],
       target: ac,
       targetNote: [`เลเวล ${base}`, ...(foe.evade ? [`หลบ +${foe.evade}`] : []), ...(foe.guarding ? ['การ์ด +4'] : [])].join(' · '),
       rolls: [roll],

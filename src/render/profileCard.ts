@@ -1,7 +1,7 @@
 /** Profile card — character portrait + stats. */
 import { balance } from '../config.js';
 import { imageUrl, pickImage } from '../game/account.js';
-import { gearAtk, gearDef, humanityTier, statMod } from '../game/character.js';
+import { gearAtk, gearDef, humanityTier, statEffect } from '../game/character.js';
 import { ICONS } from '../game/icons.js';
 import { getItem } from '../game/items.js';
 import { maidGrade, ROLES } from '../game/roles.js';
@@ -42,18 +42,24 @@ const ROLE_EN: Record<RoleId, string> = {
   survivor: 'SURVIVOR',
 };
 
-function statBox(ctx: Ctx, x: number, y: number, w: number, h: number, key: StatKey, base: number, mod: number): void {
+function statBox(ctx: Ctx, x: number, y: number, w: number, h: number, key: StatKey, base: number, effect: string): void {
   box(ctx, x, y, w, h);
   font(ctx, 15, 700, 'Cinzel');
   ctx.fillStyle = C.crimson;
-  spaced(ctx, key.toUpperCase(), x + w / 2, y + 30, 4, 'center');
+  spaced(ctx, `${key.toUpperCase()}`, x + w / 2 - 30, y + 30, 4, 'center');
+  font(ctx, 15, 600);
+  ctx.textAlign = 'left';
+  ctx.fillText(STAT_NAMES[key], x + w / 2 + 2, y + 30);
   ctx.textAlign = 'center';
   font(ctx, 46, 600);
   ctx.fillStyle = C.bone;
   ctx.fillText(String(base), x + w / 2, y + 82);
-  font(ctx, 16, 400);
-  ctx.fillStyle = C.muted;
-  ctx.fillText(`${STAT_NAMES[key]}  ·  เช็ค ${mod >= 0 ? '+' : ''}${mod}`, x + w / 2, y + h - 16);
+  // what it does in a hunt, shrunk to fit the box
+  let size = 16;
+  font(ctx, size, 500);
+  while (size > 11 && ctx.measureText(effect).width > w - 20) font(ctx, --size, 500);
+  ctx.fillStyle = C.flesh;
+  ctx.fillText(effect, x + w / 2, y + h - 16);
   ctx.textAlign = 'left';
 }
 
@@ -228,7 +234,7 @@ export async function renderProfileCard(char: Character): Promise<Buffer> {
   y += 44;
   const gap = 16;
   const bw = (W - gap * 2) / 3;
-  (['str', 'agi', 'int'] as const).forEach((k, idx) => statBox(ctx, X + idx * (bw + gap), y, bw, 126, k, char.stats[k], statMod(char, k)));
+  (['str', 'agi', 'int'] as const).forEach((k, idx) => statBox(ctx, X + idx * (bw + gap), y, bw, 126, k, char.stats[k], statEffect(char, k)));
 
   // equipment
   y += 126 + 38;

@@ -47,7 +47,7 @@ export const ROLES: Record<RoleId, RoleDef> = {
     name: 'Hound (นักล่าเนื้อ)',
     emoji: '🐺',
     short: 'นักล่าบ้าบิ่นผู้แลกความเป็นมนุษย์กับพลัง',
-    perks: ['พละ +1 ทุกเช็คนอก Rouge Land', 'ล่าเก่ง: ได้เนื้อสดจากการล่า +25%'],
+    perks: ['พละกำลัง +1 เมื่ออยู่นอก Rouge Land', 'ล่าเก่ง: ได้เนื้อสดจากการล่า +25%'],
     stats: { str: 4, agi: 2, int: 0 },
     maxHp: 40,
     maxStamina: 12,

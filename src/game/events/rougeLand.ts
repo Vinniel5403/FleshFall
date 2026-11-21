@@ -48,7 +48,7 @@ export const ROUGE_LAND_EVENTS: GameEventDef[] = [
         label: 'อดกลั้น',
         emoji: '🙏',
         style: 'primary',
-        hint: 'สัมผัส DC 13 — ผ่านแล้วได้ความเป็นมนุษย์คืน',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 13 ขึ้นไป — ผ่านแล้วได้ความเป็นมนุษย์คืน',
         resolve: ({ check }) => {
           const r = check('int', 13);
           return r.success
@@ -70,7 +70,7 @@ export const ROUGE_LAND_EVENTS: GameEventDef[] = [
         label: 'แล่ตามจังหวะ plagal cadence',
         emoji: '🔪',
         style: 'primary',
-        hint: 'ว่องไว DC 12',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 12);
           return r.success
@@ -83,7 +83,7 @@ export const ROUGE_LAND_EVENTS: GameEventDef[] = [
         label: 'ระบุอวัยวะและเกรด',
         emoji: '🧠',
         style: 'secondary',
-        hint: 'สัมผัส DC 12',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check }) => {
           const r = check('int', 12);
           return r.success
@@ -105,7 +105,7 @@ export const ROUGE_LAND_EVENTS: GameEventDef[] = [
         label: 'ช่วยขายหน้าร้าน',
         emoji: '⚖️',
         style: 'primary',
-        hint: 'สัมผัส DC 10 — ได้ค่าแรงเป็นเนื้อสด',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 10 ขึ้นไป — ได้ค่าแรงเป็นเนื้อสด',
         resolve: ({ check, rand }) => {
           const r = check('int', 10);
           return r.success
@@ -195,7 +195,7 @@ export const ROUGE_LAND_EVENTS: GameEventDef[] = [
         label: 'วักเลือดจากน้ำพุดื่ม',
         emoji: '🩸',
         style: 'danger',
-        hint: 'ฟื้นแรงมาก แต่ถูกเมดจับได้หรือเปล่า? (ว่องไว DC 14)',
+        hint: 'ฟื้นแรงมาก แต่ถูกเมดจับได้หรือเปล่า? (ใช้ว่องไว · ต้องทอยรวมได้ 14 ขึ้นไป)',
         resolve: ({ check }) => {
           const r = check('agi', 14);
           return r.success
@@ -219,7 +219,7 @@ export const ROUGE_LAND_EVENTS: GameEventDef[] = [
         label: 'ออกไปเก็บเนื้อจาก Fiend ตัวใหม่',
         emoji: '🔪',
         style: 'danger',
-        hint: 'พละ DC 15 — รางวัลสูง เสี่ยงมาก',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 15 ขึ้นไป — รางวัลสูง เสี่ยงมาก',
         resolve: ({ check, rand }) => {
           const r = check('str', 15);
           return r.success

@@ -1,6 +1,6 @@
 import { balance } from '../config.js';
 import { applyOutcome, changeHumanity, itemCount, removeItem, statMod, statParts, stopped, type AppliedOutcome } from './character.js';
-import { talentLv } from './growth.js';
+import { receiveGift, talentLv } from './growth.js';
 import { EVENTS, EVENTS_BY_ID } from './events/index.js';
 import { rollIconDungeon, receiveBlessing } from './blessings.js';
 import { feed } from './feed.js';
@@ -225,6 +225,8 @@ export function exitDungeon(char: Character, choice: ExitChoice): DungeonStep {
   }
   const lines = [exitText(run.door, choice)];
   if (choice === 'icon') lines.push(...receiveBlessing(char, run.door));
+  // getting out of a door's dungeon alive = that door's Icon notices you (its gift, the first time)
+  lines.push(...receiveGift(char, ICON_BY_DOOR[run.door].id));
   const applied = applyOutcome(char, o);
   return { ok: true, lines: [...lines, ...applied.lines], applied };
 }

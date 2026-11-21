@@ -18,7 +18,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'เก็บเกี่ยวเนื้อทารก',
         emoji: '🍼',
         style: 'primary',
-        hint: 'ว่องไว DC 11',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 11 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 11);
           return r.success
@@ -41,7 +41,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ผ่ารังไข่',
         emoji: '🔪',
         style: 'danger',
-        hint: 'พละ DC 12 — อาจได้เนื้อเกรดพรีเมียม',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 12 ขึ้นไป — อาจได้เนื้อเกรดพรีเมียม',
         resolve: ({ check, rand }) => {
           const r = check('str', 12);
           return r.success
@@ -64,7 +64,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ฟันเปิดทาง',
         emoji: '🔪',
         style: 'danger',
-        hint: 'พละ DC 12',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 12);
           return r.success
@@ -77,7 +77,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ลัดเลาะระหว่างสาย',
         emoji: '🤸',
         style: 'primary',
-        hint: 'ว่องไว DC 12',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 12);
           return r.success
@@ -99,7 +99,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ปลอบสิ่งที่ร้อง',
         emoji: '🤱',
         style: 'primary',
-        hint: 'สัมผัส DC 12',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check }) => {
           const r = check('int', 12);
           return r.success
@@ -112,7 +112,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ค้นเปลใบอื่น',
         emoji: '🖐️',
         style: 'danger',
-        hint: 'ว่องไว DC 13',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 13);
           return r.success
@@ -143,7 +143,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ลุยข้ามบ่อ',
         emoji: '🚶',
         style: 'primary',
-        hint: 'ว่องไว DC 11',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 11 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 11);
           return r.success
@@ -166,7 +166,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'สู้',
         emoji: '⚔️',
         style: 'danger',
-        hint: 'พละ DC 15',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 15 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 15);
           return r.success
@@ -179,7 +179,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'คุยกับมัน',
         emoji: '🗣️',
         style: 'primary',
-        hint: 'สัมผัส DC 14',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 14 ขึ้นไป',
         resolve: ({ check }) => {
           const r = check('int', 14);
           return r.success
@@ -212,7 +212,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'วิ่งในความมืด',
         emoji: '🏃',
         style: 'primary',
-        hint: 'ว่องไว DC 14 (ไม่มีแสง)',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 14 ขึ้นไป (ไม่มีแสง)',
         resolve: ({ check, rand }) => {
           const r = check('agi', 14);
           return r.success
@@ -234,7 +234,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ตั้งใจฟัง',
         emoji: '👂',
         style: 'primary',
-        hint: 'สัมผัส DC 13',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('int', 13);
           return r.success
@@ -269,7 +269,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'คลำหาของบนแท่น',
         emoji: '🖐️',
         style: 'primary',
-        hint: 'สัมผัส DC 13 (ไม่มีแสง)',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 13 ขึ้นไป (ไม่มีแสง)',
         resolve: ({ check, rand }) => {
           const r = check('int', 13);
           return r.success
@@ -292,7 +292,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'หันไปมอง',
         emoji: '👁️',
         style: 'danger',
-        hint: 'สัมผัส DC 13',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check }) => {
           const r = check('int', 13);
           return r.success
@@ -305,7 +305,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'เบียดตัวไปให้เร็วที่สุด',
         emoji: '🏃',
         style: 'primary',
-        hint: 'ว่องไว DC 12',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 12);
           return r.success
@@ -336,7 +336,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'นับขั้นต่อไปอย่างมีสติ',
         emoji: '🔢',
         style: 'primary',
-        hint: 'สัมผัส DC 12',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check }) => {
           const r = check('int', 12);
           return r.success
@@ -349,7 +349,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'กระโดดลงไป',
         emoji: '🕳️',
         style: 'danger',
-        hint: 'ว่องไว DC 14 — เสี่ยง',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 14 ขึ้นไป — เสี่ยง',
         resolve: ({ check, rand }) => {
           const r = check('agi', 14);
           return r.success
@@ -372,7 +372,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'เผชิญหน้า',
         emoji: '⚔️',
         style: 'danger',
-        hint: 'พละ DC 15',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 15 ขึ้นไป',
         resolve: ({ check, rand, has }) => {
           const r = check('str', has('lighter') ? 13 : 16);
           return r.success
@@ -385,7 +385,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ซ่อนตัวรอมันผ่าน',
         emoji: '🫥',
         style: 'primary',
-        hint: 'ว่องไว DC 14',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 14 ขึ้นไป',
         resolve: ({ check }) => {
           const r = check('agi', 14);
           return r.success
@@ -416,7 +416,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'นั่งพักสักครู่',
         emoji: '🪑',
         style: 'danger',
-        hint: 'สัมผัส DC 14 — ระวังลืมเวลา',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 14 ขึ้นไป — ระวังลืมเวลา',
         resolve: ({ check }) => {
           const r = check('int', 14);
           return r.success
@@ -438,7 +438,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ปฏิเสธ',
         emoji: '✋',
         style: 'primary',
-        hint: 'สัมผัส DC 13',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check }) => {
           const r = check('int', 13);
           return r.success
@@ -460,7 +460,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ล้มตัวลงบนเตียงตัวเอง',
         emoji: '🛏️',
         style: 'danger',
-        hint: 'สัมผัส DC 14 — ระวังไม่ได้ตื่น',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 14 ขึ้นไป — ระวังไม่ได้ตื่น',
         resolve: ({ check }) => {
           const r = check('int', 14);
           return r.success
@@ -490,7 +490,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'นั่งทำงาน',
         emoji: '⌨️',
         style: 'danger',
-        hint: 'สัมผัส DC 13 — ได้เงินเดือน ถ้าลุกออกมาได้',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 13 ขึ้นไป — ได้เงินเดือน ถ้าลุกออกมาได้',
         resolve: ({ check, rand }) => {
           const r = check('int', 13);
           return r.success
@@ -503,7 +503,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'รื้อลิ้นชัก',
         emoji: '🗄️',
         style: 'primary',
-        hint: 'ว่องไว DC 12',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 12);
           return r.success
@@ -538,7 +538,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'เขย่าตู้',
         emoji: '💢',
         style: 'danger',
-        hint: 'พละ DC 12',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 12);
           return r.success
@@ -562,7 +562,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ยืนยันตัวตน',
         emoji: '🪞',
         style: 'primary',
-        hint: 'สัมผัส DC 15',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 15 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('int', 15);
           return r.success
@@ -575,7 +575,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ฟันมัน',
         emoji: '⚔️',
         style: 'danger',
-        hint: 'พละ DC 15',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 15 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 15);
           return r.success
@@ -611,7 +611,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'กระโดดข้ามเหว',
         emoji: '🦘',
         style: 'primary',
-        hint: 'ว่องไว DC 13',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 13);
           return r.success
@@ -633,7 +633,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'กินสักคำ',
         emoji: '🍽️',
         style: 'danger',
-        hint: 'สัมผัส DC 13 เพื่อหยุดกินได้',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 13 ขึ้นไป เพื่อหยุดกินได้',
         resolve: ({ check }) => {
           const r = check('int', 13);
           return r.success
@@ -646,7 +646,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ขโมยของบนโต๊ะ',
         emoji: '🤏',
         style: 'primary',
-        hint: 'ว่องไว DC 12',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 12);
           return r.success
@@ -668,7 +668,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'แล่เนื้อจากตะขอ',
         emoji: '🔪',
         style: 'danger',
-        hint: 'พละ DC 12',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 12);
           return r.success
@@ -681,7 +681,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ลอดใต้ตะขอ',
         emoji: '🤸',
         style: 'primary',
-        hint: 'ว่องไว DC 12',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 12);
           return r.success
@@ -712,7 +712,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'วิ่งข้าม',
         emoji: '🏃',
         style: 'primary',
-        hint: 'ว่องไว DC 13',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 13);
           return r.success
@@ -734,7 +734,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ช้อนของในน้ำย่อย',
         emoji: '🫳',
         style: 'danger',
-        hint: 'ว่องไว DC 13',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 13);
           return r.success
@@ -747,7 +747,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'แหวกผนังออกไปก่อนมันบีบ',
         emoji: '💪',
         style: 'primary',
-        hint: 'พละ DC 12',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 12);
           return r.success
@@ -770,7 +770,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'สู้',
         emoji: '⚔️',
         style: 'danger',
-        hint: 'พละ DC 16',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 16 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 16);
           return r.success
@@ -802,7 +802,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'อดทน',
         emoji: '🧘',
         style: 'primary',
-        hint: 'สัมผัส DC 12 — ความทรมานคือสัจธรรม',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 12 ขึ้นไป — ความทรมานคือสัจธรรม',
         resolve: ({ check }) => {
           const r = check('int', 12);
           return r.success
@@ -853,7 +853,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'จ้องมันกลับ',
         emoji: '👁️',
         style: 'primary',
-        hint: 'สัมผัส DC 13',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check }) => {
           const r = check('int', 13);
           return r.success
@@ -866,7 +866,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ทุบน้ำแข็ง',
         emoji: '🧊',
         style: 'danger',
-        hint: 'พละ DC 12',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 12);
           return r.success
@@ -888,7 +888,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ตามรอยไป',
         emoji: '👣',
         style: 'primary',
-        hint: 'สัมผัส DC 12',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check }) => {
           const r = check('int', 12);
           return r.success
@@ -901,7 +901,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ฝ่าหิมะไปทางของตัวเอง',
         emoji: '🌨️',
         style: 'secondary',
-        hint: 'พละ DC 12',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 12);
           return r.success
@@ -942,7 +942,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ขโมยช้อนเงิน',
         emoji: '🥄',
         style: 'danger',
-        hint: 'ว่องไว DC 13',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 13);
           return r.success
@@ -964,7 +964,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'คุกเข่าสวดร่วมกับพวกเขา',
         emoji: '🙏',
         style: 'primary',
-        hint: 'สัมผัส DC 12',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('int', 12);
           return r.success
@@ -977,7 +977,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'งัดมือศพ',
         emoji: '🫳',
         style: 'danger',
-        hint: 'พละ DC 13 — ลบหลู่',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 13 ขึ้นไป — ลบหลู่',
         resolve: ({ check }) => {
           const r = check('str', 13);
           return r.success
@@ -1000,7 +1000,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ไม่ยอมแพ้',
         emoji: '🧘',
         style: 'primary',
-        hint: 'สัมผัส DC 15 — รางวัลสูงสุดในดันเจียน',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 15 ขึ้นไป — รางวัลสูงสุดในดันเจียน',
         resolve: ({ check, rand }) => {
           const r = check('int', 15);
           return r.success
@@ -1024,7 +1024,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ยอมรับมัน',
         emoji: '😢',
         style: 'primary',
-        hint: 'สัมผัส DC 14 — ความทรมานคือการชำระล้าง',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 14 ขึ้นไป — ความทรมานคือการชำระล้าง',
         resolve: ({ check }) => {
           const r = check('int', 14);
           return r.success
@@ -1037,7 +1037,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ทุบผนังทิ้ง',
         emoji: '💥',
         style: 'danger',
-        hint: 'พละ DC 13',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 13);
           return r.success
@@ -1070,7 +1070,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'สารภาพ',
         emoji: '🙏',
         style: 'primary',
-        hint: 'สัมผัส DC 13',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check }) => {
           const r = check('int', 13);
           return r.success
@@ -1083,7 +1083,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'กระชากประตูอีกฝั่ง',
         emoji: '🚪',
         style: 'danger',
-        hint: 'พละ DC 12',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 12);
           return r.success
@@ -1106,7 +1106,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ลุยไปให้เร็ว',
         emoji: '🏃',
         style: 'secondary',
-        hint: 'ว่องไว DC 12',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 12);
           return r.success
@@ -1119,7 +1119,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ดำลงไปค้นก้นสระ',
         emoji: '🤿',
         style: 'danger',
-        hint: 'พละ DC 13',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 13);
           return r.success
@@ -1141,7 +1141,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ปลอบมัน',
         emoji: '🫂',
         style: 'primary',
-        hint: 'สัมผัส DC 13',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check }) => {
           const r = check('int', 13);
           return r.success
@@ -1154,7 +1154,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ถอนฟันมัน',
         emoji: '🦷',
         style: 'danger',
-        hint: 'พละ DC 13',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 13);
           return r.success
@@ -1177,7 +1177,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'สู้',
         emoji: '⚔️',
         style: 'danger',
-        hint: 'พละ DC 16',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 16 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 16);
           return r.success
@@ -1234,7 +1234,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ขโมยของจากโลงศพ',
         emoji: '⚰️',
         style: 'danger',
-        hint: 'ว่องไว DC 13',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 13);
           return r.success
@@ -1256,7 +1256,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'เก็บของจากแปลง',
         emoji: '🍄',
         style: 'primary',
-        hint: 'ว่องไว DC 12 — พลาดคือสูด Miasma เต็มปอด',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 12 ขึ้นไป — พลาดคือสูด Miasma เต็มปอด',
         resolve: ({ check, rand }) => {
           const r = check('agi', 12);
           return r.success
@@ -1296,7 +1296,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ช่วยเขาเย็บศพ',
         emoji: '🪡',
         style: 'primary',
-        hint: 'สัมผัส DC 12',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('int', 12);
           return r.success
@@ -1309,7 +1309,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'ฉกขวดยา',
         emoji: '🤏',
         style: 'danger',
-        hint: 'ว่องไว DC 14',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 14 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 14);
           return r.success
@@ -1331,7 +1331,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'แงะกระดูกดี ๆ ออกมา',
         emoji: '🦴',
         style: 'danger',
-        hint: 'พละ DC 12',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 12);
           return r.success
@@ -1344,7 +1344,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'อ่านลวดลาย',
         emoji: '🧩',
         style: 'primary',
-        hint: 'สัมผัส DC 13',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('int', 13);
           return r.success
@@ -1367,7 +1367,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'สู้',
         emoji: '⚔️',
         style: 'danger',
-        hint: 'พละ DC 16 + Miasma',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 16 ขึ้นไป + Miasma',
         resolve: ({ check, rand }) => {
           const r = check('str', 16);
           return r.success
@@ -1380,7 +1380,7 @@ export const DUNGEON_EVENTS: GameEventDef[] = [
         label: 'วิ่งหาประตู',
         emoji: '🏃',
         style: 'primary',
-        hint: 'ว่องไว DC 14',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 14 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 14);
           return r.success

@@ -171,7 +171,7 @@ interface Cell {
   color?: string;
 }
 
-/** `2 + 16 = 18 ≥ 6`, each number captioned (ทอยได้ / พละ / รวม / ต้องถึง). */
+/** `2 + 16 = 18 ≥ 6`, each number captioned (ทอยได้ / พละกำลัง / รวม / ต้องถึง). */
 function equation(ctx: Ctx, cells: Cell[]): void {
   const gap = 12;
   const NUM = 24;

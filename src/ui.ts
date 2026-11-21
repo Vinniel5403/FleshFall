@@ -80,7 +80,7 @@ export function profileEmbed(char: Character): EmbedBuilder {
       {
         name: 'อุปกรณ์',
         value: [
-          `อาวุธ: ${char.equipped.weapon ? itemLabel(char.equipped.weapon) + (char.gearLevels?.[char.equipped.weapon] ? ` +${char.gearLevels[char.equipped.weapon]}` : '') : '—'} (ดาเมจ +${gearAtk(char) + mergeDmg(char)} · ทอยพละในเหตุการณ์ +${gearAtk(char)})`,
+          `อาวุธ: ${char.equipped.weapon ? itemLabel(char.equipped.weapon) + (char.gearLevels?.[char.equipped.weapon] ? ` +${char.gearLevels[char.equipped.weapon]}` : '') : '—'} (ดาเมจ +${gearAtk(char) + mergeDmg(char)} · เหตุการณ์ที่ใช้พละกำลัง +${gearAtk(char)})`,
           `เกราะ: ${char.equipped.armor ? itemLabel(char.equipped.armor) + (char.gearLevels?.[char.equipped.armor] ? ` +${char.gearLevels[char.equipped.armor]}` : '') : '—'} (ลดดาเมจ ${gearDef(char)})`,
         ].join('\n'),
       },
@@ -119,7 +119,7 @@ export function profilePayload(char: Character): Promise<ImagePayload> {
     activeBuff(char) ? `🍽️ ${buffLabel(char)} — หมด <t:${Math.ceil(activeBuff(char)!.until / 1000)}:R>` : null,
     streakText(char),
     pendingText(char) ? `**${pendingText(char)}** — กด 🆙 ด้านล่าง` : null,
-    talentsText(char) ? `**🌟 พรสวรรค์**\n${talentsText(char)}` : null,
+    talentsText(char) ? `**🌟 พรสวรรค์ · 🎁 ของขวัญ Icon**\n${talentsText(char)}` : null,
     blessingsText(char) ? `**✨ พรเทพ**\n${blessingsText(char)}` : null,
     char.mutations.length ? `**🧬 การกลายพันธุ์**\n${char.mutations.map((m) => `• ${m}`).join('\n')}` : null,
     char.role === 'bar' ? `-# ⏰ Closing Shift ${String(closingShiftHour(char.userId)).padStart(2, '0')}:00 น.` : null,

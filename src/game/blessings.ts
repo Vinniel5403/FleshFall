@@ -10,7 +10,6 @@
  */
 import { balance } from '../config.js';
 import { itemCount, removeItem } from './character.js';
-import { receiveGift } from './growth.js';
 import { isDev } from './dev.js';
 import { feed } from './feed.js';
 import { ICON_BY_DOOR, ICONS } from './icons.js';
@@ -31,7 +30,7 @@ export const BLESSING_PERK: Record<IconId, Perk> = {
   loki: stat('agi', 'ว่องไว'),
   belphegor: maxHp(4),
   sophia: maxHp(4),
-  thanatos: stat('str', 'พละ'),
+  thanatos: stat('str', 'พละกำลัง'),
   wendigo: maxHp(5),
 };
 
@@ -91,7 +90,6 @@ export function receiveBlessing(char: Character, door: IconDoor): string[] {
     const pct = (p: number) => `${+(p * 100).toFixed(1)}%`;
     lines.push(`-# ⚡ Dev: ดันเจียน Icon โผล่ทุกครั้ง — ผู้เล่นทั่วไปเจอ ${pct(balance.iconDungeonHome)} (ประตูสีประจำทวีป) / ${pct(balance.iconDungeonAway)} (สีอื่น)`);
   }
-  lines.push(...receiveGift(char, icon.id));
   if (icon.id === 'sophia') {
     char.inventory.sophia_rite = (char.inventory.sophia_rite ?? 0) + 1;
     char.inventory.placenta = (char.inventory.placenta ?? 0) + 1;

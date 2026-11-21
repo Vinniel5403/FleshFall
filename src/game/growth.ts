@@ -2,7 +2,7 @@
  * Character growth: stat points the player spends, talents picked every 5 levels, Icon gifts from shrines.
  *
  * Each stat has its own job in a hunt (so a good build needs all three):
- *  - พละ (str)   → damage (+1 per 2) and +2 max HP per point spent
+ *  - พละกำลัง (str)   → damage (+1 per 2) and +2 max HP per point spent
  *  - ว่องไว (agi) → dodge (0.8·√agi, no cap but slow) and a chance to strike twice that keeps growing (agi / (agi + 60))
  *  - สัมผัส (int) → to-hit (+1 per 3) and a wider critical range (+1 per 8, down to 15–20)
  * Every level = 1 point; every 5th level = 1 more + a talent pick (1 of 3 offered). No humanity cost.
@@ -15,13 +15,13 @@ import { ICONS } from './icons.js';
 export const GROWTH_VERSION = 1;
 /** Every Nth level gives a bonus point and a talent pick. */
 export const TALENT_EVERY = 5;
-/** Max HP per point of พละ spent. */
+/** Max HP per point of พละกำลัง spent. */
 export const HP_PER_STR = 2;
 
-export const STAT_INFO: Record<StatKey, { name: string; emoji: string; job: string }> = {
-  str: { name: 'พละ', emoji: '💪', job: 'ดาเมจ +1 ทุก 2 แต้ม · เนื้อกายสูงสุด +2 ต่อแต้มที่แจก' },
-  agi: { name: 'ว่องไว', emoji: '🦶', job: 'หลบ +1 ที่ 4 · +2 ที่ 7 · +3 ที่ 15 · +4 ที่ 25 (ยิ่งสูงยิ่งเพิ่มช้า) · โอกาสตีซ้ำ โตไม่มีเพดาน' },
-  int: { name: 'สัมผัส', emoji: '👁️', job: 'ตีโดน +1 ทุก 3 แต้ม · คริติคอลกว้างขึ้น 1 ช่องทุก 8 แต้ม (สูงสุด 15–20)' },
+export const STAT_INFO: Record<StatKey, { name: string; emoji: string }> = {
+  str: { name: 'พละกำลัง', emoji: '💪' },
+  agi: { name: 'ว่องไว', emoji: '🦶' },
+  int: { name: 'สัมผัส', emoji: '👁️' },
 };
 
 // ---------- talents ----------
@@ -41,13 +41,13 @@ export interface TalentDef {
 
 export const TALENTS: Record<string, TalentDef> = {
   thick_flesh: { id: 'thick_flesh', name: 'เนื้อหนา', emoji: '🥩', desc: 'เนื้อกายสูงสุด +10', max: 5, apply: (c) => ((c.maxHp += 10), (c.hp += 10)) },
-  heavy_hand: { id: 'heavy_hand', name: 'มือหนัก', emoji: '🔨', desc: 'ดาเมจตอนล่า +2', max: 2 },
-  hawk_eye: { id: 'hawk_eye', name: 'ตาเหยี่ยว', emoji: '🎯', desc: 'ช่วงคริติคอลกว้างขึ้น 1 ช่อง', max: 2 },
-  quick_feet: { id: 'quick_feet', name: 'เท้าไว', emoji: '💨', desc: 'หลบ +1', max: 2 },
+  heavy_hand: { id: 'heavy_hand', name: 'มือหนัก', emoji: '🔨', desc: 'ตีแรงขึ้น +2 ทุกครั้งที่โดน', max: 2 },
+  hawk_eye: { id: 'hawk_eye', name: 'ตาเหยี่ยว', emoji: '🎯', desc: 'คริติคอลง่ายขึ้น: ทอยต่ำลง 1 ก็คริ (เช่น 20 → 19–20)', max: 2 },
+  quick_feet: { id: 'quick_feet', name: 'เท้าไว', emoji: '💨', desc: 'มอนตีโดนคุณยากขึ้น +1', max: 2 },
   scavenger: { id: 'scavenger', name: 'นักเก็บกวาด', emoji: '🧺', desc: 'เนื้อ/วัตถุดิบจากมอน +10%', max: 3 },
   iron_mind: { id: 'iron_mind', name: 'ใจแข็ง', emoji: '🧠', desc: 'เสียสติน้อยลง 20%', max: 2 },
   pack_mule: { id: 'pack_mule', name: 'แบกเก่ง', emoji: '🎒', desc: 'แรงสูงสุด +3', max: 3, apply: (c) => ((c.maxStamina += 3), (c.stamina += 3)) },
-  instinct: { id: 'instinct', name: 'สัญชาตญาณ', emoji: '🐾', desc: 'ทอยเช็คในเหตุการณ์ +1 ทุกค่า', max: 3 },
+  instinct: { id: 'instinct', name: 'สัญชาตญาณ', emoji: '🐾', desc: 'ทุกเหตุการณ์ที่ต้องทอยสเตตัส ได้ +1', max: 3 },
   second_wind: { id: 'second_wind', name: 'ลมหายใจที่สอง', emoji: '🫁', desc: 'ล้มครั้งแรกของแต่ละรอบออกล่า ลุกขึ้นมาด้วยเนื้อกาย 1', max: 1 },
   // one per role
   gracious: { id: 'gracious', name: 'รอยยิ้มบริการ', emoji: '🎀', desc: 'เสิร์ฟอาหารได้ทิปสองเท่า', max: 1, role: 'maid' },
@@ -70,26 +70,26 @@ function pickRandom<T>(list: T[], n: number): T[] {
   return a.slice(0, n);
 }
 
-// ---------- Icon gifts (shrine of an Icon dungeon, once per Icon) ----------
+// ---------- Icon gifts: get out of a door's dungeon alive → that door colour's Icon, once per Icon ----------
 
 export const GIFTS: Record<IconId, { name: string; desc: string }> = {
-  loki: { name: 'ลูกเต๋าที่สอง', desc: 'ตีพลาด ได้ทอยใหม่ 1 ครั้งต่อการล่า' },
+  loki: { name: 'ลูกเต๋าที่สอง', desc: 'ตีพลาด ทอยใหม่ได้ 1 ครั้งต่อการล่า' },
   beelzebub: { name: 'ความหิวที่อิ่มไม่เป็น', desc: 'ฆ่ามอนได้ ฟื้นเนื้อกาย 10%' },
-  hastur: { name: 'ดวงตาในความมืด', desc: 'ช่วงคริติคอลกว้างขึ้น 2 ช่อง' },
+  hastur: { name: 'ดวงตาในความมืด', desc: 'คริติคอลง่ายขึ้น: ทอยต่ำลง 2 ก็คริ (เช่น 20 → 18–20)' },
   belphegor: { name: 'ความทรมานคือพลัง', desc: 'เนื้อกายต่ำกว่า 30% ดาเมจ ×1.5' },
   sophia: { name: 'ครรภ์ที่ไม่หยุดงอก', desc: 'ฟื้นเนื้อกาย 5% ทุกเทิร์นที่ล่า' },
   thanatos: { name: 'สัมผัสแห่งความเน่า', desc: 'ตีโดนแล้วมอนเน่า เสีย 5% ของเนื้อกายสูงสุดทุกเทิร์น' },
-  wendigo: { name: 'ผิวน้ำแข็ง', desc: 'รับดาเมจน้อยลง 3' },
+  wendigo: { name: 'ผิวน้ำแข็ง', desc: 'โดนตีเจ็บน้อยลง 3 ทุกครั้ง' },
 };
 
 export const hasGift = (c: Character, icon: IconId) => !!c.gifts?.includes(icon);
 
-/** Shrine visit: the door Icon's gift, the first time only. Returns text lines. */
+/** Dungeon exit (any way out): the door Icon's gift, the first time only. Returns text lines. */
 export function receiveGift(c: Character, icon: IconId): string[] {
   if (hasGift(c, icon)) return [];
   c.gifts = [...(c.gifts ?? []), icon];
   const g = GIFTS[icon];
-  return [`🎁 **ของขวัญจาก ${ICONS[icon].name}: ${g.name}** — ${g.desc}`];
+  return [`🎁 **${ICONS[icon].name} มอบของขวัญให้คุณ: ${g.name}** — ${g.desc}`, '-# ของขวัญติดตัวถาวร ดูได้ใน 📜 โปรไฟล์ › 📈 สเตตัส'];
 }
 
 // ---------- level-up / points / talents ----------

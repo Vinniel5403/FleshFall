@@ -93,7 +93,7 @@ export const OLD_REALM_EVENTS: GameEventDef[] = [
         label: 'ค้นของที่ทิ้งไว้',
         emoji: '🖐️',
         style: 'primary',
-        hint: 'สัมผัส DC 11 — อาจได้ของวินเทจ',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 11 ขึ้นไป — อาจได้ของวินเทจ',
         resolve: ({ check, rand }) => {
           const r = check('int', 11);
           const v = VINTAGE_IDS[rand(0, VINTAGE_IDS.length - 1)]!;
@@ -125,7 +125,7 @@ export const OLD_REALM_EVENTS: GameEventDef[] = [
         label: 'วิ่งหนี',
         emoji: '🏃',
         style: 'primary',
-        hint: 'ว่องไว DC 12',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 12);
           return r.success
@@ -195,7 +195,7 @@ export const OLD_REALM_EVENTS: GameEventDef[] = [
         label: 'นอนพักบนเตียง',
         emoji: '😴',
         style: 'primary',
-        hint: 'สัมผัส DC 13 — ถ้าพลาด สติจะแตกเล็กน้อย',
+        hint: 'ใช้สัมผัส · ต้องทอยรวมได้ 13 ขึ้นไป — ถ้าพลาด สติจะแตกเล็กน้อย',
         resolve: ({ check }) => {
           const r = check('int', 13);
           return r.success
@@ -225,7 +225,7 @@ export const OLD_REALM_EVENTS: GameEventDef[] = [
         label: 'สู้',
         emoji: '⚔️',
         style: 'danger',
-        hint: 'พละ DC 13',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 13 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 13);
           return r.success
@@ -246,7 +246,7 @@ export const OLD_REALM_EVENTS: GameEventDef[] = [
         label: 'หนี',
         emoji: '🏃',
         style: 'primary',
-        hint: 'ว่องไว DC 12',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 12);
           return r.success
@@ -268,7 +268,7 @@ export const OLD_REALM_EVENTS: GameEventDef[] = [
         label: 'เด็ดผลดวงตา',
         emoji: '👁️',
         style: 'primary',
-        hint: 'ว่องไว DC 10',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 10 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('agi', 10);
           return r.success
@@ -292,7 +292,7 @@ export const OLD_REALM_EVENTS: GameEventDef[] = [
         label: 'ฆ่ามันก่อนแปลงร่างเสร็จ',
         emoji: '⚔️',
         style: 'danger',
-        hint: 'พละ DC 15',
+        hint: 'ใช้พละกำลัง · ต้องทอยรวมได้ 15 ขึ้นไป',
         resolve: ({ check, rand }) => {
           const r = check('str', 15);
           return r.success
@@ -305,7 +305,7 @@ export const OLD_REALM_EVENTS: GameEventDef[] = [
         label: 'หลบเข้าตึกให้พ้นแสงจันทร์',
         emoji: '🏚️',
         style: 'primary',
-        hint: 'ว่องไว DC 12',
+        hint: 'ใช้ว่องไว · ต้องทอยรวมได้ 12 ขึ้นไป',
         resolve: ({ check }) => {
           const r = check('agi', 12);
           return r.success
