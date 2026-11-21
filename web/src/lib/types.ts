@@ -8,6 +8,8 @@ export interface TierInfo {
   rec: number;
   /** monsters climb to the hunter's level above `rec` (Epic, Legendary) */
   scales?: boolean;
+  /** level never shown: "Lv Unknown" */
+  hidden?: boolean;
 }
 
 

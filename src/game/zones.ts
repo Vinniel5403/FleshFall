@@ -36,6 +36,8 @@ export interface TierDef {
   rec: number;
   /** Monsters climb to the hunter's level when it's above the city's (the city level is then only the floor). */
   scales?: boolean;
+  /** Players never see the level: shown as "Lv Unknown" everywhere (`zoneLevelText`). */
+  hidden?: boolean;
 }
 
 export const TIERS: Record<Tier, TierDef> = {
@@ -43,7 +45,7 @@ export const TIERS: Record<Tier, TierDef> = {
   normal: { name: 'Normal', emoji: '🟡', rec: 4 },
   hard: { name: 'Hard', emoji: '🔴', rec: 8 },
   epic: { name: 'Epic', emoji: '🟣', rec: 12, scales: true },
-  legendary: { name: 'Legendary', emoji: '🌟', rec: 50, scales: true },
+  legendary: { name: 'Legendary', emoji: '🌟', rec: 50, scales: true, hidden: true },
 };
 
 /** Who spawns at each tier (monster id → pick weight). Depends on the place only — never on the hunter's level. */
@@ -228,8 +230,11 @@ export const zoneLevel = (z: ZoneDef | undefined): number => z?.level ?? zoneTie
 export const huntBaseLevel = (char: Character, z: ZoneDef | undefined): number =>
   zoneTier(z).scales ? Math.max(zoneLevel(z), char.level) : zoneLevel(z);
 
-/** "16" or "16+" — the city's level as players read it (+ = scales up with the hunter). */
-export const zoneLevelText = (z: ZoneDef | undefined): string => `${zoneLevel(z)}${z?.tier && zoneTier(z).scales ? '+' : ''}`;
+/** "16", "16+" (scales up with the hunter) or "Unknown" (hidden tier) — the city's level as players read it. */
+export function zoneLevelText(z: ZoneDef | undefined): string {
+  const t = z?.tier ? zoneTier(z) : undefined;
+  return t?.hidden ? 'Unknown' : `${zoneLevel(z)}${t?.scales ? '+' : ''}`;
+}
 
 /** "🟡 Normal · Lv 5" */
 export function tierLabel(z: ZoneDef): string {
@@ -243,6 +248,7 @@ export function tierLegend(): string {
     .map((id) => {
       const lv = mapCities().filter((z) => z.tier === id).map(zoneLevel);
       const [lo, hi] = [Math.min(...lv), Math.max(...lv)];
+      if (TIERS[id].hidden) return `${TIERS[id].emoji} ${TIERS[id].name} Lv Unknown`;
       return `${TIERS[id].emoji} ${TIERS[id].name} Lv ${lo === hi ? lo : `${lo}–${hi}`}${TIERS[id].scales ? '+' : ''}`;
     })
     .join(' · ');

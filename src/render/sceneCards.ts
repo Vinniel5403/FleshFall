@@ -4,7 +4,7 @@ import { ICON_BY_DOOR } from '../game/icons.js';
 import { getItem } from '../game/items.js';
 import type { Character, DoorColor, IconDoor } from '../game/types.js';
 import { isCrimsonMoon } from '../game/world.js';
-import { currentZone, getZone, TIERS, zoneLevel, type Tier } from '../game/zones.js';
+import { currentZone, getZone, TIERS, zoneLevel, zoneLevelText, type Tier } from '../game/zones.js';
 import {
   art,
   background,
@@ -96,7 +96,7 @@ export async function renderHuntCard(char: Character, ended?: string): Promise<B
   const ew = spaced(ctx, `HUNT · ${TIERS[tier].name.toUpperCase()}`, PAD, 62, 4);
   ctx.fillStyle = C.muted;
   font(ctx, 15, 400);
-  ctx.fillText(`มอน ${h ? huntLevelLabel(h) : `Lv ${zoneLevel(zone)}`} · คุณ Lv ${char.level}`, PAD + ew + 16, 62);
+  ctx.fillText(`มอน ${h ? huntLevelLabel(h) : `Lv ${zoneLevelText(zone)}`} · คุณ Lv ${char.level}`, PAD + ew + 16, 62);
   ctx.fillStyle = C.bone;
   fitText(ctx, noEmoji(zone.name), PAD, 112, W - PAD * 2 - 200, 44, 700);
   crimsonWash(ctx, 0);

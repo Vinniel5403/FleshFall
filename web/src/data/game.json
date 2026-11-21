@@ -43,7 +43,8 @@
     "name": "Legendary",
     "emoji": "🌟",
     "rec": 50,
-    "scales": true
+    "scales": true,
+    "hidden": true
    }
   },
   "doors": {

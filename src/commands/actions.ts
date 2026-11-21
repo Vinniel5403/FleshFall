@@ -432,7 +432,7 @@ export function travelAction(char: Character, to: string): ActionResult {
   const z = getZone(to)!;
   // warning only — nowhere is locked
   const risk = cityRisk(char, z);
-  const warn = risk ? [`${risk} มอนที่นี่ Lv ${zoneLevel(z)} คุณ Lv ${char.level} — ${risk === '💀' ? 'แทบตีไม่โดน อันตรายมาก' : 'ตีโดนยากขึ้น โดนตีง่ายขึ้น'}`] : [];
+  const warn = risk ? [`${risk} มอนที่นี่ Lv ${zoneLevelText(z)} คุณ Lv ${char.level} — ${risk === '💀' ? 'แทบตีไม่โดน อันตรายมาก' : 'ตีโดนยากขึ้น โดนตีง่ายขึ้น'}`] : [];
   if (!char.traveling) {
     if (fromHome) {
       return done(

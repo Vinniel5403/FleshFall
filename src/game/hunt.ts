@@ -14,7 +14,7 @@ import './catalog.js'; // rarities + live pools
 import { getItem, itemLabel, VINTAGE_IDS } from './items.js';
 import type { Character, Hunt, IconDoor, MonsterState, Outcome } from './types.js';
 import { DOORS, DUNGEON_RULES, isCrimsonMoon } from './world.js';
-import { currentZone, getZone, huntBaseLevel, zoneLevel, type ZoneDef } from './zones.js';
+import { currentZone, getZone, huntBaseLevel, TIERS, zoneLevel, type ZoneDef } from './zones.js';
 
 export interface MonsterDef {
   id: string;
@@ -171,8 +171,8 @@ export function startHunt(char: Character, safe = false): HuntStart {
   });
   const hunt: Hunt = { zone: zone.id, monsters, lv, door: pickDoor(zone), log, loot: {}, xp: 0 };
   const base = huntBaseLevel(char, zone);
-  if (base > zoneLevel(zone)) log.push(`🌀 ที่นี่ไม่สนว่าเมืองเลเวลเท่าไหร่ — มอนโตตามคุณ (Lv ${base})`);
-  if (lv > base) log.push(`👹 ยิ่งล่าลึก มอนยิ่งดุ — มอนรอบนี้ ${huntLevelLabel(hunt)} (ปกติ Lv ${base})`);
+  if (base > zoneLevel(zone)) log.push('🌀 ที่นี่ไม่สนว่าเมืองเลเวลเท่าไหร่ — มอนโตตามคุณ');
+  if (lv > base) log.push(`👹 ยิ่งล่าลึก มอนยิ่งดุ — มอนรอบนี้ ${huntLevelLabel(hunt)}${zone.tier && TIERS[zone.tier].hidden ? '' : ` (ปกติ Lv ${base})`}`);
   char.hunt = hunt;
   return { ok: true, hunt };
 }
