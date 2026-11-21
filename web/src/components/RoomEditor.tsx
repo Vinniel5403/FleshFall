@@ -45,6 +45,8 @@ export function RoomEditor(props: { character: AccountView; onChange: (c: Accoun
   const spare = props.character.furniture;
   const savedPlaced = useMemo(() => placedCounts(saved.items), [saved]);
   const owned = (id: string) => (spare ? (spare[id] ?? 0) + (savedPlaced.get(id) ?? 0) : Infinity);
+  // palette = what the player owns (or still has in the draft), like an inventory
+  const palette = FURNITURE.filter((f) => owned(f.id) > 0 || (placed.get(f.id) ?? 0) > 0);
   const patch = (fn: (items: RoomLayout["items"]) => RoomLayout["items"]) => setRoom((r) => ({ ...r, items: fn(r.items) }));
   const add = (id: string) => {
     const f = furniture(id);
@@ -133,7 +135,8 @@ export function RoomEditor(props: { character: AccountView; onChange: (c: Accoun
           )}
 
           <div className="room-palette" role="list" aria-label="ของตกแต่ง — กดเพื่อเพิ่มลงห้อง">
-            {FURNITURE.map((f) => {
+            {palette.length === 0 && <span className="sub">ยังไม่มีของตกแต่ง — ซื้อชั้นวางเหล็กที่ร้านเนื้อใน Rouge Land หรือหาของเก่าแต่งห้องจากการล่า</span>}
+            {palette.map((f) => {
               const used = placed.get(f.id) ?? 0;
               const have = owned(f.id);
               const out = used >= have;
