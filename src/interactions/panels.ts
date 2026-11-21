@@ -160,6 +160,7 @@ const ZONE_PANELS: Record<string, PanelDef> = Object.fromEntries(
             ...(z.monsters.length ? [{ id: `hunt:${z.id}`, label: 'ออกล่า', emoji: '🎲', style: ButtonStyle.Danger }] : []),
             { id: `explore:${z.id}`, label: 'สำรวจ', emoji: '🔍', style: z.monsters.length ? ButtonStyle.Secondary : ButtonStyle.Danger },
             { id: 'use', label: 'กิน/ใช้ของ', emoji: '🍽️' },
+            { id: 'equip', label: 'สวมใส่', emoji: '🗡️' },
             { id: 'profile', label: 'โปรไฟล์', emoji: '📜' },
           ],
           [

@@ -483,7 +483,7 @@ export function upgradeEmbed(char: Character): EmbedBuilder {
     if (lv >= MAX_GEAR_LEVEL) return { name: slot === 'weapon' ? '🗡️ อาวุธ' : '🛡️ เกราะ', value: `${head} — เต็มขั้นแล้ว` };
     const c = upgradeCost(slot, lv + 1);
     const need = [`🥩 ${c.flesh}`, ...Object.entries(c.items).map(([it, n]) => `${itemLabel(it, n)} (มี ${itemCount(char, it)})`)].join(' · ');
-    return { name: slot === 'weapon' ? '🗡️ อาวุธ' : '🛡️ เกราะ', value: `${head} → +${lv + 1} ${slot === 'weapon' ? '(พละ +1)' : '(ลดดาเมจ +1)'}
+    return { name: slot === 'weapon' ? '🗡️ อาวุธ' : '🛡️ เกราะ', value: `${head} → +${lv + 1} ${slot === 'weapon' ? '(ดาเมจ +1)' : '(ลดดาเมจ +1)'}
 -# ${need}` };
   };
   return new EmbedBuilder()

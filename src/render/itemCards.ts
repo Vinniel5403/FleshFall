@@ -43,7 +43,7 @@ function footer(ctx: Ctx, h: number, left: string): void {
 
 function gearLine(char: Character, slot: 'weapon' | 'armor'): { emoji: string; name: string; effect: string } {
   const id = char.equipped[slot];
-  const effect = slot === 'weapon' ? `พละ +${gearAtk(char)}` : `ลดดาเมจ ${gearDef(char)}`;
+  const effect = slot === 'weapon' ? `ดาเมจ +${gearAtk(char)}` : `ลดดาเมจ ${gearDef(char)}`;
   if (!id) return { emoji: '', name: 'ไม่ได้สวม', effect };
   const it = getItem(id);
   const lv = char.gearLevels?.[id];
@@ -227,7 +227,7 @@ export async function renderUpgradeCard(char: Character, slots: UpgradeSlotData[
     const it = s.id ? getItem(s.id) : undefined;
     font(ctx, 15, 500);
     ctx.fillStyle = C.muted;
-    ctx.fillText(s.slot === 'weapon' ? 'อาวุธ  ·  พละ +1 ต่อขั้น' : 'เกราะ  ·  ลดดาเมจ +1 ต่อขั้น', x + 26, y + 40);
+    ctx.fillText(s.slot === 'weapon' ? 'อาวุธ  ·  ดาเมจ +1 ต่อขั้น' : 'เกราะ  ·  ลดดาเมจ +1 ต่อขั้น', x + 26, y + 40);
     if (!s.id) {
       font(ctx, 24, 500);
       ctx.fillStyle = C.muted;

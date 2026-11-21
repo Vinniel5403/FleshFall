@@ -234,7 +234,7 @@ export async function renderProfileCard(char: Character): Promise<Buffer> {
   y += 126 + 38;
   const half = (W - 40) / 2;
   for (const [i, slot, label, val] of [
-    [0, 'weapon', 'อาวุธ', `พละ +${gearAtk(char)}`],
+    [0, 'weapon', 'อาวุธ', `ดาเมจ +${gearAtk(char)}`],
     [1, 'armor', 'เกราะ', `ลดดาเมจ ${gearDef(char)}`],
   ] as const) {
     const ex = X + i * (half + 40);

@@ -79,7 +79,7 @@ export function profileEmbed(char: Character): EmbedBuilder {
       {
         name: 'อุปกรณ์',
         value: [
-          `อาวุธ: ${char.equipped.weapon ? itemLabel(char.equipped.weapon) + (char.gearLevels?.[char.equipped.weapon] ? ` +${char.gearLevels[char.equipped.weapon]}` : '') : '—'} (พละ +${gearAtk(char)}${mergeDmg(char) ? ` · 🔗 ดาเมจ +${mergeDmg(char)}` : ''})`,
+          `อาวุธ: ${char.equipped.weapon ? itemLabel(char.equipped.weapon) + (char.gearLevels?.[char.equipped.weapon] ? ` +${char.gearLevels[char.equipped.weapon]}` : '') : '—'} (ดาเมจ +${gearAtk(char) + mergeDmg(char)} · ทอยพละในเหตุการณ์ +${gearAtk(char)})`,
           `เกราะ: ${char.equipped.armor ? itemLabel(char.equipped.armor) + (char.gearLevels?.[char.equipped.armor] ? ` +${char.gearLevels[char.equipped.armor]}` : '') : '—'} (ลดดาเมจ ${gearDef(char)})`,
         ].join('\n'),
       },
