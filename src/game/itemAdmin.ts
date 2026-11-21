@@ -6,7 +6,7 @@
 import { imageUrl } from './account.js';
 import { basePlacement, CONTINENT_IDS, defaultRarity, placementOf, RARITIES, TIER_IDS } from './catalog.js';
 import { baseItem, getItem, ITEMS, itemEffects } from './items.js';
-import type { ItemDef, ItemPatch, ItemPlacement, ItemType, Rarity } from './types.js';
+import type { Character, ItemDef, ItemPatch, ItemPlacement, ItemType, Rarity } from './types.js';
 import { CONTINENTS, TIERS } from './zones.js';
 
 export const ITEM_TYPES: ItemType[] = ['consumable', 'weapon', 'armor', 'material', 'vintage', 'furniture'];
@@ -159,4 +159,31 @@ export function itemPatchFromForm(raw: unknown, current: ItemPatch | undefined, 
   }
   if (where && (!base || !sameWhere(where, basePlacement(id)))) patch.where = where;
   return Object.keys(patch).length > 1 ? patch : null;
+}
+
+/** Deleting a custom item: take every trace of it off a character. Returns whether anything changed. */
+export function purgeItem(char: Character, id: string): boolean {
+  const furn = ITEMS[id]?.furniture;
+  let hit = false;
+  const drop = (rec: Record<string, number> | undefined) => {
+    if (rec && id in rec) {
+      delete rec[id];
+      hit = true;
+    }
+  };
+  drop(char.inventory);
+  drop(char.trip?.loot);
+  drop(char.hunt?.loot);
+  drop(char.gearLevels);
+  drop(char.gearMerged);
+  for (const slot of ['weapon', 'armor'] as const)
+    if (char.equipped[slot] === id) {
+      delete char.equipped[slot];
+      hit = true;
+    }
+  if (furn && char.room?.items.some((i) => i.id === furn)) {
+    char.room.items = char.room.items.filter((i) => i.id !== furn);
+    hit = true;
+  }
+  return hit;
 }

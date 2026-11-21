@@ -162,6 +162,21 @@ function AdminBody() {
       setBusy(false);
     }
   };
+  const remove = async () => {
+    if (!draft || !confirm(`ลบ ${draft.name} ถาวร?\nของชิ้นนี้จะหายจากผู้เล่นทุกคน (กระเป๋า ของรอรับ ที่สวมอยู่ ห้อง) และออเดอร์ในตลาด — ย้อนกลับไม่ได้`)) return;
+    setBusy(true);
+    try {
+      const r = await api<{ deleted: string; players: number }>("/api/admin/item", jsonInit("DELETE", { id: draft.id }));
+      setCat((c) => (c ? { ...c, items: c.items.filter((x) => x.id !== r.deleted) } : c));
+      setSel(null);
+      setDraft(null);
+      toast.ok(`ลบ ${draft.name} แล้ว${r.players ? ` (เอาออกจากผู้เล่น ${r.players} คน)` : ""}`);
+    } catch (e) {
+      toast.err((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
   const removeArt = async () => {
     if (!draft || !confirm("ลบรูป กลับไปใช้อีโมจิ?")) return;
     setBusy(true);
@@ -257,6 +272,7 @@ function AdminBody() {
               reset={reset}
               upload={upload}
               removeArt={removeArt}
+              remove={remove}
             />
           ) : (
             <p className="adm-hint">เลือกไอเทมทางซ้ายเพื่อแก้ไข หรือกด ＋ เพิ่มไอเทม · {cat.items.length} ชิ้น</p>
@@ -286,6 +302,7 @@ function Editor(props: {
   reset: () => void;
   upload: (f: File) => void;
   removeArt: () => void;
+  remove: () => void;
 }) {
   const { cat, draft: d, isNew, busy, set } = props;
   const locked = !d.custom; // code items keep their id + type
@@ -439,6 +456,11 @@ function Editor(props: {
       </section>
 
       <footer className="adm-foot">
+        {!isNew && d.custom && (
+          <button type="button" className="st-btn danger sm adm-del" onClick={props.remove} disabled={busy}>
+            ลบไอเทม
+          </button>
+        )}
         {!isNew && !d.custom && d.edited && (
           <button type="button" className="st-btn ghost sm" onClick={props.reset} disabled={busy}>
             รีเซ็ตเป็นค่าในโค้ด

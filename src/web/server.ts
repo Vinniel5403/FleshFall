@@ -60,6 +60,7 @@ async function handleAccount(req: IncomingMessage, res: ServerResponse, p: strin
       case '/api/account/admin/item': r = admin.saveItem(b); break;
       case '/api/account/admin/item/reset': r = admin.resetItem(b); break;
       case '/api/account/admin/item/image': r = admin.setItemImage(b); break;
+      case '/api/account/admin/item/delete': r = admin.deleteItem(b); break;
       default: r = { code: 404, body: { error: 'not found' } };
     }
     return json(res, r.code, r.body);

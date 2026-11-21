@@ -62,3 +62,4 @@
   .adm-body { grid-template-columns: 1fr; }
   .adm-list { max-height: 45vh; }
 }
+.adm-del { margin-right: auto; }

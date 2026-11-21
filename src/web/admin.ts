@@ -5,7 +5,7 @@
  */
 import { db } from '../db/index.js';
 import { refreshCatalog } from '../game/catalog.js';
-import { adminCatalog, adminItem, isItemImageKey, itemPatchFromForm } from '../game/itemAdmin.js';
+import { adminCatalog, adminItem, isItemImageKey, itemPatchFromForm, purgeItem } from '../game/itemAdmin.js';
 import { ITEMS } from '../game/items.js';
 import type { ItemPatch } from '../game/types.js';
 
@@ -69,4 +69,31 @@ export function setItemImage(b: Record<string, unknown>): Reply {
   }
   store(id, Object.keys(next).length > 1 || next.custom ? next : null);
   return ok({ item: adminItem(id), evicted });
+}
+
+/**
+ * Delete a custom item for good: off every character (inventory, trip haul, equipment, room) and out of the
+ * market (sell orders vanish with their items; buy orders give the escrowed flesh back). Code items can't be deleted.
+ */
+export function deleteItem(b: Record<string, unknown>): Reply {
+  const id = typeof b.id === 'string' ? b.id : '';
+  const d = ITEMS[id];
+  if (!d) return fail(404, 'ไม่พบไอเทมนี้');
+  if (!d.custom) return fail(400, 'ไอเทมในโค้ดลบไม่ได้ — เอาออกจากร้าน/ดรอปแทน');
+  let players = 0;
+  for (const c of db.allCharacters()) {
+    if (!purgeItem(c, id)) continue;
+    db.saveCharacter(c);
+    players++;
+  }
+  for (const o of db.allOrders().filter((x) => x.item === id)) {
+    const owner = o.kind === 'buy' ? db.getCharacter(o.owner) : undefined;
+    if (owner) {
+      owner.flesh += o.qty * o.price;
+      db.saveCharacter(owner);
+    }
+    db.deleteOrder(o.id);
+  }
+  store(id, null);
+  return ok({ deleted: id, players, evicted: d.image ? [d.image] : [] });
 }

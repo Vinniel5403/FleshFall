@@ -18,7 +18,7 @@ export async function bot(path: "get" | "create" | "join" | "rename" | "bio" | "
 }
 
 /** Admin item editor (src/web/admin.ts). The bot checks the user's Discord username against ADMIN_USERS (403 otherwise). */
-export function botAdmin<T>(path: "admin/items" | "admin/item" | "admin/item/reset" | "admin/item/image", body: Record<string, unknown>) {
+export function botAdmin<T>(path: "admin/items" | "admin/item" | "admin/item/reset" | "admin/item/image" | "admin/item/delete", body: Record<string, unknown>) {
   return post<T & { error?: string; evicted?: string[] }>(path, body);
 }
 
