@@ -152,6 +152,7 @@
     "door": "gray",
     "shop": [
      "bandage",
+     "smoke_bomb",
      "absinthe",
      "blood_wine",
      "rage_tonic",
@@ -272,6 +273,8 @@
      "spice_jerky",
      "instant_noodle",
      "alchemy_salve",
+     "marrow_serum",
+     "smoke_bomb",
      "bone_bomb",
      "carving_knife",
      "katana",
@@ -377,6 +380,7 @@
     "door": "blue",
     "shop": [
      "bandage",
+     "smoke_bomb",
      "canned_beans",
      "grilled_meat",
      "bone_bomb",
@@ -477,6 +481,7 @@
     "door": "blue",
     "shop": [
      "bandage",
+     "smoke_bomb",
      "mate_tea",
      "fetal_flesh",
      "rage_tonic",
@@ -570,6 +575,9 @@
     "shop": [
      "myrrh_balm",
      "alchemy_salve",
+     "marrow_serum",
+     "womb_elixir",
+     "smoke_bomb",
      "hide_tonic",
      "wild_flour",
      "rusty_chain",
@@ -663,6 +671,8 @@
     "shop": [
      "eucalyptus_oil",
      "alchemy_salve",
+     "marrow_serum",
+     "smoke_bomb",
      "hide_tonic",
      "bone_bomb",
      "fresh_cut",
@@ -691,6 +701,8 @@
      "whale_blubber",
      "fresh_cut",
      "alchemy_salve",
+     "marrow_serum",
+     "smoke_bomb",
      "hide_tonic",
      "bone_bomb",
      "ice_pick",
@@ -727,6 +739,9 @@
     "shop": [
      "bandage",
      "alchemy_salve",
+     "marrow_serum",
+     "womb_elixir",
+     "smoke_bomb",
      "rage_tonic",
      "hide_tonic",
      "bone_bomb",
@@ -1258,6 +1273,26 @@
    "rarity": "common"
   },
   {
+   "id": "marrow_serum",
+   "name": "เซรั่มไขกระดูก",
+   "emoji": "🧪",
+   "type": "consumable",
+   "value": 45,
+   "healPct": 30,
+   "description": "ไขกระดูกปั่นจนใสเป็นน้ำ ฉีดแล้วเนื้อเยื่องอกปิดแผลเอง (ฟื้นเนื้อกาย 30% ของสูงสุด)",
+   "rarity": "uncommon"
+  },
+  {
+   "id": "womb_elixir",
+   "name": "น้ำคร่ำคืนร่าง",
+   "emoji": "🫙",
+   "type": "consumable",
+   "value": 120,
+   "healPct": 60,
+   "description": "น้ำคร่ำจากรกในผนังดันเจียน ดื่มแล้วร่างกายจำได้ว่าตัวเองเคยสมบูรณ์แค่ไหน (ฟื้นเนื้อกาย 60% ของสูงสุด)",
+   "rarity": "rare"
+  },
+  {
    "id": "rage_tonic",
    "name": "ยาดองเลือดเดือด",
    "emoji": "🍶",
@@ -1325,6 +1360,16 @@
    ],
    "description": "ก้อนเนื้อบวมก๊าซที่ยังเต้นอยู่ ขว้างตอนล่า — มอนสเตอร์ทุกตัวโดน 14–20 (+ครึ่งเลเวลของคุณ) · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป",
    "rarity": "rare"
+  },
+  {
+   "id": "smoke_bomb",
+   "name": "ระเบิดควันซากศพ",
+   "emoji": "🌫️",
+   "type": "consumable",
+   "value": 40,
+   "escape": true,
+   "description": "ห่อเถ้ากระดูกกับเนื้อเน่าแห้ง ขว้างแล้วควันเหม็นจนมอนสเตอร์มองไม่เห็น ใช้ตอนล่า — หนีออกจากการต่อสู้ได้แน่นอน ไม่ต้องทอย",
+   "rarity": "uncommon"
   },
   {
    "id": "pipe",

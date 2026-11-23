@@ -103,6 +103,7 @@ export function ownedItems(char: Character, types?: ItemType[]) {
 
 export function useItem(char: Character, id: string): ActionResult {
   if (getItem(id)?.blast && itemCount(char, id) > 0) return fail(`${itemLabel(id)} ขว้างได้เฉพาะตอนล่า — กด 🎒 ในการ์ดการล่า`);
+  if (getItem(id)?.escape && itemCount(char, id) > 0) return fail(`${itemLabel(id)} ใช้ได้เฉพาะตอนล่า — กด 🎒 ในการ์ดการล่าเพื่อหนี`);
   const lines = consume(char, id);
   if (!lines) return fail('ใช้ไม่ได้ หรือไม่มีของชิ้นนี้');
   saveCharacter(char);

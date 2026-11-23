@@ -197,6 +197,12 @@ export function hitParts(char: Character): DicePart[] {
   return shown([['สัมผัส ÷ 3', Math.floor(char.stats.int / 3)], ...sideParts(char, 'int')]);
 }
 
+/** Fleeing a hunt: a third of ว่องไว + quick feet + the situational bonuses — getting away is about speed. */
+export function fleeParts(char: Character): DicePart[] {
+  return shown([['ว่องไว ÷ 3', Math.floor(char.stats.agi / 3)], ['ฝีเท้าไว', talentLv(char, 'quick_feet')], ...sideParts(char, 'agi')]);
+}
+export const fleeMod = (char: Character): number => total(fleeParts(char));
+
 /** Hunt damage from พละกำลัง (+1 per 2) and talents. */
 export const strDmg = (char: Character) => Math.floor(effStat(char, 'str') / 2) + 2 * talentLv(char, 'heavy_hand');
 
@@ -582,13 +588,14 @@ export function setCooldown(char: Character, key: string, ms: number, now = Date
 /** Eat/use a consumable. Returns result lines, or null if not usable. */
 export function consume(char: Character, id: string, servedBy?: string): string[] | null {
   const def = getItem(id);
-  // thrown items only do something mid-hunt (`useInHunt`) — never swallow one here
-  if (!def || def.type !== 'consumable' || def.blast || !removeItem(char, id)) return null;
+  // thrown / escape items only do something mid-hunt (`useInHunt`) — never swallow one here
+  if (!def || def.type !== 'consumable' || def.blast || def.escape || !removeItem(char, id)) return null;
   const m = mods(char.icon);
   const lines: string[] = [];
   const mult = m.healItemMult ?? 1;
   const o: Outcome = { text: '' };
   if (def.heal) o.hp = Math.round(def.heal * mult);
+  if (def.healPct) o.hp = (o.hp ?? 0) + Math.ceil((char.maxHp * def.healPct * mult) / 100);
   if (def.stamina) o.stamina = Math.round(def.stamina * mult);
   if (def.sanity) o.sanity = Math.round(def.sanity * mult);
   if (def.humanity) {

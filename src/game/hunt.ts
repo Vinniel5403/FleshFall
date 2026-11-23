@@ -5,7 +5,7 @@ import { feed } from './feed.js';
  * Lucky hunts reveal a dungeon door after victory.
  */
 import { balance } from '../config.js';
-import { applyOutcome, consume, critFrom, evadeMod, extraStrike, gainItem, gearAtk, hitMod, hitParts, mergeDmg, removeItem, stopped, strDmg, type AppliedOutcome } from './character.js';
+import { applyOutcome, consume, critFrom, evadeMod, extraStrike, fleeMod, fleeParts, gainItem, gearAtk, hitMod, hitParts, mergeDmg, removeItem, stopped, strDmg, type AppliedOutcome } from './character.js';
 import { hasGift, talentLv } from './growth.js';
 import { bumpStreak, lootMult, rareBonus, streakLevels, streakMiasma, streakOf } from './expedition.js';
 import { chance, rand, startRun } from './engine.js';
@@ -181,8 +181,8 @@ export function startHunt(char: Character, safe = false): HuntStart {
 export interface RoundResult {
   lines: string[];
   applied?: AppliedOutcome;
-  /** Hunt ended: won / died (or downed/broke/Fiend) — or paused: dying = placenta-or-give-up choice, hunt kept. */
-  ended?: 'won' | 'died' | 'dying';
+  /** Hunt ended: won / died (or downed/broke/Fiend) / fled — or paused: dying = placenta-or-give-up choice, hunt kept. */
+  ended?: 'won' | 'died' | 'dying' | 'fled';
   /** The player's d20 this round (for the dice animation). */
   dice?: DiceRoll;
 }
@@ -431,6 +431,53 @@ function throwBomb(char: Character, h: Hunt, itemId: string, [lo, hi]: [number, 
   return { lines, applied: back.applied, ended: endIfFallen(char, back.applied) };
 }
 
+/** Got away: the hunt ends — loot from kills is already in the haul, their XP is paid; no salvage, no door, the streak doesn't grow. */
+function escaped(char: Character, h: Hunt, lines: string[]): RoundResult['ended'] {
+  const loot = Object.entries(h.loot).map(([id, n]) => itemLabel(id, n));
+  if (loot.length) lines.push(`🎒 ของที่ได้ก่อนหนี: ${loot.join(', ')}`);
+  if (h.xp > 0) lines.push(...applyOutcome(char, { text: '', xp: h.xp }).lines);
+  delete char.hunt;
+  return 'fled';
+}
+
+/** What the flee roll must reach: level gap to the strongest monster still standing, +`huntFleePerFoe` for each other one. */
+export function fleeTarget(char: Character, h: Hunt): { target: number; strongest: number; foes: number } {
+  const foes = alive(h);
+  const strongest = Math.max(...foes.map((m) => monsterLevel(h, m)));
+  return { target: levelDC(char.level, strongest) + balance.huntFleePerFoe * (foes.length - 1), strongest, foes: foes.length };
+}
+
+/** Try to run: d20 + ว่องไว ÷ 3 vs `fleeTarget`. Made it = the hunt ends; failed = the turn is lost and every monster strikes. */
+export function flee(char: Character): RoundResult {
+  const h = char.hunt;
+  if (char.dying) return { lines: ['🩸 คุณกำลังจะตาย — เลือก 🥚 ใช้รกคืนชีพ หรือ ☠️ ยอมตาย ก่อน'], ended: 'dying' };
+  if (!h || h.won || alive(h).length === 0) return { lines: ['การต่อสู้จบไปแล้ว'] };
+  const { target, strongest, foes } = fleeTarget(char, h);
+  const mod = fleeMod(char);
+  const roll = rand(1, 20);
+  const success = d20Success(roll, mod, target);
+  const dice: DiceRoll = {
+    label: 'หนี',
+    mod,
+    modLabel: 'ว่องไว',
+    parts: fleeParts(char),
+    target,
+    targetNote: `คุณ Lv ${char.level} · มอนที่แรงสุด Lv ${strongest}${foes > 1 ? ` · ยังเหลือ ${foes} ตัว (+${balance.huntFleePerFoe * (foes - 1)})` : ''}`,
+    rolls: [roll],
+    success,
+    win: 'หนีพ้น!',
+    lose: 'หนีไม่พ้น',
+  };
+  if (success) {
+    const lines = [`🏃 \`${rollTag(roll, mod, target)}\` **หนีพ้น!** คุณวิ่งฝ่าหมอกจนเสียงพวกมันเงียบไป`];
+    return { lines, ended: escaped(char, h, lines), dice };
+  }
+  const lines = [`🏃 \`${rollTag(roll, mod, target)}\` **หนีไม่พ้น!** พวกมันขวางทางไว้`];
+  const back = monstersAttack(char, h);
+  lines.push(...back.lines);
+  return { lines, applied: back.applied, ended: endIfFallen(char, back.applied), dice };
+}
+
 /** Spend the turn on an item instead of attacking (heal / stamina / sanity / timed buff, or a thrown bomb), then survivors strike back. */
 export function useInHunt(char: Character, itemId: string): RoundResult {
   const h = char.hunt;
@@ -438,6 +485,11 @@ export function useInHunt(char: Character, itemId: string): RoundResult {
   if (!h || h.won || alive(h).length === 0) return { lines: ['การต่อสู้จบไปแล้ว'] };
   const blast = getItem(itemId)?.blast;
   if (blast) return throwBomb(char, h, itemId, blast);
+  if (getItem(itemId)?.escape) {
+    if (!removeItem(char, itemId)) return { lines: ['ใช้ไม่ได้ หรือไม่มีของชิ้นนี้ในกระเป๋า'] };
+    const lines = [`🏃 ใช้ ${itemLabel(itemId)} — ควันพวยพุ่งจนมอนสเตอร์มองไม่เห็น **หนีพ้น!**`];
+    return { lines, ended: escaped(char, h, lines) };
+  }
   const got = consume(char, itemId);
   if (!got) return { lines: ['ใช้ไม่ได้ หรือไม่มีของชิ้นนี้ในกระเป๋า'] };
   const lines = [`🎒 ใช้ ${itemLabel(itemId)} แทนการโจมตี${got.length ? ` — ${got.join(' ')}` : ''}`];
@@ -451,7 +503,6 @@ export function useInHunt(char: Character, itemId: string): RoundResult {
   return { lines, applied: back.applied, ended: endIfFallen(char, back.applied) };
 }
 
-// No fleeing: a hunt ends when every monster is dead — or you are.
 
 /** After a lucky victory: step through the door into a dungeon run. */
 export function enterHuntDoor(char: Character): boolean {

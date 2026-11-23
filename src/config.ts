@@ -32,6 +32,8 @@ export const balance = {
   huntSanityMult: 0.5,
   /** Passive sanity regen per stamina tick (5 min) while safe in Rouge Land. */
   homeSanityRegen: 1,
+  /** Fleeing a hunt: each monster still standing past the first adds this to the roll needed (on top of `levelDC` vs the strongest one). */
+  huntFleePerFoe: 2,
   /** Chance a hunt reveals a dungeon door after victory. */
   huntDoorChance: 0.001,
   /** Chance one explore in the Old Realm turns up a door — any Icon colour or red, all equally likely (rolled apart from the other events). */

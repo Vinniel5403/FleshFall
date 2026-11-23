@@ -31,7 +31,7 @@ export function adminItem(id: string) {
     where: placementOf(id),
     custom: !!d.custom,
     /** fields a form can't edit (kept as they are) */
-    special: [d.buff && 'buff', d.blast && 'blast'].filter(Boolean) as string[],
+    special: [d.buff && 'buff', d.blast && 'blast', d.escape && 'escape', d.healPct && `heal ${d.healPct}%`].filter(Boolean) as string[],
   };
 }
 

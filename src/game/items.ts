@@ -60,6 +60,11 @@ const list: ItemDef[] = [
     description: 'ห้ามเลือดได้ (+10 เนื้อกาย)' },
   { id: 'alchemy_salve', name: 'ยาเล่นแร่แปรธาตุ', emoji: '⚗️', type: 'consumable', value: 25, heal: 22,
     description: 'ยาที่สาวก Thanatos พึ่งพา (+22 เนื้อกาย)' },
+  // --- ยาฮีลตาม % เนื้อกายสูงสุด (ยิ่งตัวใหญ่ ยิ่งคุ้ม) ---
+  { id: 'marrow_serum', name: 'เซรั่มไขกระดูก', emoji: '🧪', type: 'consumable', value: 45, healPct: 30,
+    description: 'ไขกระดูกปั่นจนใสเป็นน้ำ ฉีดแล้วเนื้อเยื่องอกปิดแผลเอง (ฟื้นเนื้อกาย 30% ของสูงสุด)' },
+  { id: 'womb_elixir', name: 'น้ำคร่ำคืนร่าง', emoji: '🫙', type: 'consumable', value: 120, healPct: 60,
+    description: 'น้ำคร่ำจากรกในผนังดันเจียน ดื่มแล้วร่างกายจำได้ว่าตัวเองเคยสมบูรณ์แค่ไหน (ฟื้นเนื้อกาย 60% ของสูงสุด)' },
   // --- ยาบัฟชั่วคราว (อ่อนกว่าอาหารสูตรลับบาร์ แต่ซื้อได้เลย) ---
   { id: 'rage_tonic', name: 'ยาดองเลือดเดือด', emoji: '🍶', type: 'consumable', value: 28, buff: { stat: 'str', amount: 1, minutes: 20 },
     description: 'เหล้าดองเขี้ยว Fiend กระดกแล้วเลือดสูบฉีดจนมือสั่น (บัฟ พละกำลัง +1 นาน 20 นาที)' },
@@ -72,6 +77,9 @@ const list: ItemDef[] = [
     description: 'กระป๋องอัดดินปืนกับเศษกระดูก ขว้างตอนล่า — มอนสเตอร์ทุกตัวโดน 6–10 (+ครึ่งเลเวลของคุณ)' },
   { id: 'flesh_grenade', name: 'ระเบิดก้อนเนื้อ', emoji: '🧨', type: 'consumable', value: 90, blast: [14, 20],
     description: 'ก้อนเนื้อบวมก๊าซที่ยังเต้นอยู่ ขว้างตอนล่า — มอนสเตอร์ทุกตัวโดน 14–20 (+ครึ่งเลเวลของคุณ) · ดรอปเฉพาะเมืองระดับ Hard ขึ้นไป' },
+  // --- ของหนี (ใช้ได้เฉพาะตอนล่า — หนีสำเร็จแน่นอน ไม่ต้องทอย) ---
+  { id: 'smoke_bomb', name: 'ระเบิดควันซากศพ', emoji: '🌫️', type: 'consumable', value: 40, escape: true,
+    description: 'ห่อเถ้ากระดูกกับเนื้อเน่าแห้ง ขว้างแล้วควันเหม็นจนมอนสเตอร์มองไม่เห็น ใช้ตอนล่า — หนีออกจากการต่อสู้ได้แน่นอน ไม่ต้องทอย' },
   // --- อาวุธ ---
   { id: 'pipe', name: 'ท่อเหล็ก', emoji: '🔧', type: 'weapon', value: 4, atk: 1, description: 'ดาเมจ +1 · เหตุการณ์ที่ใช้พละกำลัง +1' },
   { id: 'walking_cane', name: 'ไม้เท้าหัวกะโหลก', emoji: '🦯', type: 'weapon', value: 15, atk: 1, description: 'ดาเมจ +1 · เหตุการณ์ที่ใช้พละกำลัง +1 · ดูดีสำหรับคนมีฐานะ' },
@@ -245,6 +253,7 @@ export function itemEffects(id: string, short = false): string {
     if (v) out.push(short ? `${emoji}${signed(v)}` : `${emoji} ${name} ${signed(v)}`);
   };
   add(d.heal, '🩸', 'เนื้อกาย');
+  if (d.healPct) out.push(short ? `🩸+${d.healPct}%` : `🩸 เนื้อกาย +${d.healPct}% ของสูงสุด`);
   add(d.stamina, '⚡', 'แรง');
   add(d.sanity, '🧠', 'สติ');
   add(d.humanity, '🫀', 'ความเป็นมนุษย์');
@@ -253,6 +262,7 @@ export function itemEffects(id: string, short = false): string {
     out.push(short ? `บัฟ ${what}+${d.buff.amount} ${d.buff.minutes}นาที` : `บัฟ ${what} +${d.buff.amount} (${d.buff.minutes} นาที)`);
   }
   if (d.blast) out.push(short ? `💥 ทุกตัว ${d.blast[0]}–${d.blast[1]}` : `💥 มอนสเตอร์ทุกตัว ${d.blast[0]}–${d.blast[1]} (ขว้างตอนล่า)`);
+  if (d.escape) out.push(short ? '🏃 หนีแน่นอน' : '🏃 หนีออกจากการล่าได้แน่นอน (ใช้ตอนล่า)');
   return out.join(short ? ' ' : ' · ');
 }
 

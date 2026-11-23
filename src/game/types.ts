@@ -275,6 +275,10 @@ export interface ItemDef {
   buff?: BuffDef;
   /** Thrown in a hunt: [min, max] damage to every monster still standing (+ half the thrower's level). Only usable mid-hunt. */
   blast?: [number, number];
+  /** Used in a hunt: a sure escape — the fight ends, no roll, no strike back. Only usable mid-hunt. */
+  escape?: boolean;
+  /** Heals this % of max HP (on top of `heal`). */
+  healPct?: number;
   /** The room catalog id it places (web/src/data/rooms.json) — what makes an item placeable in the private room. */
   furniture?: string;
   /** Room-decoration collectible found on hunts (drops.ts). Placeable as an emoji sticker (`decorFurnitureId`) until real art exists. */

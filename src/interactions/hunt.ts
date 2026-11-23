@@ -1,11 +1,11 @@
 /**
- * Hunt UI. customId: hn:<userId>:<atk|bag|back|door|leave|again|home>[:<idx>] — no fleeing: kill them all or fall.
+ * Hunt UI. customId: hn:<userId>:<atk|flee|bag|back|door|leave|again|home>[:<idx>] — 🏃 flee = d20 + ว่องไว roll (fail = they all strike).
  * Item picker select: hns:<userId> (using an item spends the turn).
  * Hunts usually live on ephemeral messages, so everything is i.update.
  */
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, StringSelectMenuBuilder, type ButtonInteraction, type RepliableInteraction, type StringSelectMenuInteraction } from 'discord.js';
-import { loadCharacter, saveCharacter } from '../game/character.js';
-import { attack, enterHuntDoor, getMonster, huntUsable, leaveHunt, monsterLevel, nextHuntLevel, startHunt, useInHunt, type RoundResult } from '../game/hunt.js';
+import { fleeMod, loadCharacter, saveCharacter } from '../game/character.js';
+import { attack, enterHuntDoor, flee, fleeTarget, getMonster, huntUsable, leaveHunt, monsterLevel, nextHuntLevel, startHunt, useInHunt, type RoundResult } from '../game/hunt.js';
 import { fallRow } from './fallRow.js';
 import { inField, streakOf, streakText, tripSize } from '../game/expedition.js';
 import { getItem, itemEffects, itemLabel } from '../game/items.js';
@@ -97,10 +97,12 @@ export function huntButtons(char: Character): ActionRowBuilder<ButtonBuilder>[] 
     .filter(({ m }) => m.hp > 0)
     .map(({ m, idx }) => btn(uid, `atk:${idx}`, `${idx + 1}. ${getMonster(m.id)?.name ?? m.id} · Lv ${monsterLevel(h, m)}`.slice(0, 80), ButtonStyle.Danger, '⚔️'));
   const usable = huntUsable(char).length;
+  const need = fleeTarget(char, h).target - fleeMod(char);
   return [
     new ActionRowBuilder<ButtonBuilder>().addComponents(...attacks),
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       btn(uid, 'bag', usable ? `ใช้ไอเท็ม (เสียเทิร์น)` : 'ไม่มีไอเท็มที่ใช้ได้', ButtonStyle.Secondary, '🎒').setDisabled(!usable),
+      btn(uid, 'flee', `หนี (ต้องทอย ${Math.min(20, Math.max(2, need))}+)`, ButtonStyle.Secondary, '🏃'),
     ),
   ];
 }
@@ -214,6 +216,10 @@ export async function handleHuntButton(i: ButtonInteraction): Promise<unknown> {
   }
   if (action === 'back') return i.update({ components: huntButtons(char) });
 
-  if (action !== 'atk') return i.update({ components: huntButtons(char) }); // old 🏃 flee buttons
+  if (action === 'flee') {
+    if (char.hunt.won) return i.update({ components: huntButtons(char) });
+    return showRound(i, char, flee(char));
+  }
+  if (action !== 'atk') return i.update({ components: huntButtons(char) });
   return showRound(i, char, attack(char, Number(arg)));
 }
