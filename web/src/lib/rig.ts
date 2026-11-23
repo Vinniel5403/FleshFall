@@ -21,7 +21,7 @@ export interface RigPart {
 }
 /**
  * Player's own tuning (website sprite tuner; mirrors SpriteTune in the bot's types.ts, validated by `cleanTune`).
- * Missing fields = the code defaults. Pivot in rig px; angles in degrees; dangle = sway strength; gravity 0–1
+ * Missing fields = the code defaults. Pivot in rig px; angles in degrees; dangle = sway strength (≥ 0, direction stays the part's own); gravity 0–1
  * (1 = hangs straight down while carried); idle = idle-motion multiplier.
  */
 export interface PartTune { px?: number; py?: number; min?: number; max?: number; swing?: number; dangle?: number; gravity?: number; idle?: number }

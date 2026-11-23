@@ -17,7 +17,7 @@ const FIELDS: Field[] = [
   { k: "min", label: "มุมต่ำสุด", unit: "°", lo: -180, hi: 180, step: 1, hint: "หมุนทวนเข็มได้สุดเท่านี้ เทียบกับชิ้นแม่ (ตอนปล่อย/โยน) · กรอบเหลืองบนตัวละคร" },
   { k: "max", label: "มุมสูงสุด", unit: "°", lo: -180, hi: 180, step: 1, hint: "หมุนตามเข็มได้สุดเท่านี้" },
   { k: "swing", label: "แกว่งตอนถูกถือ ±", unit: "°", lo: 0, hi: 180, step: 1, hint: "ระยะแกว่งรอบมุมห้อยตอนโดนหิ้ว" },
-  { k: "dangle", label: "แรงแกว่ง", lo: -3, hi: 3, step: 0.05, hint: "0 = ไม่แกว่งเลย · ติดลบ = ชิ้นที่ตั้งขึ้น เช่นหัว" },
+  { k: "dangle", label: "แรงแกว่ง", lo: 0, hi: 3, step: 0.05, hint: "0 = ไม่แกว่งเลย · ยิ่งมากยิ่งแกว่งแรง" },
   { k: "gravity", label: "แรงโน้มถ่วง", lo: 0, hi: 1, step: 0.05, hint: "1 = ห้อยลงตรงตอนถูกหิ้ว · 0 = แข็งติดตัว" },
   { k: "idle", label: "ท่ายืน (idle) ×", lo: 0, hi: 3, step: 0.05, hint: "ความแรงของท่าหายใจ/โยกตอนยืนเฉย · 0 = นิ่ง" },
 ];
@@ -95,6 +95,7 @@ export function SpriteTuner({ rig, tune, onTune, selected, onSelect, freeze, onF
   const defOf = (k: NumKey): number => {
     if (!def) return 0;
     if (k === "idle") return 1;
+    if (k === "dangle") return Math.abs(def.dangle); // strength only; the direction is the part's own
     return k === "min" || k === "max" || k === "swing" ? def[k] * DEG : def[k];
   };
   const copy = () => void navigator.clipboard?.writeText(JSON.stringify(tune, null, 2));

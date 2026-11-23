@@ -88,7 +88,9 @@ export function physOf(b: Bone): Phys {
   let ph = physCache.get(b);
   if (!ph) {
     const d = physDefaults(b.kind), t = b.tune ?? {}, deg = (v: number | undefined, def: number) => (v === undefined ? def : (v * Math.PI) / 180);
-    ph = { dangle: t.dangle ?? d.dangle, gravity: t.gravity ?? d.gravity, swing: deg(t.swing, d.swing), min: deg(t.min, d.min), max: deg(t.max, d.max) };
+    // tuned sway = strength only (≥ 0); the direction stays the part's own (− = stands above its pivot, like the head)
+    const dangle = t.dangle === undefined ? d.dangle : Math.abs(t.dangle) * (d.dangle < 0 ? -1 : 1);
+    ph = { dangle, gravity: t.gravity ?? d.gravity, swing: deg(t.swing, d.swing), min: deg(t.min, d.min), max: deg(t.max, d.max) };
     physCache.set(b, ph);
   }
   return ph;

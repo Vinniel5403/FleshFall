@@ -108,7 +108,7 @@ export interface CharSprite {
   at: number;
 }
 
-/** Per-part overrides: pivot in rig px; angles in degrees; dangle = sway strength; gravity 0–1; idle = idle motion ×. */
+/** Per-part overrides: pivot in rig px; angles in degrees; dangle = sway strength (0–3, direction stays the part's own); gravity 0–1; idle = idle motion ×. */
 export interface SpritePartTune { px?: number; py?: number; min?: number; max?: number; swing?: number; dangle?: number; gravity?: number; idle?: number }
 export interface SpriteTune {
   parts?: Record<string, SpritePartTune>;

@@ -320,7 +320,7 @@ export function cleanSprite(userId: string, raw: unknown, now = Date.now()): Cha
 
 /** Ranges for the sprite tuner's numbers (out of range = clamped; not a number = dropped). Pivots: within a canvas of slack. */
 const TUNE_RANGE: Record<keyof SpritePartTune, [number, number] | 'x' | 'y'> = {
-  px: 'x', py: 'y', min: [-180, 180], max: [-180, 180], swing: [0, 180], dangle: [-3, 3], gravity: [0, 1], idle: [0, 3],
+  px: 'x', py: 'y', min: [-180, 180], max: [-180, 180], swing: [0, 180], dangle: [0, 3], gravity: [0, 1], idle: [0, 3],
 };
 
 /** Shape-check a sprite's tuning against its parts. Undefined = nothing worth keeping. */
