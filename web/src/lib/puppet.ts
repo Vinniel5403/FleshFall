@@ -6,7 +6,7 @@
  * release = thrown rigid body: tumbles, bounces off floor/walls/ceiling with friction, falls over, gets back up.
  * Units: rig pixels / seconds. Pure — SpriteStage feeds it pointer positions each frame.
  */
-import { hand, idlePose, legPhase, mul, type Bone, type M, type Pose } from "./rig";
+import { hand, idlePose, legPhase, mul, tuneOf, type Bone, type M, type Mood, type PartKind, type Pose } from "./rig";
 
 /** How much each part swings (sign: + for parts hanging below their pivot, − for parts standing above it). */
 const DANGLE: Partial<Record<string, number>> = {
@@ -72,6 +72,28 @@ const JOINT_MAX: Partial<Record<string, number>> = {
   head: 0.3,
 };
 
+/** Physics numbers of one part (angles in radians): sway strength, gravity share, swing range while held, joint range once free. */
+export interface Phys { dangle: number; gravity: number; swing: number; min: number; max: number }
+
+/** Code defaults by part kind (what the sprite tuner shows as placeholders). */
+export function physDefaults(kind: PartKind | null): Phys {
+  const swing = (kind && SWING_MAX[kind]) || 0.4;
+  const joint = (kind && JOINT_MAX[kind]) || swing;
+  return { dangle: (kind && DANGLE[kind]) || 0, gravity: (kind && GRAVITY[kind]) || 0, swing, min: -joint, max: joint };
+}
+
+const physCache = new WeakMap<Bone, Phys>();
+/** Defaults overridden by the player's tuning (cached per bone; a new tuning builds new bones). */
+export function physOf(b: Bone): Phys {
+  let ph = physCache.get(b);
+  if (!ph) {
+    const d = physDefaults(b.kind), t = b.tune ?? {}, deg = (v: number | undefined, def: number) => (v === undefined ? def : (v * Math.PI) / 180);
+    ph = { dangle: t.dangle ?? d.dangle, gravity: t.gravity ?? d.gravity, swing: deg(t.swing, d.swing), min: deg(t.min, d.min), max: deg(t.max, d.max) };
+    physCache.set(b, ph);
+  }
+  return ph;
+}
+
 /** Pointer velocity low-pass (s): the throw uses this, so it must not depend on the frame rate. */
 const VEL_TAU = 0.04;
 const THROW_MAX = 12000; // fastest throw (rig px/s, ~10 m/s)
@@ -87,6 +109,10 @@ const FLOOR_BOUNCE = 0.3, WALL_BOUNCE = 0.45, BOUNCE_MIN = 600;
 /** Tilted further than this on the floor = it can't catch itself: falls over, lies dazed, then gets up. */
 const TOPPLE = 0.9, DAZED = 0.55;
 const UP = 0, DOWN = 1, RISE = 2;
+/** Carried faster than this (rig px/s) = being shaken: annoyance builds up (see `fuss`). */
+const SHAKE_SPEED = 4500;
+/** Chance an emoji face shows at all: rolled once per grab, once per release, and per idle slot — otherwise the normal face. */
+export const FACE_CHANCE = 0.1;
 
 interface Limb { a: number; v: number }
 
@@ -148,13 +174,19 @@ export interface Puppet {
   sw: number; swV: number;
   /** pointer last step + its low-passed velocity (drives that swing) */
   px: number; py: number; pvx: number; pvy: number;
+  /** annoyance from being shaken (0…1.5): builds while carried fast, fades slowly so the face doesn't flicker */
+  fuss: number;
+  /** seconds of "what just happened?" left after landing / getting back up */
+  after: number;
+  /** dice for this grab / this throw: emoji faces show when it's under the face chance */
+  roll: number;
 }
 
 export const newPuppet = (): Puppet => ({
   x: 0, y: 0, vx: 0, vy: 0, ang: 0, angV: 0, grabbed: false,
   gx: 0, gy: 0, tx: 0, ty: 0, ax: 0, fx: 0, fy: 1, squash: 0, squint: 0, carry: 0, mode: "hips", limbs: new Map(), clock: 0,
   thrown: false, ground: true, pose: UP, downT: 0, lay: 0,
-  sw: 0, swV: 0, px: 0, py: 0, pvx: 0, pvy: 0,
+  sw: 0, swV: 0, px: 0, py: 0, pvx: 0, pvy: 0, fuss: 0, after: 0, roll: 1,
 });
 
 /** Multi-legged rigs paddle their legs in the air while held (rad, around the hanging angle). */
@@ -234,12 +266,14 @@ export function grab(p: Puppet, x: number, y: number, mode: GrabMode = "hips", b
   p.ty = p.py = y;
   p.pvx = p.pvy = p.sw = p.swV = 0;
   p.grabbed = true;
+  p.roll = Math.random();
 }
 
 export function release(p: Puppet): void {
   p.grabbed = false;
   p.thrown = true;
   p.squint = 0.5;
+  p.roll = Math.random();
 }
 
 export interface StepOptions {
@@ -346,6 +380,7 @@ function fly(p: Puppet, s: Shape, dt: number, opts: StepOptions): void {
   }
   p.x += pushX;
   p.y += pushY;
+  if (ground && !p.ground && p.pose === UP) p.after = Math.max(p.after, 1.1); // landed on its feet
   p.ground = ground;
 
   // --- posture ---
@@ -353,7 +388,7 @@ function fly(p: Puppet, s: Shape, dt: number, opts: StepOptions): void {
   else if (p.pose === DOWN) {
     if (ground && Math.hypot(p.vx, p.vy) < 500 && Math.abs(p.angV) < 1.5) p.downT += dt;
     if (p.downT > DAZED) p.pose = RISE;
-  } else if (p.pose === RISE && Math.abs(p.ang) < 0.15) p.pose = UP;
+  } else if (p.pose === RISE && Math.abs(p.ang) < 0.15) (p.pose = UP), (p.after = 1.6);
 }
 
 
@@ -415,6 +450,8 @@ export function step(p: Puppet, bones: Map<string, Bone>, dt: number, _size: { w
     p.y = ny;
   } else fly(p, shape, dt, opts);
   p.ax = clamp((p.vx - pvx) / dt, -60000, 60000);
+  p.fuss = clamp(p.fuss + (p.grabbed && Math.hypot(p.vx, p.vy) > SHAKE_SPEED ? dt * 1.6 : -dt * 0.5), 0, 1.5);
+  if (!p.grabbed) p.after = Math.max(0, p.after - dt);
 
   // tip over into the carry pose while held, back upright when released
   p.carry += ((p.grabbed ? 1 : 0) - p.carry) * Math.min(1, dt * (p.grabbed ? 7 : 5));
@@ -481,8 +518,9 @@ export function step(p: Puppet, bones: Map<string, Bone>, dt: number, _size: { w
   for (const b of bones.values()) {
     if (b.part.id === armId) continue; // set above
     // held by the head → the head doesn't wobble on its own neck
-    const w = b.kind && !(p.mode === "head" && p.grabbed && b.kind === "head") ? DANGLE[b.kind] : undefined;
-    const g0 = b.kind ? GRAVITY[b.kind] ?? 0 : 0;
+    const ph = physOf(b);
+    const w = !(p.mode === "head" && p.grabbed && b.kind === "head") ? ph.dangle : 0;
+    const g0 = ph.gravity;
     if (!w && !g0) continue;
     const parentWorld = b.parent ? world(b.parent) : p.ang;
     // walking legs: left/right swing in opposite phase when shaken, and paddle in the air while held
@@ -506,13 +544,11 @@ export function step(p: Puppet, bones: Map<string, Bone>, dt: number, _size: { w
       hang = -g * parentWorld;
       acc = -LIMB_K * (g * (Math.sin(th) * p.fy + Math.cos(th) * fx) + (1 - g) * l.a - paddle);
     }
-    l.v += (acc - LIMB_C * l.v + (w ?? 0) * LIMB_GAIN * drive * gaitSign) * dt;
+    l.v += (acc - LIMB_C * l.v + w * LIMB_GAIN * drive * gaitSign) * dt;
     l.a += l.v * dt;
     // range: around the hanging angle while held (stops hair/skirt flipping out on hard shakes), the joint's own range once free.
     // Past it the part is eased back, not snapped
-    const swing = (b.kind && SWING_MAX[b.kind]) || 0.4;
-    const joint = (b.kind && JOINT_MAX[b.kind]) || swing;
-    const lo = -joint + (hang - swing + joint) * p.carry, hi = joint + (hang + swing - joint) * p.carry;
+    const lo = ph.min + (hang - ph.swing - ph.min) * p.carry, hi = ph.max + (hang + ph.swing - ph.max) * p.carry;
     // scalp covers stop dead at the limit: easing back lets a hard throw push them past it
     const back = b.kind === "bang" || b.kind === "back_hair" ? 0 : Math.exp(-dt * 16);
     if (l.a > hi) (l.a = hi + (l.a - hi) * back), (l.v = Math.min(0, l.v) * 0.3);
@@ -527,9 +563,51 @@ export function step(p: Puppet, bones: Map<string, Bone>, dt: number, _size: { w
     const a = legs.reduce((n, l) => n + l.a, 0) / legs.length, v = legs.reduce((n, l) => n + l.v, 0) / legs.length;
     for (const l of legs) (l.a = a), (l.v = v);
   }
+  // legs stay under the skirt: never turned further from it than the room at the hem allows
+  const skirt = p.limbs.get("skirt");
+  const range = skirt && legRange(bones);
+  if (skirt && range) {
+    for (const b of bones.values()) {
+      const l = b.kind === "leg" && !b.gait ? p.limbs.get(b.part.id) : undefined;
+      if (!l) continue;
+      const rel = l.a - skirt.a;
+      if (rel > range[1] || rel < range[0]) (l.a = skirt.a + clamp(rel, range[0], range[1])), (l.v = skirt.v);
+    }
+  }
 
   p.squash *= Math.exp(-dt * 9);
   if (!p.grabbed) p.squint = Math.max(0, p.squint - dt);
+}
+
+/** Share of the room between leg and hem the leg may use (the rest is a margin for the skirt's own flex). */
+export const LEG_IN_SKIRT = 0.8;
+const legRanges = new WeakMap<Map<string, Bone>, [number, number] | null>();
+/**
+ * How far the legs may turn relative to the skirt (rad, [min, max]) before they poke out past its hem: the room
+ * between each leg's edge and the skirt's edge at hem height, over the hip → hem distance. Shared by all legs
+ * (they swing as one). null = no skirt or the legs aren't under it.
+ */
+function legRange(bones: Map<string, Bone>): [number, number] | null {
+  if (legRanges.has(bones)) return legRanges.get(bones)!;
+  const sk = bones.get("skirt")?.part;
+  let range: [number, number] | null = null;
+  if (sk) {
+    let lo = -Infinity, hi = Infinity;
+    const hem = sk.y + sk.h;
+    const share = tuneOf(bones).legInSkirt ?? LEG_IN_SKIRT;
+    for (const b of bones.values()) {
+      if (b.kind !== "leg" || b.gait) continue;
+      const depth = hem - b.py;
+      if (depth <= 0) continue;
+      // + angle swings the foot to the left (canvas y-down), so the left room caps +, the right room caps −
+      const left = Math.max(0, b.part.x - sk.x), right = Math.max(0, sk.x + sk.w - (b.part.x + b.part.w));
+      hi = Math.min(hi, Math.atan2(left * share, depth));
+      lo = Math.max(lo, -Math.atan2(right * share, depth));
+    }
+    if (hi !== Infinity) range = [lo, hi];
+  }
+  legRanges.set(bones, range);
+  return range;
 }
 
 /** Idle pose + physics swing (+ landing squash on the torso). */
@@ -554,6 +632,35 @@ export function onTopParts(p: Puppet, bones: Map<string, Bone>): string[] {
     .filter((b) => b.part.id === arm || attached(b.part.id))
     .sort((a, b) => a.part.z - b.part.z)
     .map((b) => b.part.id);
+}
+
+/** Idle: now and then a face of its own for a couple of seconds (pure function of t, never in the first few seconds). */
+const IDLE_EVERY = 6.5, IDLE_SHOW = 2.2, IDLE_MOODS: Mood[] = ["happy", "smug", "hmm"];
+const hash = (n: number) => {
+  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
+};
+function idleMood(t: number, chance: number): Mood | null {
+  const n = Math.floor(t / IDLE_EVERY);
+  if (n < 1 || t - n * IDLE_EVERY > IDLE_SHOW || hash(n) >= chance) return null;
+  return IDLE_MOODS[Math.floor(hash(n + 101) * IDLE_MOODS.length)];
+}
+
+/**
+ * Emoji face for what's happening (rigs with faces on a Head Blank only — drawRig ignores moods the rig lacks):
+ * held = shock, shaken = angry · flying = shock · fallen over / getting up = hurt · just landed = confused
+ * (angry if it was shaken) · otherwise an occasional idle face (happy / smug / hmm). Each grab / throw / idle slot
+ * shows a face only FACE_CHANCE of the time; the rest keep the normal face (squinting while held).
+ */
+export function mood(p: Puppet, t: number, bones: Map<string, Bone>): Mood | null {
+  const chance = tuneOf(bones).faceChance ?? FACE_CHANCE;
+  const reacting = p.grabbed || p.pose !== UP || !p.ground || p.after > 0;
+  if (reacting && p.roll >= chance) return null;
+  if (p.grabbed) return p.fuss > 0.6 ? "angry" : "shock";
+  if (p.pose !== UP) return "hurt";
+  if (!p.ground) return "shock";
+  if (p.after > 0) return p.fuss > 0.3 ? "angry" : "confused";
+  return idleMood(t, chance);
 }
 
 /** Eyes squeezed shut while held (and a moment after). */

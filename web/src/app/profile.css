@@ -321,6 +321,31 @@ div.st-portrait { cursor: default; }
 .st-switch i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 10px; height: 10px; background: var(--muted); transition: transform .2s var(--st-ease), background .2s; }
 .st-switch input:checked + i { border-color: var(--crimson); background: rgba(224, 30, 55, .2); }
 .st-switch input:checked + i::after { transform: translateX(16px); background: var(--crimson); }
+
+/* sprite tuner */
+.st-tune { display: grid; gap: 14px; }
+.st-tune-pick { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.st-tune-pick select { flex: 1; min-width: 160px; height: 34px; padding: 0 10px; border: 1px solid rgba(230, 184, 162, .28); border-radius: 0; background: rgba(5, 3, 3, .6); color: var(--bone); font: 13px var(--font-mono, ui-monospace), monospace; }
+.st-tune-pick select:focus-visible { outline: 2px solid var(--flesh); outline-offset: 2px; }
+.st-tune-grid { display: grid; gap: 6px; padding-top: 10px; border-top: 1px solid rgba(230, 184, 162, .1); }
+.st-tune-row > * { min-width: 0; }
+.st-tune-row { display: grid; grid-template-columns: minmax(0, 1fr) 72px 18px 28px; align-items: center; gap: 8px; }
+.st-tune-row > label { display: grid; grid-template-columns: 118px minmax(0, 1fr); align-items: center; gap: 10px; min-width: 0; }
+.st-tune-row span[title] { color: var(--muted); font-size: 13px; cursor: help; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-tune-row.on span[title] { color: var(--flesh); }
+.st-tune-row.pivot { grid-template-columns: 118px minmax(0, 1fr) minmax(0, 1fr) 28px; }
+.st-tune-num {
+  width: 100%; height: 30px; padding: 0 6px; border: 1px solid rgba(230, 184, 162, .22); border-radius: 0; background: rgba(5, 3, 3, .6);
+  color: var(--bone); font-size: 13px; font-variant-numeric: tabular-nums; text-align: right;
+}
+.st-tune-num:focus { outline: none; border-color: var(--crimson); }
+.st-tune-unit { color: var(--muted); font-size: 12px; }
+.st-tune-reset { width: 28px; min-width: 0; height: 28px; min-height: 0; padding: 0; line-height: 1; border: 1px solid rgba(230, 184, 162, .22); background: transparent; color: var(--flesh); cursor: pointer; }
+.st-tune-reset:disabled { opacity: .25; cursor: default; }
+.st-tune-reset:not(:disabled):hover { border-color: var(--crimson); }
+@media (max-width: 520px) {
+  .st-tune-row > label { grid-template-columns: 1fr; gap: 2px; }
+}
 .st-switch input:focus-visible + i { outline: 2px solid var(--flesh); outline-offset: 2px; }
 
 /* template PSD download tile (sprite panel) — the most important first step, so it leads the column */

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { apply, bodyMatrix, grab, hitPart, invert, newPuppet, onTopParts, puppetPose, release, squinting, step } from "@/lib/puppet";
+import { apply, bodyMatrix, grab, hitPart, invert, mood, newPuppet, onTopParts, puppetPose, release, squinting, step } from "@/lib/puppet";
 import { buildSkeleton, drawRig, HEIGHT_DEFAULT, mul, type M, type Rig } from "@/lib/rig";
 import { furniture, furnitureSrc, FURNITURE, roomBg, template, type PlacedItem, type RoomLayout } from "@/lib/room";
 import { guardGestures, Mips, watchVisible } from "@/lib/stage";
@@ -316,7 +316,7 @@ export function RoomStage({ layout, rig, src, label, edit }: Props) {
       ctx.fill();
       ctx.restore();
       const view: M = [k, 0, 0, k, geo.ox, oy + walkBob(w, extent.h) * k];
-      drawRig(ctx, rig, bones, dollMips, t, mul(mul(view, bodyMatrix(p)), flipMatrix(w, extent.cx)), true, { pose, eyesShut: squinting(p), onTop: onTopParts(p, bones) });
+      drawRig(ctx, rig, bones, dollMips, t, mul(mul(view, bodyMatrix(p)), flipMatrix(w, extent.cx)), true, { pose, eyesShut: squinting(p), onTop: onTopParts(p, bones), mood: mood(p, t, bones), mirrored: w.face < 0 });
 
       lay.items.forEach((it, i) => it.front && drawItem(it, ed?.selected === i));
       if (visible) raf = requestAnimationFrame(frame);

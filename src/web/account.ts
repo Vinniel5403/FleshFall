@@ -3,7 +3,7 @@
  * The website verifies the Discord login; the bot owns the character store and the guild.
  * Every handler keeps load → mutate → save synchronous (no await in between).
  */
-import { accountView, applyRoom, attachImage, BIO_MAX, cleanBio, cleanHeight, cleanRoom, cleanName, cleanSprite, detachImage, isSlot, legacyMedia, mediaId, assignHandles, nameHandle, renameMedia, spriteKeys } from '../game/account.js';
+import { accountView, applyRoom, attachImage, BIO_MAX, cleanBio, cleanHeight, cleanRoom, cleanName, cleanSprite, cleanTune, detachImage, isSlot, legacyMedia, mediaId, assignHandles, nameHandle, renameMedia, spriteKeys } from '../game/account.js';
 import { db } from '../db/index.js';
 import { createCharacter, loadCharacter, saveCharacter } from '../game/character.js';
 import { ICONS } from '../game/icons.js';
@@ -181,6 +181,17 @@ export function setSpriteHeight(userId: string, b: Record<string, unknown>): Rep
   const char = loadCharacter(userId);
   if (!char?.sprite) return fail(404, 'ยังไม่มีสไปรต์');
   char.sprite.heightCm = heightCm;
+  saveCharacter(char);
+  return ok({ character: view(char) });
+}
+
+/** Replace the sprite's tuning (null / {} = back to the defaults). */
+export function setSpriteTune(userId: string, b: Record<string, unknown>): Reply {
+  const char = loadCharacter(userId);
+  if (!char?.sprite) return fail(404, 'ยังไม่มีสไปรต์');
+  const tune = cleanTune(b.tune, char.sprite);
+  if (tune) char.sprite.tune = tune;
+  else delete char.sprite.tune;
   saveCharacter(char);
   return ok({ character: view(char) });
 }

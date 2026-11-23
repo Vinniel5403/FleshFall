@@ -13,7 +13,7 @@ export interface AccountReply {
   error?: string;
 }
 
-export async function bot(path: "get" | "create" | "join" | "rename" | "bio" | "room" | "image/add" | "image/remove" | "sprite/set" | "sprite/clear" | "sprite/height", body: Record<string, unknown>) {
+export async function bot(path: "get" | "create" | "join" | "rename" | "bio" | "room" | "image/add" | "image/remove" | "sprite/set" | "sprite/clear" | "sprite/height" | "sprite/tune", body: Record<string, unknown>) {
   return post<AccountReply>(path, body);
 }
 

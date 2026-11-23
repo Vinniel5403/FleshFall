@@ -5,7 +5,7 @@
  * Canvas-agnostic via `kit`, so it also runs under @napi-rs/canvas for tests.
  */
 import type { Layer, Psd } from "ag-psd";
-import { classify, kindOf, REQUIRED_KINDS, type Rig, type RigPart } from "./rig";
+import { classify, isAlternate, kindOf, REQUIRED_KINDS, type Rig, type RigPart } from "./rig";
 
 export const PSD_MAX_BYTES = 150 * 1024 * 1024;
 /** Vercel request body cap is 4.5MB; leave room for multipart overhead. */
@@ -87,8 +87,11 @@ export async function parsePsd(psd: Psd, kit: CanvasKit): Promise<ParsedSprite> 
   const W = psd.width, H = psd.height;
   const warn = new Set<string>();
   const top = psd.children ?? [];
-  // a part = any visible top-level group OR layer (merged art is often one layer per part)
-  const groups = top.filter((l) => !l.hidden && !/^(background|bg|พื้นหลัง)$/i.test((l.name ?? "").trim()));
+  // a part = any visible top-level group OR layer (merged art is often one layer per part); hidden alternates
+  // (emoji faces, Head Blank/Blink, "… Flipped") count too — they're only shown at times
+  const groups = top
+    .filter((l) => (!l.hidden || isAlternate(l.name ?? "")) && !/^(background|bg|พื้นหลัง)$/i.test((l.name ?? "").trim()))
+    .map((l) => (l.hidden ? { ...l, hidden: false } : l));
   if (!groups.length) throw new Error("ไม่พบเลเยอร์/group ที่มองเห็นในไฟล์");
   if (groups.length > MAX_PARTS) throw new Error(`ชิ้นส่วนเยอะเกินไป (สูงสุด ${MAX_PARTS})`);
 

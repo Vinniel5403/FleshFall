@@ -3,7 +3,7 @@
  * Pure + Discord-free. Image bytes live in object storage (R2); the character only stores keys.
  */
 import { createHmac, randomBytes } from 'node:crypto';
-import type { CharImage, CharRoom, CharSprite, Character, RoomItem, ImageSlot, SpritePart } from './types.js';
+import type { CharImage, CharRoom, CharSprite, Character, RoomItem, ImageSlot, SpritePart, SpritePartTune, SpriteTune } from './types.js';
 import { currentZone, getZone, travelVerb, zoneLabel } from './zones.js';
 import { balance } from '../config.js';
 import { addItem, itemCount } from './character.js';
@@ -313,7 +313,43 @@ export function cleanSprite(userId: string, raw: unknown, now = Date.now()): Cha
   const sprite: CharSprite = { base: r.base, width: W, height: H, parts, at: now };
   const heightCm = cleanHeight(r.heightCm);
   if (heightCm) sprite.heightCm = heightCm;
+  const tune = cleanTune(r.tune, sprite);
+  if (tune) sprite.tune = tune;
   return sprite;
+}
+
+/** Ranges for the sprite tuner's numbers (out of range = clamped; not a number = dropped). Pivots: within a canvas of slack. */
+const TUNE_RANGE: Record<keyof SpritePartTune, [number, number] | 'x' | 'y'> = {
+  px: 'x', py: 'y', min: [-180, 180], max: [-180, 180], swing: [0, 180], dangle: [-3, 3], gravity: [0, 1], idle: [0, 3],
+};
+
+/** Shape-check a sprite's tuning against its parts. Undefined = nothing worth keeping. */
+export function cleanTune(raw: unknown, sprite: Pick<CharSprite, 'width' | 'height' | 'parts'>): SpriteTune | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const r = raw as Record<string, unknown>;
+  const num = (v: unknown, lo: number, hi: number) =>
+    typeof v === 'number' && Number.isFinite(v) ? Math.round(Math.min(hi, Math.max(lo, v)) * 1000) / 1000 : undefined;
+  const ids = new Set(sprite.parts.map((p) => p.id));
+  const tune: SpriteTune = {};
+  if (r.parts && typeof r.parts === 'object') {
+    const parts: Record<string, SpritePartTune> = {};
+    for (const [id, t] of Object.entries(r.parts as Record<string, unknown>)) {
+      if (!ids.has(id) || !t || typeof t !== 'object') continue;
+      const out: SpritePartTune = {};
+      for (const [k, range] of Object.entries(TUNE_RANGE) as [keyof SpritePartTune, (typeof TUNE_RANGE)[keyof SpritePartTune]][]) {
+        const [lo, hi] = range === 'x' ? [-sprite.width, sprite.width * 2] : range === 'y' ? [-sprite.height, sprite.height * 2] : range;
+        const v = num((t as Record<string, unknown>)[k], lo, hi);
+        if (v !== undefined) out[k] = v;
+      }
+      if (out.min !== undefined && out.max !== undefined && out.min > out.max) [out.min, out.max] = [out.max, out.min];
+      if (Object.keys(out).length) parts[id] = out;
+    }
+    if (Object.keys(parts).length) tune.parts = parts;
+  }
+  const legInSkirt = num(r.legInSkirt, 0, 2), faceChance = num(r.faceChance, 0, 1);
+  if (legInSkirt !== undefined) tune.legInSkirt = legInSkirt;
+  if (faceChance !== undefined) tune.faceChance = faceChance;
+  return Object.keys(tune).length ? tune : undefined;
 }
 
 /** What the website may see about a player's own character (no Discord ids). */

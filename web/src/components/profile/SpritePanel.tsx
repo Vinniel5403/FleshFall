@@ -4,9 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import templateRig from "@/data/sprite-template.json";
 import { api, jsonInit } from "@/lib/client";
 import type { ParsedSprite } from "@/lib/psd";
-import { HEIGHT_DEFAULT, HEIGHT_MAX, HEIGHT_MIN, TEMPLATE_GROUPS, type Rig } from "@/lib/rig";
+import { HEIGHT_DEFAULT, HEIGHT_MAX, HEIGHT_MIN, TEMPLATE_EXTRAS, TEMPLATE_GROUPS, type Rig, type RigTune } from "@/lib/rig";
 import type { AccountView } from "@/lib/types";
 import { SpriteStage } from "../SpriteStage";
+import { SpriteTuner } from "./SpriteTuner";
 import { Card, PanelHead, SaveBar, Spinner, useDirty, useToast } from "./ui";
 
 /** Default sprite (split from the template PSD by `npm run web:template`) shown until a player uploads their own. */
@@ -31,7 +32,19 @@ export function SpritePanel({ character, onChange }: { character: AccountView; o
   const shownHeight = draft?.rig.heightCm ?? savedHeight;
   const heightCm = heightEdit ?? shownHeight;
   const heightDirty = !draft && !!saved && heightEdit !== null && heightEdit !== savedHeight;
-  useDirty("sprite", !!draft || heightDirty);
+  /** tuner: edited tuning (null = whatever the shown sprite has saved), picked part, rest-pose mode */
+  const [tuneEdit, setTuneEdit] = useState<RigTune | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [freeze, setFreeze] = useState(false);
+  const baseRig: Rig = draft?.rig ?? saved ?? TEMPLATE_RIG;
+  const shownRig = useMemo(() => (tuneEdit ? { ...baseRig, tune: tuneEdit } : baseRig), [baseRig, tuneEdit]);
+  const tuneDirty = tuneEdit !== null && JSON.stringify(tuneEdit) !== JSON.stringify(baseRig.tune ?? {});
+  const editsDirty = !draft && !!saved && (heightDirty || tuneDirty);
+  useDirty("sprite", !!draft || editsDirty);
+  const resetEdits = () => {
+    setHeightEdit(null);
+    setTuneEdit(null);
+  };
 
   const dropDraft = useCallback(() => {
     setDraft((d) => {
@@ -54,7 +67,8 @@ export function SpritePanel({ character, onChange }: { character: AccountView; o
       const parsed = await parsePsdFile(file);
       const urls = new Map([...parsed.files].map(([id, b]) => [id, URL.createObjectURL(b as Blob)]));
       setDraft({ ...parsed, rig: { ...parsed.rig, heightCm: heightEdit ?? savedHeight }, urls });
-      setHeightEdit(null);
+      resetEdits();
+      setSelected(null);
       toast.info(`แยกได้ ${parsed.rig.parts.length} ชิ้นส่วน — ตรวจดูแล้วกดบันทึก`);
     } catch (err) {
       toast.err((err as Error).message);
@@ -69,11 +83,11 @@ export function SpritePanel({ character, onChange }: { character: AccountView; o
     setBusy("save");
     try {
       const fd = new FormData();
-      fd.set("rig", JSON.stringify({ ...draft.rig, heightCm }));
+      fd.set("rig", JSON.stringify({ ...draft.rig, heightCm, tune: tuneEdit ?? draft.rig.tune }));
       for (const p of draft.rig.parts) fd.set(`p_${p.id}`, draft.files.get(p.id) as Blob, `${p.id}.${p.ext}`);
       onChange((await api<{ character: AccountView }>("/api/me/sprite", { method: "POST", body: fd })).character);
       dropDraft();
-      setHeightEdit(null);
+      resetEdits();
       toast.ok("บันทึกสไปรต์แล้ว");
     } catch (err) {
       toast.err((err as Error).message);
@@ -82,12 +96,15 @@ export function SpritePanel({ character, onChange }: { character: AccountView; o
     }
   };
 
-  const saveHeight = async () => {
+  const saveEdits = async () => {
     setBusy("save");
     try {
-      onChange((await api<{ character: AccountView }>("/api/me/sprite", jsonInit("PATCH", { heightCm }))).character);
-      setHeightEdit(null);
-      toast.ok(`บันทึกส่วนสูง ${heightCm} cm แล้ว`);
+      let c: AccountView | null = null;
+      if (heightDirty) c = (await api<{ character: AccountView }>("/api/me/sprite", jsonInit("PATCH", { heightCm }))).character;
+      if (tuneDirty) c = (await api<{ character: AccountView }>("/api/me/sprite", jsonInit("PATCH", { tune: tuneEdit }))).character;
+      if (c) onChange(c);
+      resetEdits();
+      toast.ok(heightDirty && tuneDirty ? "บันทึกส่วนสูงและการปรับแต่งแล้ว" : heightDirty ? `บันทึกส่วนสูง ${heightCm} cm แล้ว` : "บันทึกการปรับแต่งแล้ว");
     } catch (err) {
       toast.err((err as Error).message);
     } finally {
@@ -100,7 +117,8 @@ export function SpritePanel({ character, onChange }: { character: AccountView; o
     setBusy("delete");
     try {
       onChange((await api<{ character: AccountView }>("/api/me/sprite", { method: "DELETE" })).character);
-      setHeightEdit(null);
+      resetEdits();
+      setSelected(null);
       toast.ok("ลบสไปรต์แล้ว");
     } catch (err) {
       toast.err((err as Error).message);
@@ -137,14 +155,21 @@ export function SpritePanel({ character, onChange }: { character: AccountView; o
           }}
         >
           <span className={`st-stage-tag ${state}`}>{state === "draft" ? "PREVIEW · ยังไม่บันทึก" : state === "saved" ? "SAVED" : "TEMPLATE"}</span>
-          {draft && draftSrc ? (
-            <SpriteStage rig={draft.rig} src={draftSrc} label="ตัวอย่างสไปรต์" debug={debug} heightCm={heightCm} />
-          ) : saved && savedSrc ? (
-            <SpriteStage rig={saved} src={savedSrc} label={`สไปรต์ ${character.name}`} debug={debug} heightCm={heightCm} />
-          ) : (
-            <SpriteStage rig={TEMPLATE_RIG} src={templateSrc} label="สไปรต์ตัวอย่างจากเทมเพลต" debug={debug} heightCm={heightCm} />
-          )}
-          <p className="st-stage-hint">จับหัว ตัว หรือมือแล้วลากเล่นได้</p>
+          <SpriteStage
+            rig={shownRig}
+            src={draft && draftSrc ? draftSrc : saved && savedSrc ? savedSrc : templateSrc}
+            label={draft ? "ตัวอย่างสไปรต์" : saved ? `สไปรต์ ${character.name}` : "สไปรต์ตัวอย่างจากเทมเพลต"}
+            debug={debug}
+            heightCm={heightCm}
+            selected={debug ? selected : null}
+            freeze={debug && freeze}
+            onPick={setSelected}
+            onPivot={(id, x, y) => {
+              const t = tuneEdit ?? baseRig.tune ?? {};
+              setTuneEdit({ ...t, parts: { ...t.parts, [id]: { ...t.parts?.[id], px: x, py: y } } });
+            }}
+          />
+          <p className="st-stage-hint">{debug && freeze ? "คลิกชิ้นส่วนเพื่อเลือก · ลากจุดเพื่อย้ายจุดหมุน" : "จับหัว ตัว หรือมือแล้วลากเล่นได้"}</p>
           {over && <div className="st-stage-drop">ปล่อยไฟล์ .psd เพื่อแยกชิ้นส่วน</div>}
           {busy === "parse" && (
             <div className="st-stage-drop">
@@ -195,6 +220,7 @@ export function SpritePanel({ character, onChange }: { character: AccountView; o
             <Card title={saved ? "เปลี่ยนสไปรต์" : "อัปโหลดสไปรต์ของคุณ"}>
               <p className="st-note">วาดทับในแต่ละ group ของเทมเพลต แล้วอัปโหลดกลับมา (หรือลากไฟล์มาวางบนตัวละครซ้ายมือ) — ชื่อ group ที่ระบบรู้จัก สะกดคล้าย ๆ ได้ ซ้าย/ขวาเดาจากตำแหน่ง:</p>
               <p className="st-groups">{TEMPLATE_GROUPS.join(" · ")}</p>
+              <p className="st-note">เสริม (ซ่อนเลเยอร์ไว้ได้): หน้า emoji วาดบน Head Blank — {TEMPLATE_EXTRAS.slice(0, -1).join(" · ")} (โผล่ตอนโดนจับ/เขย่า/โยน/ล้ม/ยืนเฉย) · ใส่คำว่า Flipped ต่อท้าย เช่น {TEMPLATE_EXTRAS.at(-1)} = ชิ้นที่ใช้ตอนตัวละครหันซ้าย</p>
               <div className="st-row">
                 <button type="button" className="st-btn primary" onClick={() => input.current?.click()} disabled={!!busy}>
                   {busy === "parse" ? <Spinner label="กำลังแยก" /> : saved ? "อัปโหลด PSD ใหม่" : "✦ อัปโหลด PSD"}
@@ -211,8 +237,20 @@ export function SpritePanel({ character, onChange }: { character: AccountView; o
           <label className="st-switch">
             <input type="checkbox" checked={debug} onChange={(e) => setDebug(e.target.checked)} />
             <i aria-hidden="true" />
-            แสดงจุดหมุน (debug)
+            โหมดปรับแต่ง (debug) · จุดหมุน มุม การแกว่ง
           </label>
+          {debug && (
+            <SpriteTuner
+              rig={shownRig}
+              tune={shownRig.tune ?? {}}
+              onTune={setTuneEdit}
+              selected={selected}
+              onSelect={setSelected}
+              freeze={freeze}
+              onFreeze={setFreeze}
+              note={draft ? "บันทึกไปพร้อมสไปรต์ใหม่" : saved ? undefined : "นี่คือเทมเพลต — ลองปรับดูได้ แต่ต้องอัปโหลดสไปรต์ของตัวเองก่อนถึงบันทึกได้"}
+            />
+          )}
         </div>
       </div>
 
@@ -233,9 +271,18 @@ export function SpritePanel({ character, onChange }: { character: AccountView; o
         label="สไปรต์ใหม่ยังไม่ได้บันทึก"
         saveText="✦ บันทึกสไปรต์"
         onSave={saveDraft}
-        onReset={dropDraft}
+        onReset={() => {
+          dropDraft();
+          setTuneEdit(null);
+        }}
       />
-      <SaveBar show={heightDirty} busy={busy === "save"} label={`ส่วนสูงเปลี่ยนเป็น ${heightCm} cm`} onSave={saveHeight} onReset={() => setHeightEdit(null)} />
+      <SaveBar
+        show={editsDirty}
+        busy={busy === "save"}
+        label={[heightDirty && `ส่วนสูงเปลี่ยนเป็น ${heightCm} cm`, tuneDirty && "ปรับแต่งโครงยังไม่บันทึก"].filter(Boolean).join(" · ")}
+        onSave={saveEdits}
+        onReset={resetEdits}
+      />
     </div>
   );
 }

@@ -103,7 +103,19 @@ export interface CharSprite {
   parts: SpritePart[];
   /** character height in cm (website slider) */
   heightCm?: number;
+  /** player's own rig tuning (website sprite tuner) — missing fields use the code defaults */
+  tune?: SpriteTune;
   at: number;
+}
+
+/** Per-part overrides: pivot in rig px; angles in degrees; dangle = sway strength; gravity 0–1; idle = idle motion ×. */
+export interface SpritePartTune { px?: number; py?: number; min?: number; max?: number; swing?: number; dangle?: number; gravity?: number; idle?: number }
+export interface SpriteTune {
+  parts?: Record<string, SpritePartTune>;
+  /** share of the room under the skirt the legs may swing into (0 = locked to the skirt) */
+  legInSkirt?: number;
+  /** chance (0–1) an emoji face shows per grab / throw / idle moment */
+  faceChance?: number;
 }
 
 /** One piece of furniture in the private room. x/y = top-left as fractions of the room size. */

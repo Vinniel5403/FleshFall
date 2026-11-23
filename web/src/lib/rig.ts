@@ -19,19 +19,52 @@ export interface RigPart {
   /** weapon only: which arm holds it (screen side). Missing = left. */
   hand?: "l" | "r";
 }
+/**
+ * Player's own tuning (website sprite tuner; mirrors SpriteTune in the bot's types.ts, validated by `cleanTune`).
+ * Missing fields = the code defaults. Pivot in rig px; angles in degrees; dangle = sway strength; gravity 0–1
+ * (1 = hangs straight down while carried); idle = idle-motion multiplier.
+ */
+export interface PartTune { px?: number; py?: number; min?: number; max?: number; swing?: number; dangle?: number; gravity?: number; idle?: number }
+export interface RigTune {
+  parts?: Record<string, PartTune>;
+  /** share of the room under the skirt the legs may swing into (0 = locked to the skirt) */
+  legInSkirt?: number;
+  /** chance (0–1) an emoji face shows per grab / throw / idle moment */
+  faceChance?: number;
+}
+
 export interface Rig {
   width: number;
   height: number;
   parts: RigPart[];
   /** character height in cm (feet to top of head) — drives uniform scale against the cm ruler */
   heightCm?: number;
+  tune?: RigTune;
 }
 
 export const HEIGHT_MIN = 100, HEIGHT_MAX = 220, HEIGHT_DEFAULT = 160;
 
 export type PartKind =
-  | "hair_tail" | "back_hair" | "bang" | "back_acc" | "weapon" | "skirt" | "torso" | "head_blink" | "iris" | "eyes" | "head" | "arm" | "leg";
+  | "hair_tail" | "back_hair" | "bang" | "back_acc" | "weapon" | "skirt" | "torso" | "head_blank" | "head_blink" | "face" | "iris" | "eyes" | "head" | "arm" | "leg";
 type Side = "l" | "r";
+
+/**
+ * Emoji faces: drawn on "Head Blank" (the head without eyes/mouth) in place of Head + eyes. Layer name → mood
+ * (any of the words), part id `face_<mood>`. Which one shows is picked by the puppet's state (see `mood` in puppet.ts).
+ */
+export const MOODS = ["hurt", "happy", "smug", "angry", "shock", "confused", "hmm"] as const;
+export type Mood = (typeof MOODS)[number];
+const MOOD_NAMES: [Mood, RegExp][] = [
+  ["hurt", /hurt|pain|ouch|cry/],
+  ["happy", /aww|happy|smile|joy|yay/],
+  ["smug", /f3|smug|smirk|grin/],
+  ["angry", /angr?y|mad|rage/],
+  ["shock", /wha|shock|surpris|gasp/],
+  ["confused", /huh|confus|dizzy/],
+  ["hmm", /hmm|think|suspic/],
+];
+/** "Bang Flipped" = the same part redrawn for when the doll faces the other way (asymmetric hair parting): id `<part>_flip`. */
+const FLIP_WORD = /^(flip|flipped|mirror|mirrored)$/;
 
 /** Order matters: first match wins (e.g. "back hair" before "head"). Matched on the squashed lowercase name. */
 const KINDS: [PartKind, RegExp][] = [
@@ -42,6 +75,7 @@ const KINDS: [PartKind, RegExp][] = [
   ["weapon", /weapon|sword|blade|gun|axe|knife|cleaver|spear/],
   ["skirt", /skirt|dress|pants|shorts/],
   ["torso", /torso|body|chest/],
+  ["head_blank", /blank|noface|faceless/],
   ["head_blink", /blink|eyesclosed|closedeyes/],
   ["iris", /iris|pupil/],
   ["eyes", /eye/],
@@ -54,8 +88,10 @@ const PAIRED = new Set<PartKind>(["hair_tail", "back_acc", "arm", "leg"]);
 /** What the template expects (shown to players). */
 export const TEMPLATE_GROUPS = [
   "Hair Tail Left", "Hair Tail Right", "Back Hair", "Back Accessories Left", "Back Accessories Right",
-  "Torso", "Head", "Head Blink", "White Eyes", "Irises", "Bang", "Skirt", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "Weapon",
+  "Torso", "Head", "Head Blink", "Head Blank", "White Eyes", "Irises", "Bang", "Skirt", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "Weapon",
 ];
+/** Optional extras (shown to players): emoji faces on Head Blank, and `<part> Flipped` for when the doll faces left. */
+export const TEMPLATE_EXTRAS = ["Hurt", "Happy", "Smug", "Angry", "Shock", "Confused", "Hmm", "Bang Flipped"];
 export const REQUIRED_KINDS: PartKind[] = ["torso", "head"];
 
 const tokens = (name: string) =>
@@ -88,13 +124,18 @@ export const legId = (side: Side, pair: number) => (pair <= 1 ? `leg_${side}` : 
 export function classify(groups: { name: string; x: number; w: number }[], canvasW: number): string[] {
   const used = new Set<string>();
   const ids: string[] = [];
-  for (const g of groups) {
-    const t = tokens(g.name);
+  const flips: number[] = [];
+  groups.forEach((g, i) => {
+    const all = tokens(g.name);
+    const t = all.filter((w) => !FLIP_WORD.test(w));
+    if (t.length < all.length && t.length) return void flips.push(i); // after the parts they mirror
     const squashed = t.join("");
+    const mood = MOOD_NAMES.find(([, re]) => re.test(squashed))?.[0];
     const kind = KINDS.find(([, re]) => re.test(squashed))?.[0];
     const legN = legNumber(g.name);
     let id: string;
-    if (legN) {
+    if (mood && (!kind || kind === "head")) id = `face_${mood}`; // "Crystal Sword" stays a weapon, "Face Happy" is a face
+    else if (legN) {
       const { side } = legSlot(legN);
       let pair = legSlot(legN).pair;
       while (used.has(legId(side, pair))) pair++; // e.g. a "Left Leg" already took leg_l
@@ -108,17 +149,49 @@ export function classify(groups: { name: string; x: number; w: number }[], canva
     if (used.has(id)) id = `extra_${slug(g.name)}`;
     for (let n = 2; used.has(id); n++) id = `${id.replace(/_\d+$/, "")}_${n}`;
     used.add(id);
-    ids.push(id);
+    ids[i] = id;
+  });
+  // mirrored variants: same id as the part they stand in for (name without the flip word, side from the name only) + `_flip`
+  for (const i of flips) {
+    const g = groups[i];
+    const t = tokens(g.name).filter((w) => !FLIP_WORD.test(w));
+    const name = t.join(" ");
+    const base = classify([{ name, x: g.x, w: g.w }], canvasW)[0];
+    const side = sideFromName(name);
+    const same = side ? base.replace(/_(l|r)(\d*)$/, `_${side}$2`) : base;
+    let id = same.startsWith("extra_") ? `extra_${slug(g.name)}` : `${same}_flip`;
+    for (let n = 2; used.has(id); n++) id = `extra_${slug(g.name)}_${n}`;
+    used.add(id);
+    ids[i] = id;
   }
   return ids;
 }
 
-/** Part id → kind + side (+ pair index for paired parts: `leg_l2` = 2nd left leg; default 1). */
-export function kindOf(id: string): { kind: PartKind | null; side: Side | null; pair: number } {
-  const m = /^([a-z_]+?)(?:_(l|r)(\d{0,2}))?$/.exec(id);
+/**
+ * Alternate frames (emoji face, Head Blank, Head Blink, `… Flipped`) are only shown at times, so artists often hide
+ * them in the PSD — they're imported even when hidden.
+ */
+export function isAlternate(name: string): boolean {
+  const t = tokens(name);
+  const squashed = t.join("");
+  if (t.some((w) => FLIP_WORD.test(w))) return true;
+  const kind = KINDS.find(([, re]) => re.test(squashed))?.[0];
+  return kind === "head_blank" || kind === "head_blink" || ((!kind || kind === "head") && MOOD_NAMES.some(([, re]) => re.test(squashed)));
+}
+
+/**
+ * Part id → kind + side (+ pair index for paired parts: `leg_l2` = 2nd left leg; default 1),
+ * the mood of a `face_<mood>`, and `flip` for a mirrored variant (`bang_flip`).
+ */
+export function kindOf(id: string): { kind: PartKind | null; side: Side | null; pair: number; mood?: Mood; flip: boolean } {
+  const flip = id.endsWith("_flip") && !id.startsWith("extra_");
+  const core = flip ? id.slice(0, -5) : id;
+  const mood = /^face_([a-z]+)$/.exec(core)?.[1] as Mood | undefined;
+  if (mood && MOODS.includes(mood)) return { kind: "face", side: null, pair: 1, mood, flip };
+  const m = /^([a-z_]+?)(?:_(l|r)(\d{0,2}))?$/.exec(core);
   const k = (m?.[1] ?? "") as PartKind;
-  if (id.startsWith("extra_") || !KINDS.some(([kk]) => kk === k)) return { kind: null, side: null, pair: 1 };
-  return { kind: k, side: (m?.[2] as Side) ?? null, pair: Number(m?.[3]) || 1 };
+  if (core.startsWith("extra_") || k === "face" || !KINDS.some(([kk]) => kk === k)) return { kind: null, side: null, pair: 1, flip: false };
+  return { kind: k, side: (m?.[2] as Side) ?? null, pair: Number(m?.[3]) || 1, flip };
 }
 
 // ---------- skeleton ----------
@@ -127,7 +200,7 @@ export function kindOf(id: string): { kind: PartKind | null; side: Side | null; 
 function pivotFrac(kind: PartKind | null, side: Side | null): [number, number] {
   switch (kind) {
     case "torso": return [0.5, 0.96]; // hips: breathing grows upward, nothing below the waist moves
-    case "head": case "head_blink": return [0.5, 0.92]; // neck
+    case "head": case "head_blink": case "head_blank": case "face": return [0.5, 0.92]; // neck
     case "bang": return [0.5, 0.08];
     case "back_hair": return [0.5, 0.08];
     case "hair_tail": return [side === "l" ? 0.6 : 0.4, 0.04];
@@ -143,7 +216,7 @@ function parentKind(kind: PartKind | null): PartKind | null {
   switch (kind) {
     case "torso": case "leg": case "skirt": return null; // grounded roots: feet + hem stay planted
     case "iris": return "eyes";
-    case "head_blink": case "eyes": case "bang": case "back_hair": case "hair_tail": return "head";
+    case "head_blink": case "head_blank": case "face": case "eyes": case "bang": case "back_hair": case "hair_tail": return "head";
     default: return "torso";
   }
 }
@@ -158,10 +231,20 @@ export interface Bone {
   parent: string | null;
   /** the rig has a closed-eyes head ("Head Blink") → blink swaps frames instead of squashing eyes */
   blinkFrame: boolean;
+  /** emoji face (`face_<mood>`): shown instead of Head + eyes while that mood is on */
+  mood?: Mood;
+  /** mirrored variant (`<part>_flip`): drawn instead of its part while the doll faces the other way */
+  flip: boolean;
+  /** this part has a mirrored variant → hidden while the doll faces the other way */
+  hasFlip: boolean;
   /** paired parts: 1 = first pair (`leg_l`), 2 = `leg_l2`, … */
   pair: number;
   /** legs of a multi-legged rig (more than 2 legs) step in a walk cycle instead of standing still */
   gait: boolean;
+  /** player's overrides for this part (pivot already applied to px/py) */
+  tune?: PartTune;
+  /** the whole rig's tuning (same object on every bone; read it with tuneOf) */
+  rigTune?: RigTune;
 }
 
 /** Walk-cycle phase of a leg: left vs right in opposite phase, each further pair a little later (like a creature's legs). */
@@ -174,13 +257,16 @@ const TOP_HINGED = new Set<PartKind>(["arm", "leg", "hair_tail"]);
 const distToBox = (p: { x: number; y: number }, b: RigPart) =>
   Math.hypot(Math.max(b.x - p.x, 0, p.x - (b.x + b.w)), Math.max(b.y - p.y, 0, p.y - (b.y + b.h)));
 
+/** The rig-wide tuning a skeleton was built with (legs-in-skirt, face chance). */
+export const tuneOf = (bones: Map<string, Bone>): RigTune => bones.values().next().value?.rigTune ?? {};
+
 export function buildSkeleton(rig: Rig): Map<string, Bone> {
   const byKind = new Map<string, RigPart>(rig.parts.map((p) => [p.id, p]));
   const bones = new Map<string, Bone>();
   const blinkFrame = byKind.has("head_blink");
   const gait = rig.parts.filter((p) => kindOf(p.id).kind === "leg").length > 2;
   for (const part of rig.parts) {
-    const { kind, side, pair } = kindOf(part.id);
+    const { kind, side, pair, mood, flip } = kindOf(part.id);
     const [fx, fy] = pivotFrac(kind, side);
     let px = part.x + part.w * fx;
     let py = part.y + part.h * fy;
@@ -200,7 +286,15 @@ export function buildSkeleton(rig: Rig): Map<string, Bone> {
     // missing parent → fall back up the chain (iris → head → torso → root)
     for (const up of ["head", "torso"]) if (parent && !byKind.has(parent)) parent = up;
     if (parent && !byKind.has(parent)) parent = null;
-    bones.set(part.id, { part, kind, side, px, py, parent: parent === part.id ? null : parent, blinkFrame, pair, gait: gait && kind === "leg" });
+    const tune = rig.tune?.parts?.[part.id];
+    if (tune?.px !== undefined) px = tune.px;
+    if (tune?.py !== undefined) py = tune.py;
+    bones.set(part.id, {
+      tune,
+      rigTune: rig.tune,
+      part, kind, side, px, py, parent: parent === part.id ? null : parent, blinkFrame, pair, gait: gait && kind === "leg",
+      mood, flip, hasFlip: !flip && byKind.has(`${part.id}_flip`),
+    });
   }
   return bones;
 }
@@ -210,8 +304,14 @@ export function buildSkeleton(rig: Rig): Map<string, Bone> {
 export interface Pose { r: number; sx: number; sy: number }
 const REST: Pose = { r: 0, sx: 1, sy: 1 };
 
-/** Idle loop. t in seconds. Angles in radians (canvas y-down: + = clockwise). */
+/** Idle loop. t in seconds. Angles in radians (canvas y-down: + = clockwise). Scaled by the part's `idle` tuning. */
 export function idlePose(b: Bone, t: number): Pose {
+  const k = b.tune?.idle;
+  const p = idleBase(b, t);
+  return k === undefined || k === 1 ? p : { r: p.r * k, sx: 1 + (p.sx - 1) * k, sy: 1 + (p.sy - 1) * k };
+}
+
+function idleBase(b: Bone, t: number): Pose {
   const S = Math.sin;
   const mirror = b.side === "r" ? -1 : 1;
   switch (b.kind) {
@@ -244,8 +344,27 @@ export function blinking(t: number): boolean {
   return ph < BLINK_HOLD || (n % 3 === 2 && ph > 0.26 && ph < 0.26 + BLINK_HOLD);
 }
 
-/** Frame swap: "Head Blink" replaces Head + eyes while blinking. */
-export function visibleAt(b: Bone, t: number, animate: boolean, eyesShut = false): boolean {
+/** Moods this skeleton can show: needs "Head Blank" (a face drawn over the full head would double the eyes). Cached. */
+const moodSets = new WeakMap<Map<string, Bone>, Set<Mood>>();
+export function moodsOf(bones: Map<string, Bone>): Set<Mood> {
+  let set = moodSets.get(bones);
+  if (!set) {
+    const blank = [...bones.values()].some((b) => b.kind === "head_blank");
+    set = new Set(blank ? [...bones.values()].flatMap((b) => (b.mood ? [b.mood] : [])) : []);
+    moodSets.set(bones, set);
+  }
+  return set;
+}
+
+/**
+ * Frame swaps: "Head Blink" replaces Head + eyes while blinking; an emoji face (on Head Blank) replaces both while
+ * its mood is on (`face` must be one the rig has, see moodsOf); a `_flip` variant replaces its part while mirrored.
+ */
+export function visibleAt(b: Bone, t: number, animate: boolean, eyesShut = false, face?: Mood, mirrored = false): boolean {
+  if (b.flip ? !mirrored : b.hasFlip && mirrored) return false;
+  if (b.kind === "face") return b.mood === face;
+  if (b.kind === "head_blank") return !!face;
+  if (face && (b.kind === "head" || b.kind === "head_blink" || b.kind === "eyes" || b.kind === "iris")) return false;
   const shut = eyesShut || (animate && blinking(t));
   if (b.kind === "head_blink") return shut;
   if (b.blinkFrame && (b.kind === "head" || b.kind === "eyes" || b.kind === "iris")) return !shut;
@@ -259,6 +378,10 @@ export interface DrawOptions {
   eyesShut?: boolean;
   /** part ids drawn above everything else, in this order (e.g. the arm being held) */
   onTop?: string[];
+  /** emoji face to show (ignored when the rig has no such face / no Head Blank) */
+  mood?: Mood | null;
+  /** the doll is drawn mirrored (walking left) → `_flip` variants stand in for their parts */
+  mirrored?: boolean;
 }
 
 // ---------- transforms ----------
@@ -301,7 +424,11 @@ interface Ctx2D {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /** Debug overlay: part boxes, pivot dots, parent links and ids — to check where things hinge. */
-export function drawDebug(ctx: any, rig: Rig, bones: Map<string, Bone>, t: number, view: M, animate = true, pose?: (b: Bone, t: number) => Pose): void {
+export function drawDebug(
+  ctx: any, rig: Rig, bones: Map<string, Bone>, t: number, view: M, animate = true, pose?: (b: Bone, t: number) => Pose,
+  /** tuner: highlight this part, with its joint range [min, max] (rad, relative to its parent) as a wedge */
+  hl?: { id: string; range?: [number, number] },
+): void {
   const world = solve(bones, animate ? t : 0, animate ? (pose ?? idlePose) : () => REST);
   const pt = (m: M, x: number, y: number) => [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
   const scale = Math.hypot(view[0], view[1]);
@@ -343,6 +470,46 @@ export function drawDebug(ctx: any, rig: Rig, bones: Map<string, Bone>, t: numbe
     ctx.fillStyle = "#fff";
     ctx.fillText(b.part.id, px + 6, py - 6);
   }
+  const sel = hl && bones.get(hl.id);
+  if (sel) {
+    const m = mul(view, world.get(sel.part.id) ?? I);
+    const { x, y, w, h } = sel.part;
+    ctx.strokeStyle = "#ffd400";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    [[x, y], [x + w, y], [x + w, y + h], [x, y + h]].forEach(([cx, cy], i) => {
+      const [sx, sy] = pt(m, cx, cy);
+      if (i) ctx.lineTo(sx, sy);
+      else ctx.moveTo(sx, sy);
+    });
+    ctx.closePath();
+    ctx.stroke();
+    const [px, py] = pt(m, sel.px, sel.py);
+    if (hl.range) {
+      // wedge = where the part may point: its rest direction (pivot → box centre) in the parent's frame, turned by min…max
+      const parent = sel.parent ? mul(view, world.get(sel.parent) ?? I) : view;
+      const [qx, qy] = pt(parent, sel.px, sel.py), [cx, cy] = pt(parent, x + w / 2, y + h / 2);
+      const base = Math.atan2(cy - qy, cx - qx);
+      const len = Math.max(30, Math.hypot(cx - qx, cy - qy) * 0.9);
+      ctx.fillStyle = "rgba(255,212,0,.16)";
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.arc(px, py, len, base + hl.range[0], base + hl.range[1]);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.setLineDash([3, 4]);
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(px + Math.cos(base) * len, py + Math.sin(base) * len);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ctx.fillStyle = "#ffd400";
+    ctx.beginPath();
+    ctx.arc(px, py, 7, 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.restore();
 }
 
@@ -359,10 +526,11 @@ export function drawRig(
   let sorted = zOrder.get(rig);
   if (!sorted) zOrder.set(rig, (sorted = [...rig.parts].sort((a, b) => a.z - b.z)));
   if (top.length) sorted = [...sorted].sort((a, b) => order(a.id) - order(b.id)); // stable: z order kept within each group
+  const face = opts.mood && moodsOf(bones).has(opts.mood) ? opts.mood : undefined;
   for (const p of sorted) {
     const img = images.get(p.id);
     const bone = bones.get(p.id);
-    if (!img || (bone && !visibleAt(bone, t, animate, opts.eyesShut))) continue;
+    if (!img || (bone && !visibleAt(bone, t, animate, opts.eyesShut, face, opts.mirrored))) continue;
     const m = mul(view, world.get(p.id) ?? I);
     ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
     ctx.drawImage(img as never, p.x, p.y, p.w, p.h);

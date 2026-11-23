@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { bodyMatrix, grab, hitPart, newPuppet, onTopParts, puppetPose, release, settled, squinting, step } from "@/lib/puppet";
+import { bodyMatrix, grab, hitPart, mood, newPuppet, onTopParts, physOf, puppetPose, release, settled, squinting, step } from "@/lib/puppet";
 import { buildSkeleton, drawDebug, drawRig, mul, type M, type Rig } from "@/lib/rig";
 import { guardGestures, Mips, watchVisible } from "@/lib/stage";
 
@@ -15,6 +15,13 @@ interface Props {
   debug?: boolean;
   /** character height in cm → uniform scale against a cm ruler (feet on the 0 line). Omit = fit to the frame. */
   heightCm?: number;
+  /** tuner: part to highlight (its joint range is drawn too) */
+  selected?: string | null;
+  /** tuner: rest pose, no physics — click a part / pivot dot to pick it, drag the dot to move the pivot */
+  freeze?: boolean;
+  onPick?: (id: string) => void;
+  /** dragged pivot, in rig px */
+  onPivot?: (id: string, x: number, y: number) => void;
 }
 
 /** Ruler range (cm) — the frame always shows 0…RULER_CM so different heights compare honestly. */
@@ -65,28 +72,35 @@ function drawRuler(ctx: CanvasRenderingContext2D, w: number, floorY: number, pxP
   ctx.restore();
 }
 
-/** Animated paper-doll (Canvas2D). Idle loop from lib/rig; reduced motion = no idle loop, but it can still be grabbed. */
-export function SpriteStage({ rig, src, className, label, debug, heightCm }: Props) {
+/**
+ * Animated paper-doll (Canvas2D). Idle loop from lib/rig; reduced motion = no idle loop, but it can still be grabbed.
+ * Changing only the rig's tuning rebuilds the skeleton without restarting the loop or reloading the images.
+ */
+export function SpriteStage({ rig, src, className, label, debug, heightCm, selected, freeze, onPick, onPivot }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [images, setImages] = useState<Mips | null>(null);
   const [failed, setFailed] = useState(false);
   const bones = useMemo(() => buildSkeleton(rig), [rig]);
+  const parts = rig.parts;
   const puppet = useRef(newPuppet());
   /** canvas px → rig coords (set every frame) */
   const toRig = useRef<(cx: number, cy: number) => [number, number]>(() => [0, 0]);
   /** visible frame in rig coords [left, top, right, bottom] — the only wall when dragging */
   const frameBox = useRef<[number, number, number, number]>([-Infinity, -Infinity, Infinity, Infinity]);
-  /** read every frame so moving the slider doesn't restart the animation */
-  const height = useRef(heightCm);
-  height.current = heightCm;
+  /** read every frame so moving a slider (height, tuning) doesn't restart the animation */
+  const live = useRef({ rig, bones, debug, selected, freeze, onPick, onPivot, height: heightCm });
+  live.current = { rig, bones, debug, selected, freeze, onPick, onPivot, height: heightCm };
+  /** the loop sleeps while frozen / settled under reduced motion: wake it for any prop change */
+  const redraw = useRef<() => void>(() => {});
+  useEffect(() => redraw.current(), [rig, bones, debug, selected, freeze, heightCm]);
   /** the character's real pixel extent (rig canvas has empty margins) — what heightCm measures */
   const extent = useMemo(() => {
-    const top = Math.min(...rig.parts.map((p) => p.y));
-    const bottom = Math.max(...rig.parts.map((p) => p.y + p.h));
-    const left = Math.min(...rig.parts.map((p) => p.x));
-    const right = Math.max(...rig.parts.map((p) => p.x + p.w));
+    const top = Math.min(...parts.map((p) => p.y));
+    const bottom = Math.max(...parts.map((p) => p.y + p.h));
+    const left = Math.min(...parts.map((p) => p.x));
+    const right = Math.max(...parts.map((p) => p.x + p.w));
     return { top, bottom, cx: (left + right) / 2, h: Math.max(1, bottom - top) };
-  }, [rig]);
+  }, [parts]);
 
   useEffect(() => {
     let live = true;
@@ -94,7 +108,7 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
     setImages(null);
     setFailed(false);
     Promise.all(
-      rig.parts.map(
+      parts.map(
         (p) =>
           new Promise<[string, HTMLImageElement]>((resolve, reject) => {
             const img = new Image();
@@ -108,7 +122,7 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
       (pairs) => {
         if (!live) return;
         const byId = new Map(pairs);
-        setImages((mips = new Mips(rig.parts.map((p) => ({ id: p.id, img: byId.get(p.id)!, w: p.w, h: p.h })))));
+        setImages((mips = new Mips(parts.map((p) => ({ id: p.id, img: byId.get(p.id)!, w: p.w, h: p.h })))));
       },
       () => live && setFailed(true),
     );
@@ -116,7 +130,7 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
       live = false;
       mips?.clear();
     };
-  }, [rig, src]);
+  }, [parts, src]);
 
   useEffect(() => {
     const cv = canvas.current;
@@ -131,6 +145,10 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
     let cssW = cv.clientWidth, cssH = cv.clientHeight;
     /** the pointer holding the doll (one at a time: a second finger doesn't re-grab or drop it) */
     let active: number | null = null;
+    /** tuner: part whose pivot is being dragged */
+    let pivotDrag: string | null = null;
+    /** canvas px per rig px (set every frame) — pivot dots are picked within a fixed screen radius */
+    let scale = 1;
 
     // grab the torso and shake
     const local = (e: PointerEvent) => {
@@ -138,33 +156,69 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
       const dpr = cv.width / r.width;
       return toRig.current((e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr);
     };
+    /** frozen tuner: pivot dot under the pointer (rest pose = rig coords), else the topmost part box */
+    const pickAt = (x: number, y: number): { id: string; dot: boolean } | null => {
+      const { bones } = live.current;
+      const reach = 14 * Math.min(window.devicePixelRatio || 1, 2) / scale;
+      let best: string | null = null, bestD = reach;
+      for (const b of bones.values()) {
+        const d = Math.hypot(b.px - x, b.py - y);
+        if (d < bestD) (best = b.part.id), (bestD = d);
+      }
+      const sel = live.current.selected;
+      if (sel && bones.has(sel) && Math.hypot(bones.get(sel)!.px - x, bones.get(sel)!.py - y) < reach) return { id: sel, dot: true };
+      if (best) return { id: best, dot: true };
+      const hit = [...bones.values()].filter((b) => x >= b.part.x && x <= b.part.x + b.part.w && y >= b.part.y && y <= b.part.y + b.part.h);
+      hit.sort((a, b) => b.part.z - a.part.z);
+      return hit[0] ? { id: hit[0].part.id, dot: false } : null;
+    };
     const down = (e: PointerEvent) => {
       if (active !== null || e.button !== 0) return;
       const [x, y] = local(e);
-      const part = hitPart(p, bones, x, y);
+      if (live.current.freeze) {
+        const hit = pickAt(x, y);
+        if (!hit) return;
+        e.preventDefault();
+        live.current.onPick?.(hit.id);
+        if (!hit.dot) return kick();
+        active = e.pointerId;
+        pivotDrag = hit.id;
+        try {
+          cv.setPointerCapture(e.pointerId);
+        } catch {} // pointer already gone
+        cv.style.cursor = "grabbing";
+        return kick();
+      }
+      const part = hitPart(p, live.current.bones, x, y);
       if (!part) return;
       e.preventDefault();
       active = e.pointerId;
       try {
         cv.setPointerCapture(e.pointerId);
       } catch {} // pointer already gone
-      grab(p, x, y, part, bones);
+      grab(p, x, y, part, live.current.bones);
       cv.style.cursor = "grabbing";
       kick(); // reduced motion: the loop is asleep until grabbed
     };
     const move = (e: PointerEvent) => {
       if (active !== null && e.pointerId !== active) return;
       const [x, y] = local(e);
+      if (pivotDrag) return live.current.onPivot?.(pivotDrag, Math.round(x), Math.round(y));
+      if (live.current.freeze) {
+        cv.style.cursor = pickAt(x, y)?.dot ? "move" : pickAt(x, y) ? "pointer" : "";
+        return;
+      }
       if (p.grabbed) {
         const [l, t, r, b] = frameBox.current;
         p.tx = Math.max(l, Math.min(r, x));
         p.ty = Math.max(t, Math.min(b, y));
       }
-      else cv.style.cursor = hitPart(p, bones, x, y) ? "grab" : "";
+      else cv.style.cursor = hitPart(p, live.current.bones, x, y) ? "grab" : "";
     };
     const up = (e: PointerEvent) => {
       if (e.pointerId !== active) return;
       active = null;
+      pivotDrag = null;
       if (p.grabbed) release(p);
       if (cv.hasPointerCapture(e.pointerId)) cv.releasePointerCapture(e.pointerId);
       cv.style.cursor = "grab";
@@ -179,6 +233,7 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
 
     const frame = (now: number) => {
       raf = 0;
+      const { rig, bones, debug, selected, freeze, height: cm } = live.current;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = Math.round(cssW * dpr), h = Math.round(cssH * dpr);
       if (!w || !h) return; // hidden (studio tab closed): the resize observer restarts the loop
@@ -186,7 +241,6 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
       ctx.clearRect(0, 0, w, h);
       const carryZoom = 1 - 0.22 * puppet.current.carry; // zoom out a little while carried sideways
       let s: number, ox: number, oy: number;
-      const cm = height.current;
       let ruler: (() => void) | null = null;
       if (cm) {
         // measured: 0…RULER_CM always spans the same height, the character is scaled uniformly to `cm`
@@ -203,6 +257,7 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
         ox = (w - rig.width * s) / 2;
         oy = h - rig.height * s - h * 0.02; // stand near the bottom: room above to lift
       }
+      scale = s;
       ruler?.();
       images.fit(s / carryZoom); // not the carry zoom: no re-bake mid-grab
       ctx.imageSmoothingQuality = "medium";
@@ -211,12 +266,22 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
       const view: M = [s, 0, 0, s, ox, oy];
       toRig.current = (cx, cy) => [(cx - ox) / s, (cy - oy) / s];
       frameBox.current = [...toRig.current(0, 0), ...toRig.current(w, h)];
-      if (!settled(p)) step(p, bones, (now - last) / 1000, { w: rig.width, h: rig.height });
+      if (freeze) {
+        // tuner: rest pose, the doll put back where it stands
+        Object.assign(p, newPuppet());
+        drawRig(ctx, rig, bones, images, t, view, false);
+      } else {
+        if (!settled(p)) step(p, bones, (now - last) / 1000, { w: rig.width, h: rig.height });
+        const v = mul(view, bodyMatrix(p));
+        drawRig(ctx, rig, bones, images, t, v, true, { pose, eyesShut: squinting(p), onTop: onTopParts(p, bones), mood: mood(p, t, bones) });
+      }
       last = now;
-      const v = mul(view, bodyMatrix(p));
-      drawRig(ctx, rig, bones, images, t, v, true, { pose, eyesShut: squinting(p), onTop: onTopParts(p, bones) });
-      if (debug) drawDebug(ctx, rig, bones, t, v, true, pose);
-      if (visible && (!still || !settled(p))) raf = requestAnimationFrame(frame);
+      if (debug || freeze) {
+        const b = selected ? bones.get(selected) : undefined;
+        const ph = b && physOf(b);
+        drawDebug(ctx, rig, bones, t, freeze ? view : mul(view, bodyMatrix(p)), !freeze, freeze ? undefined : pose, selected ? { id: selected, range: ph && (ph.dangle || ph.gravity) ? [ph.min, ph.max] : undefined } : undefined);
+      }
+      if (visible && !freeze && (!still || !settled(p))) raf = requestAnimationFrame(frame);
     };
     const kick = () => {
       if (raf) return;
@@ -236,7 +301,9 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
       visible = v;
       if (v) kick();
     });
+    redraw.current = kick;
     return () => {
+      redraw.current = () => {};
       cancelAnimationFrame(raf);
       ro.disconnect();
       unwatch();
@@ -247,7 +314,8 @@ export function SpriteStage({ rig, src, className, label, debug, heightCm }: Pro
       cv.removeEventListener("pointerup", up);
       cv.removeEventListener("pointercancel", up);
     };
-  }, [images, rig, bones, debug, extent]);
+  }, [images, extent]);
+
 
   return (
     <div className={`sprite-stage ${className ?? ""}`} style={{ aspectRatio: `${rig.width} / ${rig.height}` }}>

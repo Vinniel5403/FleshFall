@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   if (Number(req.headers.get("content-length") ?? 0) > MAX_BODY) return jsonError(413, "สไปรต์ใหญ่เกินไป");
 
   const form = await req.formData().catch(() => null);
-  let rig: { width: number; height: number; parts: PartIn[]; heightCm?: unknown };
+  let rig: { width: number; height: number; parts: PartIn[]; heightCm?: unknown; tune?: unknown };
   try {
     rig = JSON.parse(String(form?.get("rig") ?? ""));
   } catch {
@@ -57,6 +57,7 @@ export async function POST(req: Request) {
       width: rig.width,
       height: rig.height,
       heightCm: rig.heightCm,
+      tune: rig.tune,
       parts: rig.parts.map(({ id, x, y, w, h, z, ext, top, bot, hand }) => ({ id, x, y, w, h, z, ext, top, bot, hand })),
     };
     const r = await bot("sprite/set", { userId: s.uid, sprite });
@@ -72,14 +73,14 @@ export async function POST(req: Request) {
   }
 }
 
-/** Change only the character's height (json: { heightCm }). */
+/** Change only the character's height (json: { heightCm }) or the rig tuning (json: { tune }, null = defaults). */
 export async function PATCH(req: Request) {
   if (!sameOrigin(req)) return jsonError(403, "forbidden");
   const s = await getSession();
   if (!s) return jsonError(401, NEED_LOGIN);
-  const { heightCm } = (await req.json().catch(() => ({}))) as { heightCm?: unknown };
+  const body = (await req.json().catch(() => ({}))) as { heightCm?: unknown; tune?: unknown };
   try {
-    const r = await bot("sprite/height", { userId: s.uid, heightCm });
+    const r = "tune" in body ? await bot("sprite/tune", { userId: s.uid, tune: body.tune }) : await bot("sprite/height", { userId: s.uid, heightCm: body.heightCm });
     if (r.status !== 200) return jsonError(r.status, r.data.error ?? "บันทึกไม่สำเร็จ");
     return Response.json({ character: withUrls(r.data.character) });
   } catch {
